@@ -12,7 +12,7 @@ window.addEventListener("load", function () {
 
       <p id="turn">味方のターン</p>
 
-      <div id="map"></div>
+      <div id="mapViewport"><div id="map"></div></div>
 
       <div id="actionButtons">
 
@@ -27,6 +27,8 @@ window.addEventListener("load", function () {
     </div>`;
 
   const game=document.querySelector("#game");
+
+  const mapViewport=document.querySelector("#mapViewport");
 
   const map=document.querySelector("#map");
 
@@ -44,47 +46,65 @@ window.addEventListener("load", function () {
 
     #game{position:relative;}
 
+    #mapViewport{
+
+      position:relative;
+
+      width:94%;
+
+      max-width:900px;
+
+      height:65vh;
+
+      min-height:310px;
+
+      max-height:700px;
+
+      margin:0 auto;
+
+      overflow:hidden;
+
+      border:1px solid #777;
+
+      border-radius:6px;
+
+      background:#b8b5a8;
+
+      touch-action:pan-y;
+
+      user-select:none;
+
+      -webkit-user-select:none;
+
+      cursor:grab;
+
+    }
+
+    #mapViewport.panning{cursor:grabbing;}
+
     #map{
 
-      position:relative;margin:0 auto;overflow:visible;
+      position:absolute;
+
+      left:0;top:0;
+
+      margin:0;
+
+      overflow:visible;
+
+      transform-origin:0 0;
+
+      will-change:transform;
 
       touch-action:manipulation;
 
     }
 
-    #actionButtons{
+    #actionButtons{display:flex;justify-content:center;align-items:center;gap:8px;width:94%;max-width:340px;margin:8px auto;}
 
-      display:flex;justify-content:center;align-items:center;
+    #actionButtons button{flex:1;min-width:0;padding:9px 5px;font-size:12px;border-radius:6px;}
 
-      gap:8px;width:94%;max-width:340px;margin:8px auto;
-
-    }
-
-    #actionButtons button{
-
-      flex:1;min-width:0;padding:9px 5px;
-
-      font-size:12px;border-radius:6px;
-
-    }
-
-    #info{
-
-      position:relative;z-index:15;
-
-      width:94%;max-width:340px;box-sizing:border-box;
-
-      margin:8px auto;padding:7px;
-
-      background:rgba(255,255,255,.97);
-
-      border:1px solid #777;border-radius:8px;
-
-      color:#222;font-size:12px;line-height:1.3;
-
-      min-height:35px;
-
-    }
+    #info{position:relative;z-index:15;width:94%;max-width:340px;box-sizing:border-box;margin:8px auto;padding:7px;background:rgba(255,255,255,.97);border:1px solid #777;border-radius:8px;color:#222;font-size:12px;line-height:1.3;min-height:35px;}
 
     #info h3{font-size:14px;margin:4px 0;}
 
@@ -94,167 +114,49 @@ window.addEventListener("load", function () {
 
     #info button{font-size:11px;padding:5px 7px;margin:2px;}
 
-    .unit-token{
+    .unit-token{position:absolute;box-sizing:border-box;width:56px;height:44px;z-index:5;display:flex;align-items:center;justify-content:center;border-radius:8px;background:transparent;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
 
-      position:absolute;box-sizing:border-box;
+    .unit-token.unit-acted{filter:brightness(.55) saturate(.7);}
 
-      width:56px;height:44px;z-index:5;
-
-      display:flex;align-items:center;justify-content:center;
-
-      border-radius:8px;background:transparent;
-
-      touch-action:manipulation;
-
-      -webkit-tap-highlight-color:transparent;
-
-    }
-
-    .unit-content{
-
-      display:flex;flex-direction:column;
-
-      align-items:center;justify-content:center;
-
-      text-align:center;line-height:1;
-
-      pointer-events:none;color:#17202a;
-
-      font-weight:bold;width:100%;height:100%;
-
-    }
+    .unit-content{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;line-height:1;pointer-events:none;color:#17202a;font-weight:bold;width:100%;height:100%;}
 
     .unit-icon{font-size:16px;line-height:17px;}
 
-    .unit-name{
-
-      font-size:9px;line-height:10px;
-
-      max-width:54px;overflow-wrap:anywhere;
-
-    }
+    .unit-name{font-size:9px;line-height:10px;max-width:54px;overflow-wrap:anywhere;}
 
     .unit-hp{font-size:8px;line-height:9px;}
 
-    .battle-panel{
+    .defense-mark{position:absolute;z-index:12;font-size:15px;line-height:15px;filter:drop-shadow(0 1px 2px #000);pointer-events:none;transform:translateX(-50%);}
 
-      display:flex;align-items:center;justify-content:space-between;
-
-      gap:5px;margin:5px 0;padding:5px;
-
-      border:2px solid #777;border-radius:8px;
-
-      background:#fff;color:#222;
-
-    }
+    .battle-panel{display:flex;align-items:center;justify-content:space-between;gap:5px;margin:5px 0;padding:5px;border:2px solid #777;border-radius:8px;background:#fff;color:#222;}
 
     .battle-side{width:42%;min-width:0;text-align:center;}
 
-    .battle-name{
+    .battle-name{font-weight:bold;overflow-wrap:anywhere;margin-bottom:3px;font-size:10px;}
 
-      font-weight:bold;overflow-wrap:anywhere;
+    .hp-track{position:relative;width:100%;height:16px;background:#ddd;border:1px solid #777;border-radius:5px;overflow:hidden;box-sizing:border-box;}
 
-      margin-bottom:3px;font-size:10px;
-
-    }
-
-    .hp-track{
-
-      position:relative;width:100%;height:16px;
-
-      background:#ddd;border:1px solid #777;
-
-      border-radius:5px;overflow:hidden;box-sizing:border-box;
-
-    }
-
-    .hp-fill{
-
-      position:absolute;left:0;top:0;height:100%;
-
-      transition:width 300ms ease;
-
-    }
+    .hp-fill{position:absolute;left:0;top:0;height:100%;transition:width 300ms ease;}
 
     .hp-ally{background:#2879db;}
 
     .hp-enemy{background:#e53935;}
 
-    @keyframes hpBlink{
+    @keyframes hpBlink{0%,100%{opacity:1;filter:brightness(1);}50%{opacity:.12;filter:brightness(2);}}
 
-      0%,100%{opacity:1;filter:brightness(1);}
-
-      50%{opacity:.12;filter:brightness(2);}
-
-    }
-
-    .hp-predicted{
-
-      position:absolute;top:0;z-index:3;height:100%;
-
-      animation:hpBlink .5s steps(2,end) infinite;
-
-      background:repeating-linear-gradient(
-
-        135deg,#fff 0,#fff 3px,#ffb300 3px,#ffb300 6px
-
-      );
-
-      border-left:2px solid #222;
-
-      box-sizing:border-box;pointer-events:none;
-
-    }
+    .hp-predicted{position:absolute;top:0;z-index:3;height:100%;animation:hpBlink .5s steps(2,end) infinite;background:repeating-linear-gradient(135deg,#fff 0,#fff 3px,#ffb300 3px,#ffb300 6px);border-left:2px solid #222;box-sizing:border-box;pointer-events:none;}
 
     .battle-center{font-size:15px;font-weight:bold;text-align:center;}
 
     .battle-hp-text{font-size:10px;margin-top:3px;}
 
-    @keyframes combatLunge{
+    @keyframes combatLunge{0%{transform:translateX(0) scale(1);}35%{transform:translateX(9px) scale(1.08);}100%{transform:translateX(0) scale(1);}}
 
-      0%{transform:translateX(0) scale(1);}
+    @keyframes combatHit{0%,100%{transform:translateX(0);}20%{transform:translateX(-5px);}40%{transform:translateX(5px);}60%{transform:translateX(-4px);}80%{transform:translateX(3px);}}
 
-      35%{transform:translateX(9px) scale(1.08);}
+    @keyframes combatFloat{0%{opacity:0;transform:translate(-50%,8px) scale(.7);}15%{opacity:1;transform:translate(-50%,0) scale(1.15);}100%{opacity:0;transform:translate(-50%,-38px) scale(1);}}
 
-      100%{transform:translateX(0) scale(1);}
-
-    }
-
-    @keyframes combatHit{
-
-      0%,100%{transform:translateX(0);}
-
-      20%{transform:translateX(-5px);}
-
-      40%{transform:translateX(5px);}
-
-      60%{transform:translateX(-4px);}
-
-      80%{transform:translateX(3px);}
-
-    }
-
-    @keyframes combatFloat{
-
-      0%{opacity:0;transform:translate(-50%,8px) scale(.7);}
-
-      15%{opacity:1;transform:translate(-50%,0) scale(1.15);}
-
-      100%{opacity:0;transform:translate(-50%,-38px) scale(1);}
-
-    }
-
-    .combat-number,.combat-miss{
-
-      position:absolute;z-index:30;pointer-events:none;
-
-      font-weight:900;-webkit-text-stroke:1px white;
-
-      text-shadow:1px 2px 2px #0008;
-
-      animation:combatFloat 950ms ease-out forwards;
-
-    }
+    .combat-number,.combat-miss{position:absolute;z-index:30;pointer-events:none;font-weight:900;-webkit-text-stroke:1px white;text-shadow:1px 2px 2px #0008;animation:combatFloat 950ms ease-out forwards;}
 
     .combat-number{font-size:25px;color:#e53935;}
 
@@ -264,161 +166,35 @@ window.addEventListener("load", function () {
 
     .unit-token.combat-hit{animation:combatHit 420ms ease-in-out;}
 
-    /* 青と赤の範囲を交互に点滅させる */
+    @keyframes rangePulse{0%,100%{fill-opacity:.08;stroke-opacity:.35;}50%{fill-opacity:.34;stroke-opacity:1;}}
 
-    @keyframes rangePulse{
+    .move-range-hex{fill:#2196f3;fill-opacity:.2;stroke:#1565c0;stroke-width:2;animation:rangePulse 1s ease-in-out infinite;pointer-events:none;}
 
-      0%,100%{
+    .attack-range-hex{fill:#e53935;fill-opacity:.2;stroke:#b71c1c;stroke-width:2;animation:rangePulse 1s ease-in-out infinite;animation-delay:-.5s;pointer-events:none;}
 
-        fill-opacity:.08;
+    @keyframes battleHexPulse{0%,100%{opacity:.55;stroke-width:3;}50%{opacity:1;stroke-width:5;}}
 
-        stroke-opacity:.35;
+    .battle-hex-attacker{fill:#ff9800;fill-opacity:.28;stroke:#e65100;stroke-width:3;animation:battleHexPulse .65s ease-in-out infinite;pointer-events:none;}
 
-      }
+    .battle-hex-defender{fill:#29b6f6;fill-opacity:.28;stroke:#0277bd;stroke-width:3;animation:battleHexPulse .65s ease-in-out infinite;pointer-events:none;}
 
-      50%{
-
-        fill-opacity:.34;
-
-        stroke-opacity:1;
-
-      }
-
-    }
-
-    .move-range-hex{
-
-      fill:#2196f3;
-
-      fill-opacity:.2;
-
-      stroke:#1565c0;
-
-      stroke-width:2;
-
-      animation:rangePulse 1s ease-in-out infinite;
-
-      pointer-events:none;
-
-    }
-
-    .attack-range-hex{
-
-      fill:#e53935;
-
-      fill-opacity:.2;
-
-      stroke:#b71c1c;
-
-      stroke-width:2;
-
-      animation:rangePulse 1s ease-in-out infinite;
-
-      animation-delay:-.5s;
-
-      pointer-events:none;
-
-    }
-
-    @keyframes battleHexPulse{
-
-      0%,100%{opacity:.55;stroke-width:3;}
-
-      50%{opacity:1;stroke-width:5;}
-
-    }
-
-    .battle-hex-attacker{
-
-      fill:#ff9800;fill-opacity:.28;
-
-      stroke:#e65100;stroke-width:3;
-
-      animation:battleHexPulse .65s ease-in-out infinite;
-
-      pointer-events:none;
-
-    }
-
-    .battle-hex-defender{
-
-      fill:#29b6f6;fill-opacity:.28;
-
-      stroke:#0277bd;stroke-width:3;
-
-      animation:battleHexPulse .65s ease-in-out infinite;
-
-      pointer-events:none;
-
-    }
-
-    /* 矢印はヘックス中心から中心へ伸びる */
-
-    .battle-arrow{
-
-      fill:none;
-
-      stroke-width:3.5;
-
-      stroke-linecap:round;
-
-      stroke-linejoin:round;
-
-      filter:drop-shadow(0 0 3px #222);
-
-      pointer-events:none;
-
-    }
+    .battle-arrow{fill:none;stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 3px #222);pointer-events:none;}
 
     .battle-arrow.ally-arrow{stroke:#ff9800;}
 
     .battle-arrow.enemy-arrow{stroke:#29b6f6;}
 
-    .story-overlay{
+    .counter-impact{font-size:25px;font-weight:bold;text-anchor:middle;dominant-baseline:middle;pointer-events:none;}
 
-      position:fixed;inset:0;z-index:10000;
+    .story-overlay{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;box-sizing:border-box;padding:20px;background:rgba(10,16,27,.94);color:#fff;}
 
-      display:flex;align-items:center;justify-content:center;
-
-      box-sizing:border-box;padding:20px;
-
-      background:rgba(10,16,27,.94);color:#fff;
-
-    }
-
-    .story-panel{
-
-      width:100%;max-width:420px;box-sizing:border-box;
-
-      padding:24px 20px;border:1px solid #b9a16b;
-
-      border-radius:12px;
-
-      background:linear-gradient(160deg,#28364a,#111923);
-
-      text-align:center;
-
-    }
+    .story-panel{width:100%;max-width:420px;box-sizing:border-box;padding:24px 20px;border:1px solid #b9a16b;border-radius:12px;background:linear-gradient(160deg,#28364a,#111923);text-align:center;}
 
     .story-panel h2{font-size:22px;color:#f0d99b;}
 
-    .story-panel p{
+    .story-panel p{font-size:16px;line-height:2;text-align:left;white-space:pre-line;}
 
-      font-size:16px;line-height:2;text-align:left;
-
-      white-space:pre-line;
-
-    }
-
-    .story-panel button{
-
-      min-width:150px;padding:11px 20px;font-size:15px;
-
-      border:1px solid #d5bd83;border-radius:7px;
-
-      background:#d5bd83;color:#202020;font-weight:bold;
-
-    }
+    .story-panel button{min-width:150px;padding:11px 20px;font-size:15px;border:1px solid #d5bd83;border-radius:7px;background:#d5bd83;color:#202020;font-weight:bold;}
 
   `;
 
@@ -426,187 +202,207 @@ window.addEventListener("load", function () {
 
   const units=[
 
-    {
+    {id:1,name:"隊長",side:"ally",job:"ロード",role:"captain",x:1,y:2,hp:20,maxHp:20,icon:"👑",moved:false,acted:false,waited:false,atk:6,def:3,agi:5,dex:6,move:1,range:1,skills:["指揮"],resistances:{物理:"未設定",魔法:"未設定",炎:"未設定",氷:"未設定"}},
 
-      id:1,name:"隊長",side:"ally",job:"ロード",
+    {id:2,name:"重装兵",side:"ally",job:"ヘビーアーマー",x:0,y:3,hp:16,maxHp:16,icon:"🪖",moved:false,acted:false,waited:false,atk:7,def:6,agi:2,dex:4,move:1,range:1,skills:["防御"],resistances:{物理:"未設定",魔法:"未設定",炎:"未設定",氷:"未設定"}},
 
-      role:"captain",x:1,y:2,hp:20,maxHp:20,icon:"👑",
+    {id:3,name:"魔道士",side:"ally",job:"メイジ",x:2,y:3,hp:12,maxHp:12,icon:"🔮",moved:false,acted:false,waited:false,atk:8,def:2,agi:4,dex:6,move:1,range:2,skills:["魔法"],resistances:{物理:"未設定",魔法:"未設定",炎:"未設定",氷:"未設定"}},
 
-      moved:false,acted:false,waited:false,
+    {id:6,name:"騎兵",side:"ally",job:"キャバリア",x:0,y:1,hp:14,maxHp:14,icon:"🐎",moved:false,acted:false,waited:false,atk:6,def:3,agi:6,dex:5,move:2,range:1,skills:["突撃"],resistances:{物理:"未設定",魔法:"未設定",炎:"未設定",氷:"未設定"}},
 
-      atk:6,def:3,agi:5,dex:6,move:1,range:1,
+    {id:4,name:"敵隊長",side:"enemy",job:"ダークロード",role:"captain",x:9,y:5,hp:20,maxHp:20,icon:"💀",moved:false,acted:false,waited:false,atk:6,def:4,agi:4,dex:5,move:1,range:1,skills:["威圧"],personality:"commander",targetStyle:"captain",resistances:{物理:"未設定",魔法:"未設定",炎:"未設定",氷:"未設定"}},
 
-      skills:["指揮"],
+    {id:5,name:"敵兵",side:"enemy",job:"ソルジャー",x:8,y:4,hp:14,maxHp:14,icon:"⚔️",moved:false,acted:false,waited:false,atk:5,def:3,agi:3,dex:4,move:1,range:1,skills:["なし"],personality:"hunter",targetStyle:"weakest",resistances:{物理:"未設定",魔法:"未設定",炎:"未設定",氷:"未設定"}},
 
-      resistances:{物理:"未設定",魔法:"未設定",炎:"未設定",氷:"未設定"}
-
-    },
-
-    {
-
-      id:2,name:"重装兵",side:"ally",job:"ヘビーアーマー",
-
-      x:0,y:3,hp:16,maxHp:16,icon:"🛡️",
-
-      moved:false,acted:false,waited:false,
-
-      atk:7,def:6,agi:2,dex:4,move:1,range:1,
-
-      skills:["防御"],
-
-      resistances:{物理:"未設定",魔法:"未設定",炎:"未設定",氷:"未設定"}
-
-    },
-
-    {
-
-      id:3,name:"魔道士",side:"ally",job:"メイジ",
-
-      x:2,y:3,hp:12,maxHp:12,icon:"🔮",
-
-      moved:false,acted:false,waited:false,
-
-      atk:8,def:2,agi:4,dex:6,move:1,range:2,
-
-      skills:["魔法"],
-
-      resistances:{物理:"未設定",魔法:"未設定",炎:"未設定",氷:"未設定"}
-
-    },
-
-    {
-
-      id:6,name:"騎兵",side:"ally",job:"キャバリア",
-
-      x:0,y:1,hp:14,maxHp:14,icon:"🐎",
-
-      moved:false,acted:false,waited:false,
-
-      atk:6,def:3,agi:6,dex:5,move:2,range:1,
-
-      skills:["突撃"],
-
-      resistances:{物理:"未設定",魔法:"未設定",炎:"未設定",氷:"未設定"}
-
-    },
-
-    {
-
-      id:4,name:"敵隊長",side:"enemy",job:"ダークロード",
-
-      role:"captain",x:6,y:3,hp:20,maxHp:20,icon:"💀",
-
-      moved:false,acted:false,waited:false,
-
-      atk:6,def:4,agi:4,dex:5,move:1,range:1,
-
-      skills:["威圧"],personality:"commander",
-
-      targetStyle:"captain",
-
-      resistances:{物理:"未設定",魔法:"未設定",炎:"未設定",氷:"未設定"}
-
-    },
-
-    {
-
-      id:5,name:"敵兵",side:"enemy",job:"ソルジャー",
-
-      x:5,y:2,hp:14,maxHp:14,icon:"⚔️",
-
-      moved:false,acted:false,waited:false,
-
-      atk:5,def:3,agi:3,dex:4,move:1,range:1,
-
-      skills:["なし"],personality:"hunter",
-
-      targetStyle:"weakest",
-
-      resistances:{物理:"未設定",魔法:"未設定",炎:"未設定",氷:"未設定"}
-
-    },
-
-    {
-
-      id:7,name:"敵魔道士",side:"enemy",job:"ダークメイジ",
-
-      x:7,y:1,hp:12,maxHp:12,icon:"🧙",
-
-      moved:false,acted:false,waited:false,
-
-      atk:8,def:2,agi:4,dex:6,move:1,range:2,
-
-      skills:["魔法"],personality:"mage",
-
-      targetStyle:"weakest",
-
-      resistances:{物理:"未設定",魔法:"未設定",炎:"未設定",氷:"未設定"}
-
-    }
+    {id:7,name:"敵魔道士",side:"enemy",job:"ダークメイジ",x:10,y:2,hp:12,maxHp:12,icon:"🧙",moved:false,acted:false,waited:false,atk:8,def:2,agi:4,dex:6,move:1,range:2,skills:["魔法"],personality:"mage",targetStyle:"weakest",resistances:{物理:"未設定",魔法:"未設定",炎:"未設定",氷:"未設定"}}
 
   ];
 
-  const initialUnitStates=units.map(u=>({
+  const initialUnitStates=units.map(u=>({...u,resistances:{...u.resistances},skills:[...u.skills]}));
 
-    ...u,resistances:{...u.resistances},skills:[...u.skills]
+  const cols=12,rows=8,w=56,h=44,dx=42,dy=44;
 
-  }));
+  let selected=null,selectedEnemy=null,currentTurn="ally",turn=1;
 
-  const cols=8,rows=6,w=56,h=44,dx=42,dy=44;
+  let pendingMove=null,moveMode=false,attackMode=false,menuOpen=false;
 
-  let selected=null;
+  let reaction=false,combatAnimating=false,battleEnded=false;
 
-  let selectedEnemy=null;
+  let enemyQueue=[],enemyQueueIndex=0,enemyAIActive=false;
 
-  let currentTurn="ally";
+  let lastTapUnitId=null,lastTapTime=0,battleVisual=null;
 
-  let turn=1;
-
-  let pendingMove=null;
-
-  let moveMode=false;
-
-  let attackMode=false;
-
-  let menuOpen=false;
-
-  let reaction=false;
-
-  let combatAnimating=false;
-
-  let battleEnded=false;
-
-  let enemyQueue=[];
-
-  let enemyQueueIndex=0;
-
-  let enemyAIActive=false;
-
-  let lastTapUnitId=null;
-
-  let lastTapTime=0;
-
-  let battleVisual=null;
-
-  const DOUBLE_TAP_TIME=350;
-
-  const CRITICAL_RATE=10;
-
-  const CRITICAL_MULTIPLIER=2;
+  const DOUBLE_TAP_TIME=350,CRITICAL_RATE=10,CRITICAL_MULTIPLIER=2;
 
   const mapWidth=dx*(cols-1)+w;
 
   const mapHeight=(rows-1)*dy+h+h/2;
 
-  Object.assign(map.style,{
+  Object.assign(map.style,{width:mapWidth+"px",height:mapHeight+"px",position:"absolute",left:"0",top:"0",overflow:"visible",touchAction:"manipulation"});
 
-    width:mapWidth+"px",height:mapHeight+"px",
+  let mapOffsetX=0,mapOffsetY=0;
 
-    position:"relative",overflow:"visible",
+  let touchPanActive=false,touchPanMoved=false;
 
-    touchAction:"manipulation"
+  let touchPanLastX=0,touchPanLastY=0;
+
+  let mousePanning=false,mouseStartX=0,mouseStartY=0;
+
+  let mouseOriginX=0,mouseOriginY=0;
+
+  let suppressNextClick=false;
+
+  function clampMapOffset(){
+
+    const vw=mapViewport.clientWidth,vh=mapViewport.clientHeight;
+
+    mapOffsetX=mapWidth<=vw?(vw-mapWidth)/2:Math.max(vw-mapWidth,Math.min(0,mapOffsetX));
+
+    mapOffsetY=mapHeight<=vh?(vh-mapHeight)/2:Math.max(vh-mapHeight,Math.min(0,mapOffsetY));
+
+    map.style.transform=`translate(${mapOffsetX}px,${mapOffsetY}px)`;
+
+  }
+
+  function centerMap(){
+
+    mapOffsetX=(mapViewport.clientWidth-mapWidth)/2;
+
+    mapOffsetY=(mapViewport.clientHeight-mapHeight)/2;
+
+    clampMapOffset();
+
+  }
+
+  function getTouchCenter(touches){
+
+    return{
+
+      x:(touches[0].clientX+touches[1].clientX)/2,
+
+      y:(touches[0].clientY+touches[1].clientY)/2
+
+    };
+
+  }
+
+  mapViewport.addEventListener("touchstart",function(e){
+
+    if(e.touches.length!==2)return;
+
+    e.preventDefault();
+
+    const center=getTouchCenter(e.touches);
+
+    touchPanActive=true;
+
+    touchPanMoved=false;
+
+    touchPanLastX=center.x;
+
+    touchPanLastY=center.y;
+
+  },{passive:false});
+
+  mapViewport.addEventListener("touchmove",function(e){
+
+    if(!touchPanActive||e.touches.length!==2)return;
+
+    e.preventDefault();
+
+    const center=getTouchCenter(e.touches);
+
+    const dxTouch=center.x-touchPanLastX;
+
+    const dyTouch=center.y-touchPanLastY;
+
+    if(Math.abs(dxTouch)+Math.abs(dyTouch)>2)touchPanMoved=true;
+
+    mapOffsetX+=dxTouch;
+
+    mapOffsetY+=dyTouch;
+
+    touchPanLastX=center.x;
+
+    touchPanLastY=center.y;
+
+    clampMapOffset();
+
+  },{passive:false});
+
+  mapViewport.addEventListener("touchend",function(){
+
+    if(!touchPanActive)return;
+
+    touchPanActive=false;
+
+    if(touchPanMoved){
+
+      suppressNextClick=true;
+
+      setTimeout(()=>{suppressNextClick=false;},450);
+
+    }
 
   });
+
+  mapViewport.addEventListener("touchcancel",function(){
+
+    touchPanActive=false;
+
+  });
+
+  mapViewport.addEventListener("mousedown",function(e){
+
+    if(e.button!==1)return;
+
+    e.preventDefault();
+
+    mousePanning=true;
+
+    mouseStartX=e.clientX;
+
+    mouseStartY=e.clientY;
+
+    mouseOriginX=mapOffsetX;
+
+    mouseOriginY=mapOffsetY;
+
+    mapViewport.classList.add("panning");
+
+  });
+
+  document.addEventListener("mousemove",function(e){
+
+    if(!mousePanning)return;
+
+    mapOffsetX=mouseOriginX+(e.clientX-mouseStartX);
+
+    mapOffsetY=mouseOriginY+(e.clientY-mouseStartY);
+
+    clampMapOffset();
+
+  });
+
+  document.addEventListener("mouseup",function(e){
+
+    if(!mousePanning||e.button!==1)return;
+
+    mousePanning=false;
+
+    mapViewport.classList.remove("panning");
+
+  });
+
+  mapViewport.addEventListener("auxclick",function(e){
+
+    if(e.button===1)e.preventDefault();
+
+  });
+
+  window.addEventListener("resize",clampMapOffset);
+
+  centerMap();
 
   const svgNS="http://www.w3.org/2000/svg";
 
@@ -618,25 +414,13 @@ window.addEventListener("load", function () {
 
   board.setAttribute("height",mapHeight);
 
-  Object.assign(board.style,{
-
-    position:"absolute",left:"0",top:"0",
-
-    width:mapWidth+"px",height:mapHeight+"px",
-
-    pointerEvents:"auto",zIndex:"2",display:"block"
-
-  });
+  Object.assign(board.style,{position:"absolute",left:"0",top:"0",width:mapWidth+"px",height:mapHeight+"px",pointerEvents:"auto",zIndex:"2",display:"block"});
 
   map.appendChild(board);
 
   const points=[[14,0],[42,0],[56,22],[42,44],[14,44],[0,22]];
 
-  function position(x,y){
-
-    return{x:x*dx,y:y*dy+(x%2)*(h/2)};
-
-  }
+  function position(x,y){return{x:x*dx,y:y*dy+(x%2)*(h/2)};}
 
   function polygonPoints(x,y){
 
@@ -648,25 +432,15 @@ window.addEventListener("load", function () {
 
   function getNeighbors(unit){
 
-    const offsets=unit.x%2===0
+    const offsets=unit.x%2===0?[[0,-1],[0,1],[-1,0],[-1,-1],[1,0],[1,-1]]:[[0,-1],[0,1],[-1,0],[-1,1],[1,0],[1,1]];
 
-      ?[[0,-1],[0,1],[-1,0],[-1,-1],[1,0],[1,-1]]
-
-      :[[0,-1],[0,1],[-1,0],[-1,1],[1,0],[1,1]];
-
-    return offsets.map(([ox,oy])=>({
-
-      x:unit.x+ox,y:unit.y+oy
-
-    })).filter(c=>c.x>=0&&c.x<cols&&c.y>=0&&c.y<rows);
+    return offsets.map(([ox,oy])=>({x:unit.x+ox,y:unit.y+oy})).filter(c=>c.x>=0&&c.x<cols&&c.y>=0&&c.y<rows);
 
   }
 
   function getDistance(x1,y1,x2,y2){
 
-    const queue=[{x:x1,y:y1,d:0}];
-
-    const visited=new Set([`${x1},${y1}`]);
+    const queue=[{x:x1,y:y1,d:0}],visited=new Set([`${x1},${y1}`]);
 
     while(queue.length){
 
@@ -678,13 +452,7 @@ window.addEventListener("load", function () {
 
         const key=`${n.x},${n.y}`;
 
-        if(!visited.has(key)){
-
-          visited.add(key);
-
-          queue.push({x:n.x,y:n.y,d:c.d+1});
-
-        }
+        if(!visited.has(key)){visited.add(key);queue.push({x:n.x,y:n.y,d:c.d+1});}
 
       });
 
@@ -694,25 +462,13 @@ window.addEventListener("load", function () {
 
   }
 
-  function getUnitAt(x,y){
+  function getUnitAt(x,y){return units.find(u=>u.x===x&&u.y===y&&u.hp>0)||null;}
 
-    return units.find(u=>u.x===x&&u.y===y&&u.hp>0)||null;
-
-  }
-
-  function occupied(x,y,except){
-
-    return units.some(u=>u!==except&&u.x===x&&u.y===y&&u.hp>0);
-
-  }
+  function occupied(x,y,except){return units.some(u=>u!==except&&u.x===x&&u.y===y&&u.hp>0);}
 
   function getReachableCells(unit){
 
-    const queue=[{x:unit.x,y:unit.y,d:0}];
-
-    const visited=new Set([`${unit.x},${unit.y}`]);
-
-    const reachable=[];
+    const queue=[{x:unit.x,y:unit.y,d:0}],visited=new Set([`${unit.x},${unit.y}`]),reachable=[];
 
     while(queue.length){
 
@@ -726,11 +482,7 @@ window.addEventListener("load", function () {
 
         if(visited.has(key)||occupied(next.x,next.y,unit))return;
 
-        visited.add(key);
-
-        reachable.push({x:next.x,y:next.y});
-
-        queue.push({x:next.x,y:next.y,d:current.d+1});
+        visited.add(key);reachable.push({x:next.x,y:next.y});queue.push({x:next.x,y:next.y,d:current.d+1});
 
       });
 
@@ -740,21 +492,13 @@ window.addEventListener("load", function () {
 
   }
 
-  function isMage(unit){
-
-    return unit.name==="魔道士"||unit.name==="敵魔道士";
-
-  }
+  function isMage(unit){return unit.name==="魔道士"||unit.name==="敵魔道士";}
 
   function isUnitInAttackRange(attacker,defender){
 
     if(!attacker||!defender)return false;
 
-    const distance=getDistance(
-
-      attacker.x,attacker.y,defender.x,defender.y
-
-    );
+    const distance=getDistance(attacker.x,attacker.y,defender.x,defender.y);
 
     if(isMage(attacker))return distance===2;
 
@@ -764,39 +508,21 @@ window.addEventListener("load", function () {
 
   function isMoveTarget(x,y){
 
-    if(!selected||selected.side!=="ally"||
-
-       selected.moved||selected.acted||selected.waited||
-
-       currentTurn!=="ally"||menuOpen||pendingMove||
-
-       combatAnimating||battleEnded)return false;
+    if(!selected||selected.side!=="ally"||selected.moved||selected.acted||selected.waited||currentTurn!=="ally"||menuOpen||pendingMove||combatAnimating||battleEnded)return false;
 
     return getReachableCells(selected).some(c=>c.x===x&&c.y===y);
 
   }
 
-  // 攻撃可能な距離にあるヘックス全体を判定する。
-
-  // 敵がいない空きマスも攻撃範囲として表示する。
-
   function isAttackRangeCell(x,y){
 
-    if(!selected||selected.side!=="ally"||
-
-       selected.acted||selected.waited||
-
-       battleVisual||battleEnded)return false;
+    if(!selected||selected.side!=="ally"||selected.acted||selected.waited||battleVisual||battleEnded)return false;
 
     const target=getUnitAt(x,y);
 
     if(target&&target.side==="ally")return false;
 
-    const distance=getDistance(
-
-      selected.x,selected.y,x,y
-
-    );
+    const distance=getDistance(selected.x,selected.y,x,y);
 
     if(isMage(selected))return distance===2;
 
@@ -806,9 +532,7 @@ window.addEventListener("load", function () {
 
   function isAllyAttackCell(x,y){
 
-    if(!selected||selected.side!=="ally"||
-
-       selected.acted||selected.waited)return false;
+    if(!selected||selected.side!=="ally"||selected.acted||selected.waited)return false;
 
     const target=getUnitAt(x,y);
 
@@ -816,19 +540,133 @@ window.addEventListener("load", function () {
 
     return isUnitInAttackRange(selected,target);
 
+  }  function drawBattleArrow(from,to,color,extraClass){
+
+    const a=position(from.x,from.y),d=position(to.x,to.y);
+
+    const startX=a.x+28,startY=a.y+22,endX=d.x+28,endY=d.y+22;
+
+    const defs=document.createElementNS(svgNS,"defs");
+
+    const marker=document.createElementNS(svgNS,"marker");
+
+    const markerId="battleArrowHead"+board.querySelectorAll("marker").length;
+
+    marker.setAttribute("id",markerId);
+
+    marker.setAttribute("markerWidth","12");
+
+    marker.setAttribute("markerHeight","12");
+
+    marker.setAttribute("refX","11");
+
+    marker.setAttribute("refY","6");
+
+    marker.setAttribute("orient","auto");
+
+    marker.setAttribute("markerUnits","userSpaceOnUse");
+
+    const arrowHead=document.createElementNS(svgNS,"path");
+
+    arrowHead.setAttribute("d","M0,0 L12,6 L0,12 Z");
+
+    arrowHead.setAttribute("fill",color);
+
+    marker.appendChild(arrowHead);
+
+    defs.appendChild(marker);
+
+    board.appendChild(defs);
+
+    const line=document.createElementNS(svgNS,"line");
+
+    line.setAttribute("x1",startX);line.setAttribute("y1",startY);
+
+    line.setAttribute("x2",endX);line.setAttribute("y2",endY);
+
+    line.setAttribute("class","battle-arrow "+extraClass);
+
+    line.setAttribute("stroke",color);
+
+    line.setAttribute("marker-end",`url(#${markerId})`);
+
+    board.appendChild(line);
+
+    return line;
+
+  }
+
+  function drawCounterArrow(from,to,color,delay){
+
+    const a=position(from.x,from.y),d=position(to.x,to.y);
+
+    const startX=a.x+28,startY=a.y+22,endX=d.x+28,endY=d.y+22;
+
+    const midX=(startX+endX)/2,midY=(startY+endY)/2;
+
+    const line=drawBattleArrow(from,to,color,"counter-arrow");
+
+    line.setAttribute("x2",startX);line.setAttribute("y2",startY);
+
+    const animateX=document.createElementNS(svgNS,"animate");
+
+    animateX.setAttribute("attributeName","x2");
+
+    animateX.setAttribute("values",`${startX};${midX};${midX};${startX}`);
+
+    animateX.setAttribute("keyTimes","0;0.55;0.78;1");
+
+    animateX.setAttribute("dur","1.8s");
+
+    animateX.setAttribute("begin",delay+"s");
+
+    animateX.setAttribute("repeatCount","indefinite");
+
+    line.appendChild(animateX);
+
+    const animateY=document.createElementNS(svgNS,"animate");
+
+    animateY.setAttribute("attributeName","y2");
+
+    animateY.setAttribute("values",`${startY};${midY};${midY};${startY}`);
+
+    animateY.setAttribute("keyTimes","0;0.55;0.78;1");
+
+    animateY.setAttribute("dur","1.8s");
+
+    animateY.setAttribute("begin",delay+"s");
+
+    animateY.setAttribute("repeatCount","indefinite");
+
+    line.appendChild(animateY);
+
+    const animateOpacity=document.createElementNS(svgNS,"animate");
+
+    animateOpacity.setAttribute("attributeName","opacity");
+
+    animateOpacity.setAttribute("values","0;1;1;0");
+
+    animateOpacity.setAttribute("keyTimes","0;.08;.78;1");
+
+    animateOpacity.setAttribute("dur","1.8s");
+
+    animateOpacity.setAttribute("begin",delay+"s");
+
+    animateOpacity.setAttribute("repeatCount","indefinite");
+
+    line.appendChild(animateOpacity);
+
+    return{midX,midY};
+
   }
 
   function drawBattleVisual(){
 
     if(!battleVisual)return;
 
-    const attacker=battleVisual.attacker;
+    const attacker=battleVisual.attacker,defender=battleVisual.defender;
 
-    const defender=battleVisual.defender;
-
-    if(!attacker||!defender||
-
-       attacker.hp<=0||defender.hp<=0)return;
+    if(!attacker||!defender||attacker.hp<=0||defender.hp<=0)return;
 
     const attackerHex=document.createElementNS(svgNS,"polygon");
 
@@ -846,161 +684,115 @@ window.addEventListener("load", function () {
 
     board.appendChild(defenderHex);
 
-    const a=position(attacker.x,attacker.y);
+    if(battleVisual.showArrows===false)return;
 
-    const d=position(defender.x,defender.y);
+    const color=attacker.side==="ally"?"#ff9800":"#29b6f6";
 
-    const ax=a.x+28;
+    if(battleVisual.response==="counter"){
 
-    const ay=a.y+22;
+      const center=drawCounterArrow(attacker,defender,color,0);
 
-    const dx2=d.x+28;
+      drawCounterArrow(defender,attacker,defender.side==="ally"?"#ff9800":"#29b6f6",0);
 
-    const dy2=d.y+22;
+      const impactGroup=document.createElementNS(svgNS,"g");
 
-    const vx=dx2-ax;
+      impactGroup.setAttribute("transform",`translate(${center.midX},${center.midY})`);
 
-    const vy=dy2-ay;
+      const impact=document.createElementNS(svgNS,"text");
 
-    const length=Math.sqrt(vx*vx+vy*vy);
+      impact.setAttribute("x","0");impact.setAttribute("y","0");
 
-    if(length>0){
+      impact.setAttribute("class","counter-impact");
 
-      // 始点と終点を、それぞれのヘックスの中心にする。
+      impact.textContent="💥";
 
-      const startX=ax;
+      const scale=document.createElementNS(svgNS,"animateTransform");
 
-      const startY=ay;
+      scale.setAttribute("attributeName","transform");
 
-      const endX=dx2;
+      scale.setAttribute("type","scale");
 
-      const endY=dy2;
+      scale.setAttribute("values","0.2;1.35;1;0.65;0.2");
 
-      const color=attacker.side==="ally"?"#ff9800":"#29b6f6";
+      scale.setAttribute("keyTimes","0;0.68;0.78;0.92;1");
 
-      const defs=document.createElementNS(svgNS,"defs");
+      scale.setAttribute("dur","1.8s");
 
-      const marker=document.createElementNS(svgNS,"marker");
+      scale.setAttribute("repeatCount","indefinite");
 
-      marker.setAttribute("id","battleArrowHead");
+      const opacity=document.createElementNS(svgNS,"animate");
 
-      marker.setAttribute("markerWidth","12");
+      opacity.setAttribute("attributeName","opacity");
 
-      marker.setAttribute("markerHeight","12");
+      opacity.setAttribute("values","0;0;1;1;0");
 
-      marker.setAttribute("refX","11");
+      opacity.setAttribute("keyTimes","0;0.55;0.68;0.78;1");
 
-      marker.setAttribute("refY","6");
+      opacity.setAttribute("dur","1.8s");
 
-      marker.setAttribute("orient","auto");
+      opacity.setAttribute("repeatCount","indefinite");
 
-      marker.setAttribute("markerUnits","userSpaceOnUse");
+      impact.appendChild(scale);impact.appendChild(opacity);
 
-      const arrowHead=document.createElementNS(svgNS,"path");
+      impactGroup.appendChild(impact);board.appendChild(impactGroup);
 
-      arrowHead.setAttribute("d","M0,0 L12,6 L0,12 Z");
-
-      arrowHead.setAttribute("fill",color);
-
-      marker.appendChild(arrowHead);
-
-      defs.appendChild(marker);
-
-      board.appendChild(defs);
-
-      const line=document.createElementNS(svgNS,"line");
-
-      line.setAttribute("x1",startX);
-
-      line.setAttribute("y1",startY);
-
-      line.setAttribute("x2",startX);
-
-      line.setAttribute("y2",startY);
-
-      line.setAttribute(
-
-        "class",
-
-        "battle-arrow "+
-
-        (attacker.side==="ally"?"ally-arrow":"enemy-arrow")
-
-      );
-
-      line.setAttribute("marker-end","url(#battleArrowHead)");
-
-      board.appendChild(line);
-
-      const animateX=document.createElementNS(svgNS,"animate");
-
-      animateX.setAttribute("attributeName","x2");
-
-      animateX.setAttribute(
-
-        "values",
-
-        `${startX};${endX};${endX};${startX}`
-
-      );
-
-      animateX.setAttribute("keyTimes","0;0.72;0.9;1");
-
-      animateX.setAttribute("dur","1.25s");
-
-      animateX.setAttribute("repeatCount","indefinite");
-
-      line.appendChild(animateX);
-
-      const animateY=document.createElementNS(svgNS,"animate");
-
-      animateY.setAttribute("attributeName","y2");
-
-      animateY.setAttribute(
-
-        "values",
-
-        `${startY};${endY};${endY};${startY}`
-
-      );
-
-      animateY.setAttribute("keyTimes","0;0.72;0.9;1");
-
-      animateY.setAttribute("dur","1.25s");
-
-      animateY.setAttribute("repeatCount","indefinite");
-
-      line.appendChild(animateY);
-
-      const animateOpacity=document.createElementNS(svgNS,"animate");
-
-      animateOpacity.setAttribute("attributeName","opacity");
-
-      animateOpacity.setAttribute(
-
-        "values",
-
-        "0;1;1;0"
-
-      );
-
-      animateOpacity.setAttribute("keyTimes","0;0.12;0.78;1");
-
-      animateOpacity.setAttribute("dur","1.25s");
-
-      animateOpacity.setAttribute("repeatCount","indefinite");
-
-      line.appendChild(animateOpacity);
+      return;
 
     }
+
+    const line=drawBattleArrow(attacker,defender,color,attacker.side==="ally"?"ally-arrow":"enemy-arrow");
+
+    const a=position(attacker.x,attacker.y),d=position(defender.x,defender.y);
+
+    const startX=a.x+28,startY=a.y+22,endX=d.x+28,endY=d.y+22;
+
+    const animateX=document.createElementNS(svgNS,"animate");
+
+    animateX.setAttribute("attributeName","x2");
+
+    animateX.setAttribute("values",`${startX};${endX};${endX};${startX}`);
+
+    animateX.setAttribute("keyTimes","0;0.72;0.9;1");
+
+    animateX.setAttribute("dur","1.25s");
+
+    animateX.setAttribute("repeatCount","indefinite");
+
+    line.appendChild(animateX);
+
+    const animateY=document.createElementNS(svgNS,"animate");
+
+    animateY.setAttribute("attributeName","y2");
+
+    animateY.setAttribute("values",`${startY};${endY};${endY};${startY}`);
+
+    animateY.setAttribute("keyTimes","0;0.72;0.9;1");
+
+    animateY.setAttribute("dur","1.25s");
+
+    animateY.setAttribute("repeatCount","indefinite");
+
+    line.appendChild(animateY);
+
+    const animateOpacity=document.createElementNS(svgNS,"animate");
+
+    animateOpacity.setAttribute("attributeName","opacity");
+
+    animateOpacity.setAttribute("values","0;1;1;0");
+
+    animateOpacity.setAttribute("keyTimes","0;0.12;0.78;1");
+
+    animateOpacity.setAttribute("dur","1.25s");
+
+    animateOpacity.setAttribute("repeatCount","indefinite");
+
+    line.appendChild(animateOpacity);
 
   }
 
   function drawBoard(){
 
     board.innerHTML="";
-
-    // 盤面の基本ヘックスを描画
 
     for(let y=0;y<rows;y++){
 
@@ -1012,17 +804,9 @@ window.addEventListener("load", function () {
 
         poly.setAttribute("points",polygonPoints(x,y));
 
-        poly.dataset.x=x;
+        poly.dataset.x=x;poly.dataset.y=y;
 
-        poly.dataset.y=y;
-
-        const fill=unit
-
-          ?(unit.side==="ally"?"#b9d8f5":"#f3baba")
-
-          :"#d4d0bd";
-
-        poly.setAttribute("fill",fill);
+        poly.setAttribute("fill",unit?(unit.side==="ally"?"#b9d8f5":"#f3baba"):"#d4d0bd");
 
         poly.setAttribute("stroke","#777");
 
@@ -1036,75 +820,37 @@ window.addEventListener("load", function () {
 
     }
 
-    // 移動可能なヘックスを青く表示
+    if(selected&&selected.side==="ally"&&!pendingMove&&!battleVisual&&!battleEnded&&!selected.moved&&!selected.acted&&!selected.waited&&currentTurn==="ally"&&!menuOpen){
 
-    if(selected&&selected.side==="ally"&&
+      for(let y=0;y<rows;y++)for(let x=0;x<cols;x++)if(isMoveTarget(x,y)){
 
-       !pendingMove&&!battleVisual&&
+        const moveHex=document.createElementNS(svgNS,"polygon");
 
-       !battleEnded&&!selected.moved&&
+        moveHex.setAttribute("points",polygonPoints(x,y));
 
-       !selected.acted&&!selected.waited&&
+        moveHex.setAttribute("class","move-range-hex");
 
-       currentTurn==="ally"&&!menuOpen){
-
-      for(let y=0;y<rows;y++){
-
-        for(let x=0;x<cols;x++){
-
-          if(isMoveTarget(x,y)){
-
-            const moveHex=document.createElementNS(svgNS,"polygon");
-
-            moveHex.setAttribute("points",polygonPoints(x,y));
-
-            moveHex.setAttribute("class","move-range-hex");
-
-            board.appendChild(moveHex);
-
-          }
-
-        }
+        board.appendChild(moveHex);
 
       }
 
     }
 
-    // 移動前から攻撃範囲も赤く表示する。
+    if(selected&&selected.side==="ally"&&!battleVisual&&!battleEnded&&!menuOpen&&!selected.acted&&!selected.waited&&currentTurn==="ally"){
 
-    // 青と赤はCSSで交互に点滅する。
+      for(let y=0;y<rows;y++)for(let x=0;x<cols;x++)if(isAttackRangeCell(x,y)){
 
-    if(selected&&selected.side==="ally"&&
+        const attackHex=document.createElementNS(svgNS,"polygon");
 
-       !battleVisual&&!battleEnded&&!menuOpen&&
+        attackHex.setAttribute("points",polygonPoints(x,y));
 
-       !selected.acted&&!selected.waited&&
+        attackHex.setAttribute("class","attack-range-hex");
 
-       currentTurn==="ally"){
-
-      for(let y=0;y<rows;y++){
-
-        for(let x=0;x<cols;x++){
-
-          if(isAttackRangeCell(x,y)){
-
-            const attackHex=document.createElementNS(svgNS,"polygon");
-
-            attackHex.setAttribute("points",polygonPoints(x,y));
-
-            attackHex.setAttribute("class","attack-range-hex");
-
-            board.appendChild(attackHex);
-
-          }
-
-        }
+        board.appendChild(attackHex);
 
       }
 
     }
-
-    // 選択中ユニットの枠
 
     if(selected){
 
@@ -1130,7 +876,7 @@ window.addEventListener("load", function () {
 
   function drawUnits(){
 
-    map.querySelectorAll(".unit-token").forEach(el=>el.remove());
+    map.querySelectorAll(".unit-token,.defense-mark").forEach(el=>el.remove());
 
     units.forEach(unit=>{
 
@@ -1142,15 +888,11 @@ window.addEventListener("load", function () {
 
       token.className="unit-token";
 
-      token.dataset.x=unit.x;
+      if(unit.acted||unit.waited)token.classList.add("unit-acted");
 
-      token.dataset.y=unit.y;
+      token.dataset.x=unit.x;token.dataset.y=unit.y;token.dataset.unitId=unit.id;
 
-      token.dataset.unitId=unit.id;
-
-      token.style.left=p.x+"px";
-
-      token.style.top=p.y+"px";
+      token.style.left=p.x+"px";token.style.top=p.y+"px";
 
       token.innerHTML=`
 
@@ -1166,37 +908,43 @@ window.addEventListener("load", function () {
 
       map.appendChild(token);
 
+      const showDefenseMark=battleVisual&&battleVisual.defender&&battleVisual.defender.id===unit.id&&(battleVisual.response==="defend"||battleVisual.response==="skill");
+
+      if(showDefenseMark){
+
+        const shield=document.createElement("div");
+
+        shield.className="defense-mark";
+
+        shield.textContent="🛡️";
+
+        shield.style.left=(p.x+28)+"px";
+
+        shield.style.top=(p.y-9)+"px";
+
+        map.appendChild(shield);
+
+      }
+
     });
 
-  }  function refresh(){
+  }
 
-    drawBoard();
+  function refresh(){
 
-    drawUnits();
+    drawBoard();drawUnits();
 
-    pendingWaitButton.style.display=
+    pendingWaitButton.style.display=pendingMove?"inline-block":"none";
 
-      pendingMove?"inline-block":"none";
+    turnLabel.textContent=currentTurn==="ally"?"味方のターン":"敵のターン";
 
-    turnLabel.textContent=currentTurn==="ally"
-
-      ?"味方のターン":"敵のターン";
-
-    endTurnButton.disabled=
-
-      battleEnded||combatAnimating||menuOpen||
-
-      pendingMove||reaction||enemyAIActive;
+    endTurnButton.disabled=battleEnded||combatAnimating||menuOpen||pendingMove||reaction||enemyAIActive;
 
   }
 
   function animateUnit(unit,className){
 
-    const token=map.querySelector(
-
-      `.unit-token[data-unit-id="${unit.id}"]`
-
-    );
+    const token=map.querySelector(`.unit-token[data-unit-id="${unit.id}"]`);
 
     if(!token)return;
 
@@ -1234,21 +982,9 @@ window.addEventListener("load", function () {
 
     const unit=pendingMove.unit;
 
-    unit.x=pendingMove.fromX;
+    unit.x=pendingMove.fromX;unit.y=pendingMove.fromY;unit.moved=false;
 
-    unit.y=pendingMove.fromY;
-
-    unit.moved=false;
-
-    pendingMove=null;
-
-    moveMode=false;
-
-    attackMode=false;
-
-    menuOpen=false;
-
-    selected=unit;
+    pendingMove=null;moveMode=false;attackMode=false;menuOpen=false;selected=unit;
 
     info.innerHTML=`<p>${unit.name}は元の位置に戻った。</p>`;
 
@@ -1262,21 +998,9 @@ window.addEventListener("load", function () {
 
     const unit=pendingMove.unit;
 
-    unit.moved=true;
+    unit.moved=true;unit.acted=true;unit.waited=true;
 
-    unit.acted=true;
-
-    unit.waited=true;
-
-    pendingMove=null;
-
-    moveMode=false;
-
-    attackMode=false;
-
-    menuOpen=false;
-
-    selected=null;
+    pendingMove=null;moveMode=false;attackMode=false;menuOpen=false;selected=null;
 
     info.innerHTML=`<p>${unit.name}は移動して待機した。</p>`;
 
@@ -1308,11 +1032,7 @@ window.addEventListener("load", function () {
 
     document.querySelector("#detailClose").onclick=()=>{
 
-      menuOpen=false;
-
-      info.innerHTML="ユニットを選択してね";
-
-      refresh();
+      menuOpen=false;info.innerHTML="ユニットを選択してね";refresh();
 
     };
 
@@ -1322,29 +1042,11 @@ window.addEventListener("load", function () {
 
   function closeMenuByEmptyTap(){
 
-    if(pendingMove){
+    if(pendingMove){cancelMove();return;}
 
-      cancelMove();
+    menuOpen=false;moveMode=false;attackMode=false;selected=null;selectedEnemy=null;
 
-      return;
-
-    }
-
-    menuOpen=false;
-
-    moveMode=false;
-
-    attackMode=false;
-
-    selected=null;
-
-    selectedEnemy=null;
-
-    lastTapUnitId=null;
-
-    lastTapTime=0;
-
-    battleVisual=null;
+    lastTapUnitId=null;lastTapTime=0;battleVisual=null;
 
     info.innerHTML="ユニットを選択してね";
 
@@ -1356,17 +1058,7 @@ window.addEventListener("load", function () {
 
     if(!unit||unit.hp<=0)return;
 
-    selected=unit;
-
-    selectedEnemy=null;
-
-    menuOpen=true;
-
-    moveMode=false;
-
-    attackMode=false;
-
-    battleVisual=null;
+    selected=unit;selectedEnemy=null;menuOpen=true;moveMode=false;attackMode=false;battleVisual=null;
 
     const canMove=!unit.moved&&!unit.acted&&!unit.waited;
 
@@ -1398,11 +1090,7 @@ window.addEventListener("load", function () {
 
       if(!canMove)return;
 
-      menuOpen=false;
-
-      moveMode=true;
-
-      attackMode=false;
+      menuOpen=false;moveMode=true;attackMode=false;
 
       info.innerHTML=`<p>${unit.name}：青い範囲から移動先を選んでね。</p>`;
 
@@ -1410,49 +1098,23 @@ window.addEventListener("load", function () {
 
     };
 
-    document.querySelector("#actAttack").onclick=()=>{
+    document.querySelector("#actAttack").onclick=()=>{if(canAct)showAttackMenu(unit);};
 
-      if(canAct)showAttackMenu(unit);
+    document.querySelector("#actSkill").onclick=()=>{if(canAct)showSkillMenu(unit);};
 
-    };
+    document.querySelector("#actItem").onclick=()=>{if(canAct)showItemMenu(unit);};
 
-    document.querySelector("#actSkill").onclick=()=>{
-
-      if(canAct)showSkillMenu(unit);
-
-    };
-
-    document.querySelector("#actItem").onclick=()=>{
-
-      if(canAct)showItemMenu(unit);
-
-    };
-
-    document.querySelector("#actDetails").onclick=()=>{
-
-      showDetails(unit);
-
-    };
+    document.querySelector("#actDetails").onclick=()=>showDetails(unit);
 
     document.querySelector("#actWait").onclick=()=>{
 
-      if(pendingMove){
+      if(pendingMove){finishMoveAndWait();}
 
-        finishMoveAndWait();
+      else{
 
-      }else{
+        unit.acted=true;unit.waited=true;selected=null;menuOpen=false;
 
-        unit.acted=true;
-
-        unit.waited=true;
-
-        selected=null;
-
-        menuOpen=false;
-
-        info.innerHTML=`<p>${unit.name}は待機した。</p>`;
-
-        refresh();
+        info.innerHTML=`<p>${unit.name}は待機した。</p>`;refresh();
 
       }
 
@@ -1460,21 +1122,9 @@ window.addEventListener("load", function () {
 
     document.querySelector("#actCancel").onclick=()=>{
 
-      if(pendingMove){
+      if(pendingMove)cancelMove();
 
-        cancelMove();
-
-      }else{
-
-        menuOpen=false;
-
-        selected=null;
-
-        info.innerHTML="ユニットを選択してね";
-
-        refresh();
-
-      }
+      else{menuOpen=false;selected=null;info.innerHTML="ユニットを選択してね";refresh();}
 
     };
 
@@ -1484,27 +1134,13 @@ window.addEventListener("load", function () {
 
   function showAttackMenu(unit){
 
-    selected=unit;
+    selected=unit;menuOpen=false;moveMode=false;attackMode=true;battleVisual=null;
 
-    menuOpen=false;
-
-    moveMode=false;
-
-    attackMode=true;
-
-    battleVisual=null;
-
-    info.innerHTML=`
-
-      <p>${unit.name}：攻撃する敵を選んでね。</p>
-
-      <button id="attackCancel">戻る</button>`;
+    info.innerHTML=`<p>${unit.name}：攻撃する敵を選んでね。</p><button id="attackCancel">戻る</button>`;
 
     document.querySelector("#attackCancel").onclick=()=>{
 
-      attackMode=false;
-
-      showActionMenu(unit);
+      attackMode=false;showActionMenu(unit);
 
     };
 
@@ -1514,21 +1150,11 @@ window.addEventListener("load", function () {
 
   function showSkillMenu(unit){
 
-    menuOpen=true;
-
-    attackMode=false;
-
-    moveMode=false;
-
-    battleVisual=null;
+    menuOpen=true;attackMode=false;moveMode=false;battleVisual=null;
 
     let html=`<h3>${unit.name}のスキル</h3>`;
 
-    unit.skills.forEach((skill,i)=>{
-
-      html+=`<button data-skill="${i}">${skill}</button>`;
-
-    });
+    unit.skills.forEach((skill,i)=>{html+=`<button data-skill="${i}">${skill}</button>`;});
 
     html+=`<button id="skillBack">戻る</button>`;
 
@@ -1542,57 +1168,27 @@ window.addEventListener("load", function () {
 
         if(skill==="指揮"){
 
-          unit.acted=true;
+          unit.acted=true;unit.waited=true;selected=null;menuOpen=false;
 
-          unit.waited=true;
-
-          selected=null;
-
-          menuOpen=false;
-
-          info.innerHTML="<p>隊長は味方を鼓舞した。</p>";
-
-          refresh();
-
-          return;
+          info.innerHTML="<p>隊長は味方を鼓舞した。</p>";refresh();return;
 
         }
 
         if(skill==="防御"){
 
-          unit.defending=true;
+          unit.defending=true;unit.acted=true;unit.waited=true;selected=null;menuOpen=false;
 
-          unit.acted=true;
-
-          unit.waited=true;
-
-          selected=null;
-
-          menuOpen=false;
-
-          info.innerHTML="<p>重装兵は防御態勢を取った。</p>";
-
-          refresh();
-
-          return;
+          info.innerHTML="<p>重装兵は防御態勢を取った。</p>";refresh();return;
 
         }
 
-        if(skill==="魔法"||skill==="突撃"){
-
-          showAttackMenu(unit);
-
-        }
+        if(skill==="魔法"||skill==="突撃")showAttackMenu(unit);
 
       };
 
     });
 
-    document.querySelector("#skillBack").onclick=()=>{
-
-      showActionMenu(unit);
-
-    };
+    document.querySelector("#skillBack").onclick=()=>showActionMenu(unit);
 
     refresh();
 
@@ -1600,23 +1196,11 @@ window.addEventListener("load", function () {
 
   function showItemMenu(unit){
 
-    menuOpen=true;
+    menuOpen=true;battleVisual=null;
 
-    battleVisual=null;
+    info.innerHTML=`<h3>アイテム</h3><p>使用できるアイテムはありません。</p><button id="itemBack">戻る</button>`;
 
-    info.innerHTML=`
-
-      <h3>アイテム</h3>
-
-      <p>使用できるアイテムはありません。</p>
-
-      <button id="itemBack">戻る</button>`;
-
-    document.querySelector("#itemBack").onclick=()=>{
-
-      showActionMenu(unit);
-
-    };
+    document.querySelector("#itemBack").onclick=()=>showActionMenu(unit);
 
     refresh();
 
@@ -1636,15 +1220,21 @@ window.addEventListener("load", function () {
 
   }
 
-  // 回避率は防御側の速さと攻撃側の技量で決める。
-
-  // 基本30％、能力差1ごとに5％変動、最低10％・最高70％。
-
   function calculateEvadeChance(attacker,defender){
 
     const chance=30+(defender.agi-attacker.dex)*5;
 
     return Math.max(10,Math.min(70,chance));
+
+  }
+
+  function chooseEnemyReaction(attacker,defender){
+
+    if(isUnitInAttackRange(defender,attacker))return "counter";
+
+    const evadeChance=calculateEvadeChance(attacker,defender);
+
+    return evadeChance>=40?"evade":"defend";
 
   }
 
@@ -1654,37 +1244,15 @@ window.addEventListener("load", function () {
 
     let damage=calculateDamage(attacker,defender);
 
-    if(response==="defend"||response==="skill"){
+    if(response==="defend"||response==="skill")damage=Math.max(1,Math.floor(damage/2));
 
-      damage=Math.max(1,Math.floor(damage/2));
+    const evadeChance=response==="evade"?calculateEvadeChance(attacker,defender):0;
 
-    }
+    const canCounter=defender.hp>0&&isUnitInAttackRange(defender,attacker);
 
-    const evadeChance=response==="evade"
+    const counterDamage=response==="counter"&&canCounter?calculateDamage(defender,attacker):0;
 
-      ?calculateEvadeChance(attacker,defender):0;
-
-    const canCounter=defender.hp>0&&
-
-      isUnitInAttackRange(defender,attacker);
-
-    const counterDamage=canCounter
-
-      ?calculateDamage(defender,attacker):0;
-
-    return{
-
-      hit,
-
-      damage,
-
-      evadeChance,
-
-      counterDamage,
-
-      canCounter
-
-    };
+    return{hit,damage,evadeChance,counterDamage,canCounter};
 
   }
 
@@ -1692,33 +1260,15 @@ window.addEventListener("load", function () {
 
     const percent=Math.max(0,unit.hp/unit.maxHp*100);
 
-    const predicted=Math.max(0,Math.min(
-
-      percent,predictedDamage/unit.maxHp*100
-
-    ));
+    const predicted=Math.max(0,Math.min(percent,predictedDamage/unit.maxHp*100));
 
     return`
 
       <div class="hp-track">
 
-        <div class="hp-fill ${
+        <div class="hp-fill ${unit.side==="ally"?"hp-ally":"hp-enemy"}" style="width:${percent}%"></div>
 
-          unit.side==="ally"?"hp-ally":"hp-enemy"
-
-        }" style="width:${percent}%"></div>
-
-        ${
-
-          predictedDamage>0
-
-          ?`<div class="hp-predicted"
-
-              style="left:${Math.max(0,percent-predicted)}%;
-
-              width:${predicted}%"></div>`:""
-
-        }
+        ${predictedDamage>0?`<div class="hp-predicted" style="left:${Math.max(0,percent-predicted)}%;width:${predicted}%"></div>`:""}
 
       </div>
 
@@ -1726,9 +1276,7 @@ window.addEventListener("load", function () {
 
         ${unit.hp}/${unit.maxHp}
 
-        ${predictedDamage>0
-
-          ?` → ${Math.max(0,unit.hp-predictedDamage)}`:""}
+        ${predictedDamage>0?` → ${Math.max(0,unit.hp-predictedDamage)}`:""}
 
       </div>`;
 
@@ -1766,17 +1314,25 @@ window.addEventListener("load", function () {
 
   }
 
-  // 回避を選んだ場合は、回避率と失敗時のダメージを表示する。
+  function predictionHTML(prediction,response,attacker){
 
-  function predictionHTML(prediction,response){
+    let reactionText="";
+
+    if(attacker.side==="ally"){
+
+      if(response==="counter")reactionText="<p>敵の対応：反撃</p>";
+
+      else if(response==="defend")reactionText="<p>敵の対応：防御（ダメージ半減）</p>";
+
+      else if(response==="evade")reactionText="<p>敵の対応：回避</p>";
+
+    }
 
     if(response==="evade"){
 
-      return`
+      return`${reactionText}
 
-        <p>回避率：${prediction.evadeChance}％
-
-        通常命中率：${prediction.hit}％</p>
+        <p>回避率：${prediction.evadeChance}％　通常命中率：${prediction.hit}％</p>
 
         <p>回避失敗時の予測ダメージ：${prediction.damage}</p>
 
@@ -1784,35 +1340,21 @@ window.addEventListener("load", function () {
 
     }
 
-    return`
+    return`${reactionText}
 
-      <p>命中率：${prediction.hit}％
+      <p>命中率：${prediction.hit}％　予測ダメージ：${prediction.damage}</p>
 
-      予測ダメージ：${prediction.damage}</p>
+      <p>反撃ダメージ：${prediction.canCounter?prediction.counterDamage:"反撃不可"}</p>`;
 
-      <p>反撃ダメージ：${
-
-        prediction.canCounter?prediction.counterDamage:"反撃不可"
-
-      }</p>`;
-
-  }
-
-  function showCombatConfirmation(attacker,defender,response){
+  }  function showCombatConfirmation(attacker,defender,response){
 
     if(!attacker||!defender)return;
 
     const prediction=getCombatPrediction(attacker,defender,response);
 
-    menuOpen=true;
+    menuOpen=true;attackMode=false;moveMode=false;selectedEnemy=defender;
 
-    attackMode=false;
-
-    moveMode=false;
-
-    selectedEnemy=defender;
-
-    battleVisual={attacker:attacker,defender:defender};
+    battleVisual={attacker:attacker,defender:defender,response:response,showArrows:true};
 
     info.innerHTML=`
 
@@ -1824,7 +1366,7 @@ window.addEventListener("load", function () {
 
       ${battlePanelHTML(attacker,defender,prediction)}
 
-      ${predictionHTML(prediction,response)}
+      ${predictionHTML(prediction,response,attacker)}
 
       <p>オレンジ：攻撃側　青：防御側</p>`;
 
@@ -1838,15 +1380,9 @@ window.addEventListener("load", function () {
 
       battleVisual=null;
 
-      if(attacker.side==="enemy"){
+      if(attacker.side==="enemy")showReactionMenu(attacker,defender);
 
-        showReactionMenu(attacker,defender);
-
-      }else{
-
-        showAttackMenu(attacker);
-
-      }
+      else showAttackMenu(attacker);
 
     };
 
@@ -1856,15 +1392,9 @@ window.addEventListener("load", function () {
 
   function showReactionMenu(attacker,defender){
 
-    reaction=true;
+    reaction=true;menuOpen=true;attackMode=false;moveMode=false;
 
-    menuOpen=true;
-
-    attackMode=false;
-
-    moveMode=false;
-
-    battleVisual=null;
+    battleVisual={attacker:attacker,defender:defender,response:"normal",showArrows:true};
 
     const canCounter=isUnitInAttackRange(defender,attacker);
 
@@ -1886,33 +1416,25 @@ window.addEventListener("load", function () {
 
     document.querySelector("#reactCounter").onclick=()=>{
 
-      reaction=false;
-
-      showCombatConfirmation(attacker,defender,"counter");
+      reaction=false;showCombatConfirmation(attacker,defender,"counter");
 
     };
 
     document.querySelector("#reactDefend").onclick=()=>{
 
-      reaction=false;
-
-      showCombatConfirmation(attacker,defender,"defend");
+      reaction=false;showCombatConfirmation(attacker,defender,"defend");
 
     };
 
     document.querySelector("#reactEvade").onclick=()=>{
 
-      reaction=false;
-
-      showCombatConfirmation(attacker,defender,"evade");
+      reaction=false;showCombatConfirmation(attacker,defender,"evade");
 
     };
 
     document.querySelector("#reactSkill").onclick=()=>{
 
-      reaction=false;
-
-      showReactionSkills(attacker,defender);
+      reaction=false;showReactionSkills(attacker,defender);
 
     };
 
@@ -1922,11 +1444,9 @@ window.addEventListener("load", function () {
 
   function showReactionSkills(attacker,defender){
 
-    menuOpen=true;
+    menuOpen=true;reaction=true;
 
-    reaction=true;
-
-    battleVisual=null;
+    battleVisual={attacker:attacker,defender:defender,response:"normal",showArrows:true};
 
     info.innerHTML=`
 
@@ -1940,75 +1460,37 @@ window.addEventListener("load", function () {
 
     document.querySelector("#reactionSkillUse").onclick=()=>{
 
-      reaction=false;
-
-      showCombatConfirmation(attacker,defender,"skill");
+      reaction=false;showCombatConfirmation(attacker,defender,"skill");
 
     };
 
-    document.querySelector("#reactionSkillBack").onclick=()=>{
-
-      showReactionMenu(attacker,defender);
-
-    };
+    document.querySelector("#reactionSkillBack").onclick=()=>showReactionMenu(attacker,defender);
 
     refresh();
 
-  }  function resetBattle(){
+  }
+
+  function resetBattle(){
 
     units.forEach((unit,index)=>{
 
       const initial=initialUnitStates[index];
 
-      Object.assign(unit,{
-
-        ...initial,
-
-        resistances:{...initial.resistances},
-
-        skills:[...initial.skills]
-
-      });
+      Object.assign(unit,{...initial,resistances:{...initial.resistances},skills:[...initial.skills]});
 
     });
 
-    selected=null;
+    selected=null;selectedEnemy=null;currentTurn="ally";turn=1;
 
-    selectedEnemy=null;
+    pendingMove=null;moveMode=false;attackMode=false;menuOpen=false;
 
-    currentTurn="ally";
+    reaction=false;combatAnimating=false;battleEnded=false;
 
-    turn=1;
+    enemyQueue=[];enemyQueueIndex=0;enemyAIActive=false;
 
-    pendingMove=null;
+    lastTapUnitId=null;lastTapTime=0;battleVisual=null;
 
-    moveMode=false;
-
-    attackMode=false;
-
-    menuOpen=false;
-
-    reaction=false;
-
-    combatAnimating=false;
-
-    battleEnded=false;
-
-    enemyQueue=[];
-
-    enemyQueueIndex=0;
-
-    enemyAIActive=false;
-
-    lastTapUnitId=null;
-
-    lastTapTime=0;
-
-    battleVisual=null;
-
-    map.querySelectorAll(".combat-number,.combat-miss")
-
-      .forEach(el=>el.remove());
+    map.querySelectorAll(".combat-number,.combat-miss").forEach(el=>el.remove());
 
     info.innerHTML="<p>新しい戦いが始まった。ユニットを選択してね。</p>";
 
@@ -2046,91 +1528,41 @@ window.addEventListener("load", function () {
 
     };
 
-    panel.appendChild(heading);
+    panel.appendChild(heading);panel.appendChild(paragraph);panel.appendChild(button);
 
-    panel.appendChild(paragraph);
-
-    panel.appendChild(button);
-
-    overlay.appendChild(panel);
-
-    game.appendChild(overlay);
+    overlay.appendChild(panel);game.appendChild(overlay);
 
   }
 
   function checkBattleEnd(){
 
-    const allyCaptain=units.find(
+    const allyCaptain=units.find(u=>u.side==="ally"&&u.role==="captain");
 
-      u=>u.side==="ally"&&u.role==="captain"
-
-    );
-
-    const enemyCaptain=units.find(
-
-      u=>u.side==="enemy"&&u.role==="captain"
-
-    );
+    const enemyCaptain=units.find(u=>u.side==="enemy"&&u.role==="captain");
 
     if(!allyCaptain||allyCaptain.hp<=0){
 
-      battleEnded=true;
+      battleEnded=true;combatAnimating=false;battleVisual=null;
 
-      combatAnimating=false;
+      showStory("敗北","隊長が倒れた。\n味方部隊は撤退した。","終了",resetBattle);
 
-      battleVisual=null;
-
-      showStory(
-
-        "敗北",
-
-        "隊長が倒れた。\n味方部隊は撤退した。",
-
-        "終了",
-
-        resetBattle
-
-      );
-
-      refresh();
-
-      return true;
+      refresh();return true;
 
     }
 
     if(!enemyCaptain||enemyCaptain.hp<=0){
 
-      battleEnded=true;
+      battleEnded=true;combatAnimating=false;battleVisual=null;
 
-      combatAnimating=false;
+      showStory("勝利","敵隊長を撃破した。\n戦いは味方の勝利に終わった。","終了",resetBattle);
 
-      battleVisual=null;
-
-      showStory(
-
-        "勝利",
-
-        "敵隊長を撃破した。\n戦いは味方の勝利に終わった。",
-
-        "終了",
-
-        resetBattle
-
-      );
-
-      refresh();
-
-      return true;
+      refresh();return true;
 
     }
 
     return false;
 
   }
-
-  // 回避判定に成功すれば攻撃を避ける。
-
-  // 失敗した場合は、通常の命中判定に進む。
 
   function applyDamage(attacker,defender,damage,response,evadeChance){
 
@@ -2180,21 +1612,15 @@ window.addEventListener("load", function () {
 
     if(combatAnimating||battleEnded)return;
 
-    combatAnimating=true;
-
-    menuOpen=true;
-
-    battleVisual=null;
+    combatAnimating=true;menuOpen=true;
 
     const isEnemyAttack=attacker.side==="enemy";
 
     const isAllyAttack=attacker.side==="ally";
 
-    const prediction=getCombatPrediction(
+    battleVisual={attacker:attacker,defender:defender,response:response,showArrows:false};
 
-      attacker,defender,response
-
-    );
+    const prediction=getCombatPrediction(attacker,defender,response);
 
     info.innerHTML=`
 
@@ -2212,19 +1638,7 @@ window.addEventListener("load", function () {
 
       if(battleEnded)return;
 
-      applyDamage(
-
-        attacker,
-
-        defender,
-
-        prediction.damage,
-
-        response,
-
-        prediction.evadeChance
-
-      );
+      applyDamage(attacker,defender,prediction.damage,response,prediction.evadeChance);
 
       refresh();
 
@@ -2236,31 +1650,15 @@ window.addEventListener("load", function () {
 
         let counterAttacker=null;
 
-        if(isEnemyAttack){
+        if(isEnemyAttack&&response==="counter"&&defender.hp>0&&isUnitInAttackRange(defender,attacker)){
 
-          if(response==="counter"&&
-
-             defender.hp>0&&
-
-             isUnitInAttackRange(defender,attacker)){
-
-            counterAttacker=defender;
-
-            counterTarget=attacker;
-
-          }
+          counterAttacker=defender;counterTarget=attacker;
 
         }
 
-        if(isAllyAttack&&
+        if(isAllyAttack&&response==="counter"&&defender.hp>0&&isUnitInAttackRange(defender,attacker)){
 
-           defender.hp>0&&
-
-           isUnitInAttackRange(defender,attacker)){
-
-          counterAttacker=defender;
-
-          counterTarget=attacker;
+          counterAttacker=defender;counterTarget=attacker;
 
         }
 
@@ -2272,35 +1670,19 @@ window.addEventListener("load", function () {
 
             animateUnit(counterAttacker,"combat-attacking");
 
-            const counterDamage=calculateDamage(
+            const counterDamage=calculateDamage(counterAttacker,counterTarget);
 
-              counterAttacker,counterTarget
-
-            );
-
-            applyDamage(
-
-              counterAttacker,counterTarget,counterDamage
-
-            );
+            applyDamage(counterAttacker,counterTarget,counterDamage,"normal",0);
 
             refresh();
 
-            setTimeout(()=>{
-
-              finishCombat(attacker,defender,isEnemyAttack);
-
-            },500);
+            setTimeout(()=>finishCombat(attacker,defender,isEnemyAttack),500);
 
           },450);
 
         }else{
 
-          setTimeout(()=>{
-
-            finishCombat(attacker,defender,isEnemyAttack);
-
-          },500);
+          setTimeout(()=>finishCombat(attacker,defender,isEnemyAttack),500);
 
         }
 
@@ -2312,19 +1694,15 @@ window.addEventListener("load", function () {
 
   function finishCombat(attacker,defender,isEnemyAttack){
 
-    combatAnimating=false;
-
-    menuOpen=false;
-
-    battleVisual=null;
+    combatAnimating=false;menuOpen=false;battleVisual=null;
 
     if(checkBattleEnd())return;
 
     if(isEnemyAttack){
 
-      selected=null;
+      attacker.acted=true;attacker.waited=true;
 
-      reaction=false;
+      selected=null;reaction=false;
 
       info.innerHTML="<p>敵の攻撃が終了した。</p>";
 
@@ -2346,21 +1724,13 @@ window.addEventListener("load", function () {
 
     if(pendingMove)pendingMove=null;
 
-    selected=null;
-
-    selectedEnemy=null;
-
-    attackMode=false;
-
-    moveMode=false;
+    selected=null;selectedEnemy=null;attackMode=false;moveMode=false;
 
     info.innerHTML=`<p>${actingUnit.name}の行動が終了した。</p>`;
 
     refresh();
 
   }
-
-  // 敵の標的を決める
 
   function chooseEnemyTarget(enemy){
 
@@ -2370,19 +1740,9 @@ window.addEventListener("load", function () {
 
     const allyCaptain=allies.find(u=>u.role==="captain");
 
-    // 敵隊長は味方隊長を優先する。
-
-    // 味方隊長の隣に護衛がいる場合は、その護衛を攻撃する。
-
     if(enemy.targetStyle==="captain"&&allyCaptain){
 
-      const guards=allies.filter(u=>
-
-        u.id!==allyCaptain.id&&
-
-        getDistance(u.x,u.y,allyCaptain.x,allyCaptain.y)===1
-
-      );
+      const guards=allies.filter(u=>u.id!==allyCaptain.id&&getDistance(u.x,u.y,allyCaptain.x,allyCaptain.y)===1);
 
       if(guards.length){
 
@@ -2396,21 +1756,11 @@ window.addEventListener("load", function () {
 
     }
 
-    // 敵隊長の周囲に味方が迫ったら、護衛役が迎撃する。
-
-    const enemyCaptain=units.find(
-
-      u=>u.side==="enemy"&&u.role==="captain"&&u.hp>0
-
-    );
+    const enemyCaptain=units.find(u=>u.side==="enemy"&&u.role==="captain"&&u.hp>0);
 
     if(enemyCaptain){
 
-      const threats=allies.filter(u=>
-
-        getDistance(u.x,u.y,enemyCaptain.x,enemyCaptain.y)<=1
-
-      );
+      const threats=allies.filter(u=>getDistance(u.x,u.y,enemyCaptain.x,enemyCaptain.y)<=1);
 
       if(threats.length){
 
@@ -2422,13 +1772,9 @@ window.addEventListener("load", function () {
 
     }
 
-    // 敵兵・敵魔道士はHP割合の低い味方を狙う。
-
     allies.sort((a,b)=>{
 
-      const aRate=a.hp/a.maxHp;
-
-      const bRate=b.hp/b.maxHp;
+      const aRate=a.hp/a.maxHp,bRate=b.hp/b.maxHp;
 
       if(aRate!==bRate)return aRate-bRate;
 
@@ -2440,17 +1786,9 @@ window.addEventListener("load", function () {
 
   }
 
-  // 敵の経路探索。
-
-  // 他ユニットを障害物として扱い、迂回して攻撃可能な位置を探す。
-
   function moveEnemyToward(enemy,target){
 
-    const queue=[{
-
-      x:enemy.x,y:enemy.y,firstStep:null,d:0
-
-    }];
+    const queue=[{x:enemy.x,y:enemy.y,firstStep:null,d:0}];
 
     const visited=new Set([`${enemy.x},${enemy.y}`]);
 
@@ -2462,25 +1800,11 @@ window.addEventListener("load", function () {
 
       if(current.d>0){
 
-        const distance=getDistance(
+        const distance=getDistance(current.x,current.y,target.x,target.y);
 
-          current.x,current.y,target.x,target.y
+        const canAttack=isMage(enemy)?distance===2:(distance>=1&&distance<=enemy.range);
 
-        );
-
-        const canAttack=isMage(enemy)
-
-          ?distance===2
-
-          :(distance>=1&&distance<=enemy.range);
-
-        if(canAttack){
-
-          goals.push(current);
-
-          continue;
-
-        }
+        if(canAttack){goals.push(current);continue;}
 
       }
 
@@ -2494,15 +1818,9 @@ window.addEventListener("load", function () {
 
         queue.push({
 
-          x:next.x,
+          x:next.x,y:next.y,
 
-          y:next.y,
-
-          firstStep:current.firstStep||{
-
-            x:next.x,y:next.y
-
-          },
+          firstStep:current.firstStep||{x:next.x,y:next.y},
 
           d:current.d+1
 
@@ -2530,37 +1848,21 @@ window.addEventListener("load", function () {
 
     if(!best.firstStep)return false;
 
-    enemy.x=best.firstStep.x;
-
-    enemy.y=best.firstStep.y;
-
-    enemy.moved=true;
+    enemy.x=best.firstStep.x;enemy.y=best.firstStep.y;enemy.moved=true;
 
     return true;
 
-  }  function startEnemyTurn(){
+  }
+
+  function startEnemyTurn(){
 
     if(battleEnded)return;
 
-    currentTurn="enemy";
+    currentTurn="enemy";turn++;
 
-    turn++;
+    selected=null;selectedEnemy=null;pendingMove=null;
 
-    selected=null;
-
-    selectedEnemy=null;
-
-    pendingMove=null;
-
-    moveMode=false;
-
-    attackMode=false;
-
-    menuOpen=false;
-
-    reaction=false;
-
-    battleVisual=null;
+    moveMode=false;attackMode=false;menuOpen=false;reaction=false;battleVisual=null;
 
     enemyAIActive=true;
 
@@ -2568,21 +1870,13 @@ window.addEventListener("load", function () {
 
       if(unit.side==="enemy"){
 
-        unit.moved=false;
-
-        unit.acted=false;
-
-        unit.waited=false;
+        unit.moved=false;unit.acted=false;unit.waited=false;
 
       }
 
     });
 
-    enemyQueue=units.filter(
-
-      u=>u.side==="enemy"&&u.hp>0
-
-    );
+    enemyQueue=units.filter(u=>u.side==="enemy"&&u.hp>0);
 
     enemyQueueIndex=0;
 
@@ -2598,41 +1892,17 @@ window.addEventListener("load", function () {
 
     if(battleEnded)return;
 
-    if(enemyQueueIndex>=enemyQueue.length){
-
-      startEnemyTurnFinish();
-
-      return;
-
-    }
+    if(enemyQueueIndex>=enemyQueue.length){startEnemyTurnFinish();return;}
 
     const enemy=enemyQueue[enemyQueueIndex];
 
-    if(!enemy||enemy.hp<=0){
-
-      enemyQueueIndex++;
-
-      processEnemyTurn();
-
-      return;
-
-    }
+    if(!enemy||enemy.hp<=0){enemyQueueIndex++;processEnemyTurn();return;}
 
     const target=chooseEnemyTarget(enemy);
 
-    if(!target){
-
-      startEnemyTurnFinish();
-
-      return;
-
-    }
+    if(!target){startEnemyTurnFinish();return;}
 
     let canAttack=isUnitInAttackRange(enemy,target);
-
-    // 射程外なら攻撃可能な位置まで移動する。
-
-    // 魔道士は距離2の位置だけを攻撃地点とする。
 
     if(!canAttack){
 
@@ -2644,11 +1914,7 @@ window.addEventListener("load", function () {
 
     }
 
-    // 射程内ならプレイヤーの対応を待つ。
-
     if(canAttack){
-
-      enemy.acted=true;
 
       enemyQueueIndex++;
 
@@ -2658,21 +1924,17 @@ window.addEventListener("load", function () {
 
       refresh();
 
-      setTimeout(()=>{
-
-        if(!battleEnded)showReactionMenu(enemy,target);
-
-      },350);
+      setTimeout(()=>{if(!battleEnded)showReactionMenu(enemy,target);},350);
 
       return;
 
     }
 
-    enemy.moved=true;
-
-    enemy.acted=true;
+    enemy.moved=true;enemy.acted=true;enemy.waited=true;
 
     enemyQueueIndex++;
+
+    refresh();
 
     setTimeout(processEnemyTurn,350);
 
@@ -2682,13 +1944,7 @@ window.addEventListener("load", function () {
 
     if(battleEnded)return;
 
-    enemyAIActive=false;
-
-    reaction=false;
-
-    menuOpen=false;
-
-    battleVisual=null;
+    enemyAIActive=false;reaction=false;menuOpen=false;battleVisual=null;
 
     currentTurn="ally";
 
@@ -2696,177 +1952,101 @@ window.addEventListener("load", function () {
 
       if(unit.side==="ally"){
 
-        unit.moved=false;
-
-        unit.acted=false;
-
-        unit.waited=false;
-
-        unit.defending=false;
+        unit.moved=false;unit.acted=false;unit.waited=false;unit.defending=false;
 
       }
 
     });
 
-    selected=null;
-
-    selectedEnemy=null;
+    selected=null;selectedEnemy=null;
 
     info.innerHTML="<p>味方のターン。ユニットを選択してね。</p>";
 
     refresh();
 
-  }
+  }  function handleCellTap(x,y){
 
-  function handleCellTap(x,y){
-
-    if(battleEnded||combatAnimating||
-
-       currentTurn!=="ally"||enemyAIActive)return;
+    if(battleEnded||combatAnimating||currentTurn!=="ally"||enemyAIActive)return;
 
     const unit=getUnitAt(x,y);
 
-    // メニュー表示中に盤面をタップしたら閉じる。
-
-    if(menuOpen){
-
-      menuOpen=false;
-
-      attackMode=false;
-
-      moveMode=false;
-
-    }
-
-    // 攻撃モード
+    if(menuOpen){menuOpen=false;attackMode=false;moveMode=false;}
 
     if(attackMode){
 
-      if(unit&&unit.side==="enemy"&&
+      if(unit&&unit.side==="enemy"&&selected&&isAllyAttackCell(x,y)){
 
-         selected&&isAllyAttackCell(x,y)){
+        const response=chooseEnemyReaction(selected,unit);
 
-        showCombatConfirmation(selected,unit,"normal");
+        showCombatConfirmation(selected,unit,response);
 
         return;
 
       }
 
-      closeMenuByEmptyTap();
-
-      return;
+      closeMenuByEmptyTap();return;
 
     }
-
-    // 移動後の仮確定状態
 
     if(pendingMove){
 
-      if(unit&&unit.side==="enemy"&&
+      if(unit&&unit.side==="enemy"&&selected&&isAllyAttackCell(x,y)){
 
-         selected&&isAllyAttackCell(x,y)){
+        const response=chooseEnemyReaction(selected,unit);
 
-        showCombatConfirmation(selected,unit,"normal");
-
-        return;
-
-      }
-
-      if(x===pendingMove.fromX&&y===pendingMove.fromY){
-
-        cancelMove();
+        showCombatConfirmation(selected,unit,response);
 
         return;
 
       }
+
+      if(x===pendingMove.fromX&&y===pendingMove.fromY){cancelMove();return;}
 
       if(unit&&unit.side==="ally"){
 
-        cancelMove();
+        cancelMove();selected=unit;
 
-        selected=unit;
-
-        lastTapUnitId=unit.id;
-
-        lastTapTime=Date.now();
+        lastTapUnitId=unit.id;lastTapTime=Date.now();
 
         info.innerHTML=`<p>${unit.name}を選択した。もう一度タップで行動メニュー。</p>`;
 
-        refresh();
-
-        return;
+        refresh();return;
 
       }
 
-      // 移動後、別の空きマスをタップしたら移動を取り消す。
-
-      cancelMove();
-
-      return;
+      cancelMove();return;
 
     }
-
-    // 敵をタップした場合
 
     if(unit&&unit.side==="enemy"){
 
-      if(selected&&selected.side==="ally"&&
+      if(selected&&selected.side==="ally"&&isAllyAttackCell(x,y)){
 
-         isAllyAttackCell(x,y)){
+        const response=chooseEnemyReaction(selected,unit);
 
-        showCombatConfirmation(selected,unit,"normal");
+        showCombatConfirmation(selected,unit,response);
 
         return;
 
       }
 
-      selected=null;
-
-      selectedEnemy=unit;
-
-      showDetails(unit);
-
-      return;
+      selected=null;selectedEnemy=unit;showDetails(unit);return;
 
     }
-
-    // 味方をタップした場合
 
     if(unit&&unit.side==="ally"){
 
       const now=Date.now();
 
-      if(selected&&selected.id===unit.id&&
+      if(selected&&selected.id===unit.id&&lastTapUnitId===unit.id&&now-lastTapTime<=DOUBLE_TAP_TIME){
 
-         lastTapUnitId===unit.id&&
-
-         now-lastTapTime<=DOUBLE_TAP_TIME){
-
-        lastTapUnitId=null;
-
-        lastTapTime=0;
-
-        showActionMenu(unit);
-
-        return;
+        lastTapUnitId=null;lastTapTime=0;showActionMenu(unit);return;
 
       }
 
-      selected=unit;
+      selected=unit;selectedEnemy=null;lastTapUnitId=unit.id;lastTapTime=now;
 
-      selectedEnemy=null;
-
-      lastTapUnitId=unit.id;
-
-      lastTapTime=now;
-
-      menuOpen=false;
-
-      moveMode=false;
-
-      attackMode=false;
-
-      battleVisual=null;
+      menuOpen=false;moveMode=false;attackMode=false;battleVisual=null;
 
       info.innerHTML=`
 
@@ -2874,31 +2054,19 @@ window.addEventListener("load", function () {
 
           ${unit.icon} ${unit.name}を選択中。
 
-          <br>
+          <br>青：移動可能範囲
 
-          青：移動可能範囲
+          <br>赤：攻撃可能範囲
 
-          <br>
-
-          赤：攻撃可能範囲
-
-          <br>
-
-          もう一度タップで行動メニュー
+          <br>もう一度タップで行動メニュー
 
         </p>`;
 
-      refresh();
-
-      return;
+      refresh();return;
 
     }
 
-    // 空きマスをタップした場合、移動可能なら移動。
-
-    if(selected&&selected.side==="ally"&&
-
-       !selected.moved&&!selected.acted&&!selected.waited){
+    if(selected&&selected.side==="ally"&&!selected.moved&&!selected.acted&&!selected.waited){
 
       const reachable=getReachableCells(selected);
 
@@ -2908,31 +2076,13 @@ window.addEventListener("load", function () {
 
         const mover=selected;
 
-        pendingMove={
+        pendingMove={unit:mover,fromX:mover.x,fromY:mover.y};
 
-          unit:mover,
+        mover.x=x;mover.y=y;mover.moved=true;
 
-          fromX:mover.x,
+        moveMode=false;attackMode=false;menuOpen=false;
 
-          fromY:mover.y
-
-        };
-
-        mover.x=x;
-
-        mover.y=y;
-
-        mover.moved=true;
-
-        moveMode=false;
-
-        attackMode=false;
-
-        menuOpen=false;
-
-        lastTapUnitId=null;
-
-        lastTapTime=0;
+        lastTapUnitId=null;lastTapTime=0;
 
         info.innerHTML=`
 
@@ -2940,29 +2090,19 @@ window.addEventListener("load", function () {
 
             ${mover.name}が移動した。
 
-            <br>
+            <br>赤く点滅する範囲が攻撃可能範囲。
 
-            赤く点滅する範囲が攻撃可能範囲。
+            <br>赤い範囲内の敵をタップすると攻撃できる。
 
-            <br>
-
-            赤い範囲内の敵をタップすると攻撃できる。
-
-            <br>
-
-            「移動して待機」で行動終了。
+            <br>「移動して待機」で行動終了。
 
           </p>`;
 
-        refresh();
-
-        return;
+        refresh();return;
 
       }
 
     }
-
-    // 空白マスをタップしたら選択解除。
 
     closeMenuByEmptyTap();
 
@@ -2970,23 +2110,29 @@ window.addEventListener("load", function () {
 
   map.addEventListener("click",function(e){
 
-    const cell=e.target.closest("[data-x][data-y]");
+    if(suppressNextClick){
 
-    if(!cell){
+      e.preventDefault();
 
-      if(!reaction&&!combatAnimating){
+      e.stopPropagation();
 
-        closeMenuByEmptyTap();
-
-      }
+      suppressNextClick=false;
 
       return;
 
     }
 
-    const x=Number(cell.dataset.x);
+    const cell=e.target.closest("[data-x][data-y]");
 
-    const y=Number(cell.dataset.y);
+    if(!cell){
+
+      if(!reaction&&!combatAnimating)closeMenuByEmptyTap();
+
+      return;
+
+    }
+
+    const x=Number(cell.dataset.x),y=Number(cell.dataset.y);
 
     handleCellTap(x,y);
 
@@ -2994,29 +2140,13 @@ window.addEventListener("load", function () {
 
   endTurnButton.addEventListener("click",function(){
 
-    if(battleEnded||combatAnimating||reaction||
+    if(battleEnded||combatAnimating||reaction||enemyAIActive||currentTurn!=="ally")return;
 
-       enemyAIActive||currentTurn!=="ally")return;
+    if(pendingMove){cancelMove();return;}
 
-    if(pendingMove){
+    if(menuOpen){menuOpen=false;selected=null;}
 
-      cancelMove();
-
-      return;
-
-    }
-
-    if(menuOpen){
-
-      menuOpen=false;
-
-      selected=null;
-
-    }
-
-    lastTapUnitId=null;
-
-    lastTapTime=0;
+    lastTapUnitId=null;lastTapTime=0;
 
     startEnemyTurn();
 
@@ -3028,47 +2158,21 @@ window.addEventListener("load", function () {
 
   });
 
-  // 初期表示
+  selected=null;selectedEnemy=null;currentTurn="ally";turn=1;
 
-  selected=null;
+  pendingMove=null;moveMode=false;attackMode=false;menuOpen=false;
 
-  selectedEnemy=null;
+  reaction=false;combatAnimating=false;battleEnded=false;
 
-  currentTurn="ally";
+  enemyQueue=[];enemyQueueIndex=0;enemyAIActive=false;
 
-  turn=1;
-
-  pendingMove=null;
-
-  moveMode=false;
-
-  attackMode=false;
-
-  menuOpen=false;
-
-  reaction=false;
-
-  combatAnimating=false;
-
-  battleEnded=false;
-
-  enemyQueue=[];
-
-  enemyQueueIndex=0;
-
-  enemyAIActive=false;
-
-  lastTapUnitId=null;
-
-  lastTapTime=0;
-
-  battleVisual=null;
+  lastTapUnitId=null;lastTapTime=0;battleVisual=null;
 
   info.innerHTML="<p>ユニットを選択してね。</p>";
 
   refresh();
 
-  // 戦闘開始前のストーリーと勝敗条件
+  centerMap();
 
   showStory(
 
