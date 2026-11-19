@@ -1,2195 +1,1997 @@
 window.addEventListener("load", function () {
 
-  const test=document.querySelector("#test");
+const test=document.querySelector("#test");
 
-  if(!test){console.error("#test が見つかりません");return;}
+if(!test){console.error("#test が見つかりません");return;}
 
-  test.innerHTML=`
+test.innerHTML=`
 
-    <div id="game">
+<div id="game">
 
-      <h2>ミラのSRPG</h2>
+<h2>ミラのSRPG</h2>
 
-      <p id="turn">味方のターン</p>
+<p id="turn">味方のターン</p>
 
-      <div id="mapViewport"><div id="map"></div></div>
+<div id="mapViewport"><div id="map"></div></div>
 
-      <div id="actionButtons">
+<div id="actionButtons">
 
-        <button id="pendingWait" style="display:none">移動して待機</button>
+<button id="pendingMove" style="display:none">移動</button>
 
-        <button id="endTurn">ターン終了</button>
+<button id="pendingAttack" style="display:none">攻撃</button>
 
-      </div>
+<button id="pendingWait" style="display:none">待機</button>
 
-      <div id="info">ユニットを選択してね</div>
+<button id="systemButton" style="display:none">メニュー</button>
 
-    </div>`;
+</div>
 
-  const game=document.querySelector("#game");
+<div id="info">ユニットを選択してね</div>
 
-  const mapViewport=document.querySelector("#mapViewport");
+</div>`;
 
-  const map=document.querySelector("#map");
+const game=document.querySelector("#game");
 
-  const info=document.querySelector("#info");
+const mapViewport=document.querySelector("#mapViewport");
 
-  const turnLabel=document.querySelector("#turn");
+const map=document.querySelector("#map");
 
-  const endTurnButton=document.querySelector("#endTurn");
+const info=document.querySelector("#info");
 
-  const pendingWaitButton=document.querySelector("#pendingWait");
+const turnLabel=document.querySelector("#turn");
 
-  const style=document.createElement("style");
+const pendingMoveButton=document.querySelector("#pendingMove");
 
-  style.textContent=`
+const pendingAttackButton=document.querySelector("#pendingAttack");
 
-    #game{position:relative;}
+const pendingWaitButton=document.querySelector("#pendingWait");
 
-    #mapViewport{
+const systemButton=document.querySelector("#systemButton");
 
-      position:relative;
+const style=document.createElement("style");
 
-      width:94%;
+style.textContent=`
 
-      max-width:900px;
+#game{position:relative;}
 
-      height:65vh;
+#mapViewport{position:relative;width:94%;max-width:900px;height:65vh;min-height:310px;max-height:700px;margin:0 auto;overflow:hidden;border:1px solid #777;border-radius:6px;background:#b8b5a8;touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:grab;}
 
-      min-height:310px;
+#mapViewport.panning{cursor:grabbing;}
 
-      max-height:700px;
+#map{position:absolute;left:0;top:0;margin:0;overflow:visible;transform-origin:0 0;will-change:transform;touch-action:manipulation;}
 
-      margin:0 auto;
+#actionButtons{display:flex;justify-content:center;align-items:center;gap:5px;width:94%;max-width:420px;margin:8px auto;}
 
-      overflow:hidden;
+#actionButtons button{flex:1;min-width:0;padding:9px 3px;font-size:11px;border-radius:6px;}
 
-      border:1px solid #777;
+#actionButtons button:disabled{opacity:.35;filter:grayscale(1);}
 
-      border-radius:6px;
+#info{position:relative;z-index:15;width:94%;max-width:340px;box-sizing:border-box;margin:8px auto;padding:7px;background:rgba(255,255,255,.97);border:1px solid #777;border-radius:8px;color:#222;font-size:12px;line-height:1.3;min-height:35px;}
 
-      background:#b8b5a8;
+#info h3{font-size:14px;margin:4px 0;}
 
-      touch-action:pan-y;
+#info h4{font-size:12px;margin:4px 0;}
 
-      user-select:none;
+#info p{margin:4px 0;}
 
-      -webkit-user-select:none;
+#info button{font-size:11px;padding:5px 7px;margin:2px;}
 
-      cursor:grab;
+.unit-token{position:absolute;box-sizing:border-box;width:56px;height:44px;z-index:5;display:flex;align-items:center;justify-content:center;border-radius:8px;background:transparent;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
 
-    }
+.unit-token.unit-acted{filter:brightness(.55) saturate(.7);}
 
-    #mapViewport.panning{cursor:grabbing;}
+.unit-content{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;line-height:1;pointer-events:none;color:#17202a;font-weight:bold;width:100%;height:100%;}
 
-    #map{
+.unit-icon{font-size:16px;line-height:17px;}
 
-      position:absolute;
+.unit-name{font-size:9px;line-height:10px;max-width:54px;overflow-wrap:anywhere;}
 
-      left:0;top:0;
+.unit-hp{font-size:8px;line-height:9px;}
 
-      margin:0;
+.defense-mark{position:absolute;z-index:12;font-size:15px;line-height:15px;filter:drop-shadow(0 1px 2px #000);pointer-events:none;transform:translateX(-50%);}
 
-      overflow:visible;
+.battle-panel{display:flex;align-items:center;justify-content:space-between;gap:5px;margin:5px 0;padding:5px;border:2px solid #777;border-radius:8px;background:#fff;color:#222;}
 
-      transform-origin:0 0;
+.battle-side{width:42%;min-width:0;text-align:center;}
 
-      will-change:transform;
+.battle-name{font-weight:bold;overflow-wrap:anywhere;margin-bottom:3px;font-size:10px;}
 
-      touch-action:manipulation;
+.hp-track{position:relative;width:100%;height:16px;background:#ddd;border:1px solid #777;border-radius:5px;overflow:hidden;box-sizing:border-box;}
 
-    }
+.hp-fill{position:absolute;left:0;top:0;height:100%;transition:width 300ms ease;}
 
-    #actionButtons{display:flex;justify-content:center;align-items:center;gap:8px;width:94%;max-width:340px;margin:8px auto;}
+.hp-ally{background:#2879db;}
 
-    #actionButtons button{flex:1;min-width:0;padding:9px 5px;font-size:12px;border-radius:6px;}
+.hp-enemy{background:#e53935;}
 
-    #info{position:relative;z-index:15;width:94%;max-width:340px;box-sizing:border-box;margin:8px auto;padding:7px;background:rgba(255,255,255,.97);border:1px solid #777;border-radius:8px;color:#222;font-size:12px;line-height:1.3;min-height:35px;}
+@keyframes hpBlink{0%,100%{opacity:1;filter:brightness(1);}50%{opacity:.12;filter:brightness(2);}}
 
-    #info h3{font-size:14px;margin:4px 0;}
+.hp-predicted{position:absolute;top:0;z-index:3;height:100%;animation:hpBlink .5s steps(2,end) infinite;background:repeating-linear-gradient(135deg,#fff 0,#fff 3px,#ffb300 3px,#ffb300 6px);border-left:2px solid #222;box-sizing:border-box;pointer-events:none;}
 
-    #info h4{font-size:12px;margin:4px 0;}
+.battle-center{font-size:15px;font-weight:bold;text-align:center;}
 
-    #info p{margin:4px 0;}
+.battle-hp-text{font-size:10px;margin-top:3px;}
 
-    #info button{font-size:11px;padding:5px 7px;margin:2px;}
+@keyframes combatLunge{0%{transform:translateX(0) scale(1);}35%{transform:translateX(9px) scale(1.08);}100%{transform:translateX(0) scale(1);}}
 
-    .unit-token{position:absolute;box-sizing:border-box;width:56px;height:44px;z-index:5;display:flex;align-items:center;justify-content:center;border-radius:8px;background:transparent;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+@keyframes combatHit{0%,100%{transform:translateX(0);}20%{transform:translateX(-5px);}40%{transform:translateX(5px);}60%{transform:translateX(-4px);}80%{transform:translateX(3px);}}
 
-    .unit-token.unit-acted{filter:brightness(.55) saturate(.7);}
+@keyframes combatFloat{0%{opacity:0;transform:translate(-50%,8px) scale(.7);}15%{opacity:1;transform:translate(-50%,0) scale(1.15);}100%{opacity:0;transform:translate(-50%,-38px) scale(1);}}
 
-    .unit-content{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;line-height:1;pointer-events:none;color:#17202a;font-weight:bold;width:100%;height:100%;}
+.combat-number,.combat-miss{position:absolute;z-index:30;pointer-events:none;font-weight:900;-webkit-text-stroke:1px white;text-shadow:1px 2px 2px #0008;animation:combatFloat 950ms ease-out forwards;}
 
-    .unit-icon{font-size:16px;line-height:17px;}
+.combat-number{font-size:25px;color:#e53935;}
 
-    .unit-name{font-size:9px;line-height:10px;max-width:54px;overflow-wrap:anywhere;}
+.combat-miss{font-size:20px;color:#2879db;}
 
-    .unit-hp{font-size:8px;line-height:9px;}
+.unit-token.combat-attacking{animation:combatLunge 380ms ease-in-out;}
 
-    .defense-mark{position:absolute;z-index:12;font-size:15px;line-height:15px;filter:drop-shadow(0 1px 2px #000);pointer-events:none;transform:translateX(-50%);}
+.unit-token.combat-hit{animation:combatHit 420ms ease-in-out;}
 
-    .battle-panel{display:flex;align-items:center;justify-content:space-between;gap:5px;margin:5px 0;padding:5px;border:2px solid #777;border-radius:8px;background:#fff;color:#222;}
+@keyframes rangePulse{0%,100%{fill-opacity:.08;stroke-opacity:.35;}50%{fill-opacity:.34;stroke-opacity:1;}}
 
-    .battle-side{width:42%;min-width:0;text-align:center;}
+.move-range-hex{fill:#2196f3;fill-opacity:.2;stroke:#1565c0;stroke-width:2;animation:rangePulse 1s ease-in-out infinite;pointer-events:none;}
 
-    .battle-name{font-weight:bold;overflow-wrap:anywhere;margin-bottom:3px;font-size:10px;}
+.attack-range-hex{fill:#e53935;fill-opacity:.2;stroke:#b71c1c;stroke-width:2;animation:rangePulse 1s ease-in-out infinite;animation-delay:-.5s;pointer-events:none;}
 
-    .hp-track{position:relative;width:100%;height:16px;background:#ddd;border:1px solid #777;border-radius:5px;overflow:hidden;box-sizing:border-box;}
+@keyframes battleHexPulse{0%,100%{opacity:.55;stroke-width:3;}50%{opacity:1;stroke-width:5;}}
 
-    .hp-fill{position:absolute;left:0;top:0;height:100%;transition:width 300ms ease;}
+.battle-hex-attacker{fill:#ff9800;fill-opacity:.28;stroke:#e65100;stroke-width:3;animation:battleHexPulse .65s ease-in-out infinite;pointer-events:none;}
 
-    .hp-ally{background:#2879db;}
+.battle-hex-defender{fill:#29b6f6;fill-opacity:.28;stroke:#0277bd;stroke-width:3;animation:battleHexPulse .65s ease-in-out infinite;pointer-events:none;}
 
-    .hp-enemy{background:#e53935;}
+.battle-arrow{fill:none;stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 3px #222);pointer-events:none;}
 
-    @keyframes hpBlink{0%,100%{opacity:1;filter:brightness(1);}50%{opacity:.12;filter:brightness(2);}}
+.battle-arrow.ally-arrow{stroke:#ff9800;}
 
-    .hp-predicted{position:absolute;top:0;z-index:3;height:100%;animation:hpBlink .5s steps(2,end) infinite;background:repeating-linear-gradient(135deg,#fff 0,#fff 3px,#ffb300 3px,#ffb300 6px);border-left:2px solid #222;box-sizing:border-box;pointer-events:none;}
+.battle-arrow.enemy-arrow{stroke:#29b6f6;}
 
-    .battle-center{font-size:15px;font-weight:bold;text-align:center;}
+.counter-impact{font-size:25px;font-weight:bold;text-anchor:middle;dominant-baseline:middle;pointer-events:none;}
 
-    .battle-hp-text{font-size:10px;margin-top:3px;}
+.story-overlay{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;box-sizing:border-box;padding:20px;background:rgba(10,16,27,.94);color:#fff;}
 
-    @keyframes combatLunge{0%{transform:translateX(0) scale(1);}35%{transform:translateX(9px) scale(1.08);}100%{transform:translateX(0) scale(1);}}
+.story-panel{width:100%;max-width:420px;box-sizing:border-box;padding:24px 20px;border:1px solid #b9a16b;border-radius:12px;background:linear-gradient(160deg,#28364a,#111923);text-align:center;}
 
-    @keyframes combatHit{0%,100%{transform:translateX(0);}20%{transform:translateX(-5px);}40%{transform:translateX(5px);}60%{transform:translateX(-4px);}80%{transform:translateX(3px);}}
+.story-panel h2{font-size:22px;color:#f0d99b;}
 
-    @keyframes combatFloat{0%{opacity:0;transform:translate(-50%,8px) scale(.7);}15%{opacity:1;transform:translate(-50%,0) scale(1.15);}100%{opacity:0;transform:translate(-50%,-38px) scale(1);}}
+.story-panel p{font-size:16px;line-height:2;text-align:left;white-space:pre-line;}
 
-    .combat-number,.combat-miss{position:absolute;z-index:30;pointer-events:none;font-weight:900;-webkit-text-stroke:1px white;text-shadow:1px 2px 2px #0008;animation:combatFloat 950ms ease-out forwards;}
+.story-panel button{min-width:150px;padding:11px 20px;font-size:15px;border:1px solid #d5bd83;border-radius:7px;background:#d5bd83;color:#202020;font-weight:bold;}
 
-    .combat-number{font-size:25px;color:#e53935;}
+#intermissionPanel{width:94%;max-width:520px;margin:12px auto;padding:14px;box-sizing:border-box;border:2px solid #a78b55;border-radius:10px;background:linear-gradient(160deg,#28364a,#111923);color:#fff;text-align:center;}
 
-    .combat-miss{font-size:20px;color:#2879db;}
+#intermissionPanel h3{font-size:19px;color:#f0d99b;margin:5px;}
 
-    .unit-token.combat-attacking{animation:combatLunge 380ms ease-in-out;}
+#intermissionPanel p{font-size:12px;line-height:1.6;}
 
-    .unit-token.combat-hit{animation:combatHit 420ms ease-in-out;}
+#intermissionPanel button{padding:9px 10px;margin:4px;border:1px solid #b9a16b;border-radius:6px;background:#e4d2a6;color:#202020;font-weight:bold;font-size:12px;}
 
-    @keyframes rangePulse{0%,100%{fill-opacity:.08;stroke-opacity:.35;}50%{fill-opacity:.34;stroke-opacity:1;}}
+#intermissionPanel .intermission-main{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:12px 0;}
 
-    .move-range-hex{fill:#2196f3;fill-opacity:.2;stroke:#1565c0;stroke-width:2;animation:rangePulse 1s ease-in-out infinite;pointer-events:none;}
+#intermissionPanel .intermission-main button{min-height:42px;}
 
-    .attack-range-hex{fill:#e53935;fill-opacity:.2;stroke:#b71c1c;stroke-width:2;animation:rangePulse 1s ease-in-out infinite;animation-delay:-.5s;pointer-events:none;}
+#intermissionPanel .intermission-start{width:90%;margin-top:12px;background:#d5bd83;font-size:15px;}
 
-    @keyframes battleHexPulse{0%,100%{opacity:.55;stroke-width:3;}50%{opacity:1;stroke-width:5;}}
+`;
 
-    .battle-hex-attacker{fill:#ff9800;fill-opacity:.28;stroke:#e65100;stroke-width:3;animation:battleHexPulse .65s ease-in-out infinite;pointer-events:none;}
+document.head.appendChild(style);
 
-    .battle-hex-defender{fill:#29b6f6;fill-opacity:.28;stroke:#0277bd;stroke-width:3;animation:battleHexPulse .65s ease-in-out infinite;pointer-events:none;}
+const units=[
 
-    .battle-arrow{fill:none;stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 3px #222);pointer-events:none;}
+{id:1,name:"隊長",side:"ally",job:"ロード",role:"captain",x:1,y:2,hp:20,maxHp:20,icon:"👑",moved:false,acted:false,waited:false,atk:6,def:3,agi:5,dex:6,move:1,range:1,skills:["指揮"],resistances:{物理:"未設定",魔法:"未設定",炎:"未設定",氷:"未設定"}},
 
-    .battle-arrow.ally-arrow{stroke:#ff9800;}
+{id:2,name:"重装兵",side:"ally",job:"ヘビーアーマー",x:0,y:3,hp:16,maxHp:16,icon:"🪖",moved:false,acted:false,waited:false,atk:7,def:6,agi:2,dex:4,move:1,range:1,skills:["防御"],resistances:{物理:"未設定",魔法:"未設定",炎:"未設定",氷:"未設定"}},
 
-    .battle-arrow.enemy-arrow{stroke:#29b6f6;}
+{id:3,name:"魔道士",side:"ally",job:"メイジ",x:2,y:3,hp:12,maxHp:12,icon:"🔮",moved:false,acted:false,waited:false,atk:8,def:2,agi:4,dex:6,move:1,range:2,skills:["魔法"],resistances:{物理:"未設定",魔法:"未設定",炎:"未設定",氷:"未設定"}},
 
-    .counter-impact{font-size:25px;font-weight:bold;text-anchor:middle;dominant-baseline:middle;pointer-events:none;}
+{id:6,name:"騎兵",side:"ally",job:"キャバリア",x:0,y:1,hp:14,maxHp:14,icon:"🐎",moved:false,acted:false,waited:false,atk:6,def:3,agi:6,dex:5,move:2,range:1,skills:["突撃"],resistances:{物理:"未設定",魔法:"未設定",炎:"未設定",氷:"未設定"}},
 
-    .story-overlay{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;box-sizing:border-box;padding:20px;background:rgba(10,16,27,.94);color:#fff;}
+{id:4,name:"敵隊長",side:"enemy",job:"ダークロード",role:"captain",x:9,y:5,hp:20,maxHp:20,icon:"💀",moved:false,acted:false,waited:false,atk:6,def:4,agi:4,dex:5,move:1,range:1,skills:["威圧"],personality:"commander",targetStyle:"captain",resistances:{物理:"未設定",魔法:"未設定",炎:"未設定",氷:"未設定"}},
 
-    .story-panel{width:100%;max-width:420px;box-sizing:border-box;padding:24px 20px;border:1px solid #b9a16b;border-radius:12px;background:linear-gradient(160deg,#28364a,#111923);text-align:center;}
+{id:5,name:"敵兵",side:"enemy",job:"ソルジャー",x:8,y:4,hp:14,maxHp:14,icon:"⚔️",moved:false,acted:false,waited:false,atk:5,def:3,agi:3,dex:4,move:1,range:1,skills:["なし"],personality:"hunter",targetStyle:"weakest",resistances:{物理:"未設定",魔法:"未設定",炎:"未設定",氷:"未設定"}},
 
-    .story-panel h2{font-size:22px;color:#f0d99b;}
+{id:7,name:"敵魔道士",side:"enemy",job:"ダークメイジ",x:10,y:2,hp:12,maxHp:12,icon:"🧙",moved:false,acted:false,waited:false,atk:8,def:2,agi:4,dex:6,move:1,range:2,skills:["魔法"],personality:"mage",targetStyle:"weakest",resistances:{物理:"未設定",魔法:"未設定",炎:"未設定",氷:"未設定"}}
 
-    .story-panel p{font-size:16px;line-height:2;text-align:left;white-space:pre-line;}
+];
 
-    .story-panel button{min-width:150px;padding:11px 20px;font-size:15px;border:1px solid #d5bd83;border-radius:7px;background:#d5bd83;color:#202020;font-weight:bold;}
+const initialUnitStates=units.map(u=>({...u,resistances:{...u.resistances},skills:[...u.skills]}));
 
-  `;
+const cols=12,rows=8,w=56,h=44,dx=42,dy=44;
 
-  document.head.appendChild(style);
+let selected=null,selectedEnemy=null,currentTurn="ally",turn=1;
 
-  const units=[
+let pendingMove=null,moveMode=false,attackMode=false,menuOpen=false;
 
-    {id:1,name:"隊長",side:"ally",job:"ロード",role:"captain",x:1,y:2,hp:20,maxHp:20,icon:"👑",moved:false,acted:false,waited:false,atk:6,def:3,agi:5,dex:6,move:1,range:1,skills:["指揮"],resistances:{物理:"未設定",魔法:"未設定",炎:"未設定",氷:"未設定"}},
+let reaction=false,combatAnimating=false,battleEnded=false;
 
-    {id:2,name:"重装兵",side:"ally",job:"ヘビーアーマー",x:0,y:3,hp:16,maxHp:16,icon:"🪖",moved:false,acted:false,waited:false,atk:7,def:6,agi:2,dex:4,move:1,range:1,skills:["防御"],resistances:{物理:"未設定",魔法:"未設定",炎:"未設定",氷:"未設定"}},
+let enemyQueue=[],enemyQueueIndex=0,enemyAIActive=false;
 
-    {id:3,name:"魔道士",side:"ally",job:"メイジ",x:2,y:3,hp:12,maxHp:12,icon:"🔮",moved:false,acted:false,waited:false,atk:8,def:2,agi:4,dex:6,move:1,range:2,skills:["魔法"],resistances:{物理:"未設定",魔法:"未設定",炎:"未設定",氷:"未設定"}},
+let lastTapUnitId=null,battleVisual=null;
 
-    {id:6,name:"騎兵",side:"ally",job:"キャバリア",x:0,y:1,hp:14,maxHp:14,icon:"🐎",moved:false,acted:false,waited:false,atk:6,def:3,agi:6,dex:5,move:2,range:1,skills:["突撃"],resistances:{物理:"未設定",魔法:"未設定",炎:"未設定",氷:"未設定"}},
+let systemMenuOpen=false,intermissionOpen=false,intermissionReturnMode=false;
 
-    {id:4,name:"敵隊長",side:"enemy",job:"ダークロード",role:"captain",x:9,y:5,hp:20,maxHp:20,icon:"💀",moved:false,acted:false,waited:false,atk:6,def:4,agi:4,dex:5,move:1,range:1,skills:["威圧"],personality:"commander",targetStyle:"captain",resistances:{物理:"未設定",魔法:"未設定",炎:"未設定",氷:"未設定"}},
+let stageNumber=1,cameraBusy=false;
 
-    {id:5,name:"敵兵",side:"enemy",job:"ソルジャー",x:8,y:4,hp:14,maxHp:14,icon:"⚔️",moved:false,acted:false,waited:false,atk:5,def:3,agi:3,dex:4,move:1,range:1,skills:["なし"],personality:"hunter",targetStyle:"weakest",resistances:{物理:"未設定",魔法:"未設定",炎:"未設定",氷:"未設定"}},
+const CRITICAL_RATE=10,CRITICAL_MULTIPLIER=2;
 
-    {id:7,name:"敵魔道士",side:"enemy",job:"ダークメイジ",x:10,y:2,hp:12,maxHp:12,icon:"🧙",moved:false,acted:false,waited:false,atk:8,def:2,agi:4,dex:6,move:1,range:2,skills:["魔法"],personality:"mage",targetStyle:"weakest",resistances:{物理:"未設定",魔法:"未設定",炎:"未設定",氷:"未設定"}}
+const SAVE_KEY="mira_srpg_save_slots_v1";
 
-  ];
+const mapWidth=dx*(cols-1)+w;
 
-  const initialUnitStates=units.map(u=>({...u,resistances:{...u.resistances},skills:[...u.skills]}));
+const mapHeight=(rows-1)*dy+h+h/2;
 
-  const cols=12,rows=8,w=56,h=44,dx=42,dy=44;
+Object.assign(map.style,{width:mapWidth+"px",height:mapHeight+"px",position:"absolute",left:"0",top:"0",overflow:"visible",touchAction:"manipulation"});
 
-  let selected=null,selectedEnemy=null,currentTurn="ally",turn=1;
+let mapOffsetX=0,mapOffsetY=0;
 
-  let pendingMove=null,moveMode=false,attackMode=false,menuOpen=false;
+let touchPanActive=false,touchPanMoved=false,touchPanLastX=0,touchPanLastY=0;
 
-  let reaction=false,combatAnimating=false,battleEnded=false;
+let mousePanning=false,mouseStartX=0,mouseStartY=0,mouseOriginX=0,mouseOriginY=0;
 
-  let enemyQueue=[],enemyQueueIndex=0,enemyAIActive=false;
+let suppressNextClick=false;
 
-  let lastTapUnitId=null,lastTapTime=0,battleVisual=null;
+function clampMapOffset(){
 
-  const DOUBLE_TAP_TIME=350,CRITICAL_RATE=10,CRITICAL_MULTIPLIER=2;
+const vw=mapViewport.clientWidth,vh=mapViewport.clientHeight;
 
-  const mapWidth=dx*(cols-1)+w;
+mapOffsetX=mapWidth<=vw?(vw-mapWidth)/2:Math.max(vw-mapWidth,Math.min(0,mapOffsetX));
 
-  const mapHeight=(rows-1)*dy+h+h/2;
+mapOffsetY=mapHeight<=vh?(vh-mapHeight)/2:Math.max(vh-mapHeight,Math.min(0,mapOffsetY));
 
-  Object.assign(map.style,{width:mapWidth+"px",height:mapHeight+"px",position:"absolute",left:"0",top:"0",overflow:"visible",touchAction:"manipulation"});
+map.style.transform=`translate(${mapOffsetX}px,${mapOffsetY}px)`;
 
-  let mapOffsetX=0,mapOffsetY=0;
+}
 
-  let touchPanActive=false,touchPanMoved=false;
+function centerMap(){mapOffsetX=(mapViewport.clientWidth-mapWidth)/2;mapOffsetY=(mapViewport.clientHeight-mapHeight)/2;clampMapOffset();}
 
-  let touchPanLastX=0,touchPanLastY=0;
+function centerMapOnUnit(unit){
 
-  let mousePanning=false,mouseStartX=0,mouseStartY=0;
+if(!unit)return;
 
-  let mouseOriginX=0,mouseOriginY=0;
+const p=position(unit.x,unit.y);
 
-  let suppressNextClick=false;
+mapOffsetX=mapViewport.clientWidth/2-(p.x+28);
 
-  function clampMapOffset(){
+mapOffsetY=mapViewport.clientHeight/2-(p.y+22);
 
-    const vw=mapViewport.clientWidth,vh=mapViewport.clientHeight;
+clampMapOffset();
 
-    mapOffsetX=mapWidth<=vw?(vw-mapWidth)/2:Math.max(vw-mapWidth,Math.min(0,mapOffsetX));
+}
 
-    mapOffsetY=mapHeight<=vh?(vh-mapHeight)/2:Math.max(vh-mapHeight,Math.min(0,mapOffsetY));
+function animateCameraTo(targetX,targetY,duration){
 
-    map.style.transform=`translate(${mapOffsetX}px,${mapOffsetY}px)`;
+return new Promise(resolve=>{
 
-  }
+const startX=mapOffsetX,startY=mapOffsetY,start=performance.now();
 
-  function centerMap(){
+function frame(now){
 
-    mapOffsetX=(mapViewport.clientWidth-mapWidth)/2;
+const t=Math.min(1,(now-start)/duration);
 
-    mapOffsetY=(mapViewport.clientHeight-mapHeight)/2;
+const eased=t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
 
-    clampMapOffset();
+mapOffsetX=startX+(targetX-startX)*eased;
 
-  }
+mapOffsetY=startY+(targetY-startY)*eased;
 
-  function getTouchCenter(touches){
+clampMapOffset();
 
-    return{
+if(t<1)requestAnimationFrame(frame);else resolve();
 
-      x:(touches[0].clientX+touches[1].clientX)/2,
+}
 
-      y:(touches[0].clientY+touches[1].clientY)/2
+requestAnimationFrame(frame);
 
-    };
+});
 
-  }
+}
 
-  mapViewport.addEventListener("touchstart",function(e){
+function getTouchCenter(touches){return{x:(touches[0].clientX+touches[1].clientX)/2,y:(touches[0].clientY+touches[1].clientY)/2};}
 
-    if(e.touches.length!==2)return;
+mapViewport.addEventListener("touchstart",function(e){
 
-    e.preventDefault();
+if(e.touches.length!==2)return;e.preventDefault();
 
-    const center=getTouchCenter(e.touches);
+const c=getTouchCenter(e.touches);touchPanActive=true;touchPanMoved=false;touchPanLastX=c.x;touchPanLastY=c.y;
 
-    touchPanActive=true;
+},{passive:false});
 
-    touchPanMoved=false;
+mapViewport.addEventListener("touchmove",function(e){
 
-    touchPanLastX=center.x;
+if(!touchPanActive||e.touches.length!==2)return;e.preventDefault();
 
-    touchPanLastY=center.y;
+const c=getTouchCenter(e.touches),mx=c.x-touchPanLastX,my=c.y-touchPanLastY;
 
-  },{passive:false});
+if(Math.abs(mx)+Math.abs(my)>2)touchPanMoved=true;
 
-  mapViewport.addEventListener("touchmove",function(e){
+mapOffsetX+=mx;mapOffsetY+=my;touchPanLastX=c.x;touchPanLastY=c.y;clampMapOffset();
 
-    if(!touchPanActive||e.touches.length!==2)return;
+},{passive:false});
 
-    e.preventDefault();
+mapViewport.addEventListener("touchend",function(){
 
-    const center=getTouchCenter(e.touches);
+if(!touchPanActive)return;touchPanActive=false;
 
-    const dxTouch=center.x-touchPanLastX;
+if(touchPanMoved){suppressNextClick=true;setTimeout(()=>{suppressNextClick=false;},450);}
 
-    const dyTouch=center.y-touchPanLastY;
+});
 
-    if(Math.abs(dxTouch)+Math.abs(dyTouch)>2)touchPanMoved=true;
+mapViewport.addEventListener("touchcancel",function(){touchPanActive=false;});
 
-    mapOffsetX+=dxTouch;
+mapViewport.addEventListener("mousedown",function(e){
 
-    mapOffsetY+=dyTouch;
+if(e.button!==1)return;e.preventDefault();mousePanning=true;
 
-    touchPanLastX=center.x;
+mouseStartX=e.clientX;mouseStartY=e.clientY;mouseOriginX=mapOffsetX;mouseOriginY=mapOffsetY;mapViewport.classList.add("panning");
 
-    touchPanLastY=center.y;
+});
 
-    clampMapOffset();
+document.addEventListener("mousemove",function(e){
 
-  },{passive:false});
+if(!mousePanning)return;mapOffsetX=mouseOriginX+(e.clientX-mouseStartX);mapOffsetY=mouseOriginY+(e.clientY-mouseStartY);clampMapOffset();
 
-  mapViewport.addEventListener("touchend",function(){
+});
 
-    if(!touchPanActive)return;
+document.addEventListener("mouseup",function(e){
 
-    touchPanActive=false;
+if(!mousePanning||e.button!==1)return;mousePanning=false;mapViewport.classList.remove("panning");
 
-    if(touchPanMoved){
+});
 
-      suppressNextClick=true;
+mapViewport.addEventListener("auxclick",function(e){if(e.button===1)e.preventDefault();});
 
-      setTimeout(()=>{suppressNextClick=false;},450);
+window.addEventListener("resize",()=>{if(!cameraBusy)clampMapOffset();});
 
-    }
+centerMap();
 
-  });
+const svgNS="http://www.w3.org/2000/svg";
 
-  mapViewport.addEventListener("touchcancel",function(){
+const board=document.createElementNS(svgNS,"svg");
 
-    touchPanActive=false;
+board.setAttribute("viewBox",`0 0 ${mapWidth} ${mapHeight}`);
 
-  });
+board.setAttribute("width",mapWidth);board.setAttribute("height",mapHeight);
 
-  mapViewport.addEventListener("mousedown",function(e){
+Object.assign(board.style,{position:"absolute",left:"0",top:"0",width:mapWidth+"px",height:mapHeight+"px",pointerEvents:"auto",zIndex:"2",display:"block"});
 
-    if(e.button!==1)return;
+map.appendChild(board);
 
-    e.preventDefault();
+const points=[[14,0],[42,0],[56,22],[42,44],[14,44],[0,22]];
 
-    mousePanning=true;
+function position(x,y){return{x:x*dx,y:y*dy+(x%2)*(h/2)};}
 
-    mouseStartX=e.clientX;
+function polygonPoints(x,y){const p=position(x,y);return points.map(([px,py])=>`${p.x+px},${p.y+py}`).join(" ");}
 
-    mouseStartY=e.clientY;
+function getNeighbors(unit){
 
-    mouseOriginX=mapOffsetX;
+const offsets=unit.x%2===0?[[0,-1],[0,1],[-1,0],[-1,-1],[1,0],[1,-1]]:[[0,-1],[0,1],[-1,0],[-1,1],[1,0],[1,1]];
 
-    mouseOriginY=mapOffsetY;
+return offsets.map(([ox,oy])=>({x:unit.x+ox,y:unit.y+oy})).filter(c=>c.x>=0&&c.x<cols&&c.y>=0&&c.y<rows);
 
-    mapViewport.classList.add("panning");
+}
 
-  });
+function getDistance(x1,y1,x2,y2){
 
-  document.addEventListener("mousemove",function(e){
+const queue=[{x:x1,y:y1,d:0}],visited=new Set([`${x1},${y1}`]);
 
-    if(!mousePanning)return;
+while(queue.length){const c=queue.shift();if(c.x===x2&&c.y===y2)return c.d;
 
-    mapOffsetX=mouseOriginX+(e.clientX-mouseStartX);
+getNeighbors(c).forEach(n=>{const key=`${n.x},${n.y}`;if(!visited.has(key)){visited.add(key);queue.push({x:n.x,y:n.y,d:c.d+1});}});}
 
-    mapOffsetY=mouseOriginY+(e.clientY-mouseStartY);
+return Infinity;
 
-    clampMapOffset();
+}
 
-  });
+function getUnitAt(x,y){return units.find(u=>u.x===x&&u.y===y&&u.hp>0)||null;}
 
-  document.addEventListener("mouseup",function(e){
+function occupied(x,y,except){return units.some(u=>u!==except&&u.x===x&&u.y===y&&u.hp>0);}
 
-    if(!mousePanning||e.button!==1)return;
+function getReachableCells(unit){
 
-    mousePanning=false;
+const queue=[{x:unit.x,y:unit.y,d:0}],visited=new Set([`${unit.x},${unit.y}`]),reachable=[];
 
-    mapViewport.classList.remove("panning");
+while(queue.length){const c=queue.shift();if(c.d>=unit.move)continue;
 
-  });
+getNeighbors(c).forEach(n=>{const key=`${n.x},${n.y}`;if(visited.has(key)||occupied(n.x,n.y,unit))return;visited.add(key);reachable.push({x:n.x,y:n.y});queue.push({x:n.x,y:n.y,d:c.d+1});});}
 
-  mapViewport.addEventListener("auxclick",function(e){
+return reachable;
 
-    if(e.button===1)e.preventDefault();
+}
 
-  });
+function isMage(unit){return unit.name==="魔道士"||unit.name==="敵魔道士";}
 
-  window.addEventListener("resize",clampMapOffset);
+function isUnitInAttackRange(a,d){
 
-  centerMap();
+if(!a||!d)return false;const distance=getDistance(a.x,a.y,d.x,d.y);
 
-  const svgNS="http://www.w3.org/2000/svg";
+if(isMage(a))return distance===2;return distance>=1&&distance<=a.range;
 
-  const board=document.createElementNS(svgNS,"svg");
+}
 
-  board.setAttribute("viewBox",`0 0 ${mapWidth} ${mapHeight}`);
+function isMoveTarget(x,y){
 
-  board.setAttribute("width",mapWidth);
+if(!selected||selected.side!=="ally"||selected.moved||selected.acted||selected.waited||currentTurn!=="ally"||menuOpen||pendingMove||combatAnimating||battleEnded)return false;
 
-  board.setAttribute("height",mapHeight);
+return getReachableCells(selected).some(c=>c.x===x&&c.y===y);
 
-  Object.assign(board.style,{position:"absolute",left:"0",top:"0",width:mapWidth+"px",height:mapHeight+"px",pointerEvents:"auto",zIndex:"2",display:"block"});
+}
 
-  map.appendChild(board);
+function isAttackRangeCell(x,y){
 
-  const points=[[14,0],[42,0],[56,22],[42,44],[14,44],[0,22]];
+if(!selected||selected.acted||selected.waited||battleVisual||battleEnded)return false;
 
-  function position(x,y){return{x:x*dx,y:y*dy+(x%2)*(h/2)};}
+const target=getUnitAt(x,y);if(target&&target.side===selected.side)return false;
 
-  function polygonPoints(x,y){
+const d=getDistance(selected.x,selected.y,x,y);if(isMage(selected))return d===2;return d>=1&&d<=selected.range;
 
-    const p=position(x,y);
+}
 
-    return points.map(([px,py])=>`${p.x+px},${p.y+py}`).join(" ");
+function isAllyAttackCell(x,y){
 
-  }
+if(!selected||selected.side!=="ally"||selected.acted||selected.waited)return false;
 
-  function getNeighbors(unit){
+const target=getUnitAt(x,y);return Boolean(target&&target.side==="enemy"&&isUnitInAttackRange(selected,target));
 
-    const offsets=unit.x%2===0?[[0,-1],[0,1],[-1,0],[-1,-1],[1,0],[1,-1]]:[[0,-1],[0,1],[-1,0],[-1,1],[1,0],[1,1]];
+}
 
-    return offsets.map(([ox,oy])=>({x:unit.x+ox,y:unit.y+oy})).filter(c=>c.x>=0&&c.x<cols&&c.y>=0&&c.y<rows);
+function isEnemyAttackCell(enemy,x,y){
 
-  }
+if(!enemy||enemy.side!=="enemy")return false;const target=getUnitAt(x,y);if(target&&target.side!=="ally")return false;
 
-  function getDistance(x1,y1,x2,y2){
+const d=getDistance(enemy.x,enemy.y,x,y);if(isMage(enemy))return d===2;return d>=1&&d<=enemy.range;
 
-    const queue=[{x:x1,y:y1,d:0}],visited=new Set([`${x1},${y1}`]);
+}
 
-    while(queue.length){
+function hasAttackTargets(unit){
 
-      const c=queue.shift();
+if(!unit||unit.hp<=0)return false;const side=unit.side==="ally"?"enemy":"ally";
 
-      if(c.x===x2&&c.y===y2)return c.d;
+return units.some(t=>t.hp>0&&t.side===side&&isUnitInAttackRange(unit,t));
 
-      getNeighbors(c).forEach(n=>{
+} function drawBattleArrow(from,to,color,extraClass){
 
-        const key=`${n.x},${n.y}`;
+const a=position(from.x,from.y),d=position(to.x,to.y);
 
-        if(!visited.has(key)){visited.add(key);queue.push({x:n.x,y:n.y,d:c.d+1});}
+const sx=a.x+28,sy=a.y+22,ex=d.x+28,ey=d.y+22;
 
-      });
+const defs=document.createElementNS(svgNS,"defs"),marker=document.createElementNS(svgNS,"marker");
 
-    }
+const markerId="battleArrowHead"+board.querySelectorAll("marker").length;
 
-    return Infinity;
+marker.setAttribute("id",markerId);marker.setAttribute("markerWidth","12");marker.setAttribute("markerHeight","12");marker.setAttribute("refX","11");marker.setAttribute("refY","6");marker.setAttribute("orient","auto");marker.setAttribute("markerUnits","userSpaceOnUse");
 
-  }
+const head=document.createElementNS(svgNS,"path");head.setAttribute("d","M0,0 L12,6 L0,12 Z");head.setAttribute("fill",color);
 
-  function getUnitAt(x,y){return units.find(u=>u.x===x&&u.y===y&&u.hp>0)||null;}
+marker.appendChild(head);defs.appendChild(marker);board.appendChild(defs);
 
-  function occupied(x,y,except){return units.some(u=>u!==except&&u.x===x&&u.y===y&&u.hp>0);}
+const line=document.createElementNS(svgNS,"line");
 
-  function getReachableCells(unit){
+line.setAttribute("x1",sx);line.setAttribute("y1",sy);line.setAttribute("x2",ex);line.setAttribute("y2",ey);
 
-    const queue=[{x:unit.x,y:unit.y,d:0}],visited=new Set([`${unit.x},${unit.y}`]),reachable=[];
+line.setAttribute("class","battle-arrow "+extraClass);line.setAttribute("stroke",color);line.setAttribute("marker-end",`url(#${markerId})`);board.appendChild(line);return line;
 
-    while(queue.length){
+}
 
-      const current=queue.shift();
+function drawCounterArrow(from,to,color,delay){
 
-      if(current.d>=unit.move)continue;
+const a=position(from.x,from.y),d=position(to.x,to.y),sx=a.x+28,sy=a.y+22,ex=d.x+28,ey=d.y+22;
 
-      getNeighbors(current).forEach(next=>{
+const midX=(sx+ex)/2,midY=(sy+ey)/2,line=drawBattleArrow(from,to,color,"counter-arrow");
 
-        const key=`${next.x},${next.y}`;
+line.setAttribute("x2",sx);line.setAttribute("y2",sy);
 
-        if(visited.has(key)||occupied(next.x,next.y,unit))return;
+[["x2",`${sx};${midX};${midX};${sx}`],["y2",`${sy};${midY};${midY};${sy}`],["opacity","0;1;1;0"]].forEach(([attr,values])=>{
 
-        visited.add(key);reachable.push({x:next.x,y:next.y});queue.push({x:next.x,y:next.y,d:current.d+1});
+const anim=document.createElementNS(svgNS,"animate");anim.setAttribute("attributeName",attr);anim.setAttribute("values",values);
 
-      });
+anim.setAttribute("keyTimes",attr==="opacity"?"0;.08;.78;1":"0;0.55;0.78;1");
 
-    }
+anim.setAttribute("dur","1.8s");anim.setAttribute("begin",delay+"s");anim.setAttribute("repeatCount","indefinite");line.appendChild(anim);
 
-    return reachable;
+});
 
-  }
+return{midX,midY};
 
-  function isMage(unit){return unit.name==="魔道士"||unit.name==="敵魔道士";}
+}
 
-  function isUnitInAttackRange(attacker,defender){
+function drawBattleVisual(){
 
-    if(!attacker||!defender)return false;
+if(!battleVisual)return;
 
-    const distance=getDistance(attacker.x,attacker.y,defender.x,defender.y);
+const a=battleVisual.attacker,d=battleVisual.defender;
 
-    if(isMage(attacker))return distance===2;
+if(!a||!d||a.hp<=0||d.hp<=0)return;
 
-    return distance>=1&&distance<=attacker.range;
+const ah=document.createElementNS(svgNS,"polygon");ah.setAttribute("points",polygonPoints(a.x,a.y));ah.setAttribute("class","battle-hex-attacker");board.appendChild(ah);
 
-  }
+const dh=document.createElementNS(svgNS,"polygon");dh.setAttribute("points",polygonPoints(d.x,d.y));dh.setAttribute("class","battle-hex-defender");board.appendChild(dh);
 
-  function isMoveTarget(x,y){
+if(battleVisual.showArrows===false)return;
 
-    if(!selected||selected.side!=="ally"||selected.moved||selected.acted||selected.waited||currentTurn!=="ally"||menuOpen||pendingMove||combatAnimating||battleEnded)return false;
+const color=a.side==="ally"?"#ff9800":"#29b6f6";
 
-    return getReachableCells(selected).some(c=>c.x===x&&c.y===y);
+if(battleVisual.response==="counter"){
 
-  }
+const center=drawCounterArrow(a,d,color,0);
 
-  function isAttackRangeCell(x,y){
+drawCounterArrow(d,a,d.side==="ally"?"#ff9800":"#29b6f6",0);
 
-    if(!selected||selected.side!=="ally"||selected.acted||selected.waited||battleVisual||battleEnded)return false;
+const group=document.createElementNS(svgNS,"g");group.setAttribute("transform",`translate(${center.midX},${center.midY})`);
 
-    const target=getUnitAt(x,y);
+const impact=document.createElementNS(svgNS,"text");impact.setAttribute("x","0");impact.setAttribute("y","0");impact.setAttribute("class","counter-impact");impact.textContent="💥";
 
-    if(target&&target.side==="ally")return false;
+const scale=document.createElementNS(svgNS,"animateTransform");scale.setAttribute("attributeName","transform");scale.setAttribute("type","scale");scale.setAttribute("values","0.2;1.35;1;0.65;0.2");scale.setAttribute("keyTimes","0;0.68;0.78;0.92;1");scale.setAttribute("dur","1.8s");scale.setAttribute("repeatCount","indefinite");
 
-    const distance=getDistance(selected.x,selected.y,x,y);
+const opacity=document.createElementNS(svgNS,"animate");opacity.setAttribute("attributeName","opacity");opacity.setAttribute("values","0;0;1;1;0");opacity.setAttribute("keyTimes","0;0.55;0.68;0.78;1");opacity.setAttribute("dur","1.8s");opacity.setAttribute("repeatCount","indefinite");
 
-    if(isMage(selected))return distance===2;
+impact.appendChild(scale);impact.appendChild(opacity);group.appendChild(impact);board.appendChild(group);return;
 
-    return distance>=1&&distance<=selected.range;
+}
 
-  }
+const line=drawBattleArrow(a,d,color,a.side==="ally"?"ally-arrow":"enemy-arrow");
 
-  function isAllyAttackCell(x,y){
+const ap=position(a.x,a.y),dp=position(d.x,d.y),sx=ap.x+28,sy=ap.y+22,ex=dp.x+28,ey=dp.y+22;
 
-    if(!selected||selected.side!=="ally"||selected.acted||selected.waited)return false;
+[["x2",`${sx};${ex};${ex};${sx}`],["y2",`${sy};${ey};${ey};${sy}`],["opacity","0;1;1;0"]].forEach(([attr,values])=>{
 
-    const target=getUnitAt(x,y);
+const anim=document.createElementNS(svgNS,"animate");anim.setAttribute("attributeName",attr);anim.setAttribute("values",values);
 
-    if(!target||target.side!=="enemy")return false;
+anim.setAttribute("keyTimes",attr==="opacity"?"0;0.12;0.78;1":"0;0.72;0.9;1");anim.setAttribute("dur","1.25s");anim.setAttribute("repeatCount","indefinite");line.appendChild(anim);
 
-    return isUnitInAttackRange(selected,target);
+});
 
-  }  function drawBattleArrow(from,to,color,extraClass){
+}
 
-    const a=position(from.x,from.y),d=position(to.x,to.y);
+function drawBoard(){
 
-    const startX=a.x+28,startY=a.y+22,endX=d.x+28,endY=d.y+22;
+board.innerHTML="";
 
-    const defs=document.createElementNS(svgNS,"defs");
+for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
 
-    const marker=document.createElementNS(svgNS,"marker");
+const unit=getUnitAt(x,y),poly=document.createElementNS(svgNS,"polygon");
 
-    const markerId="battleArrowHead"+board.querySelectorAll("marker").length;
+poly.setAttribute("points",polygonPoints(x,y));poly.dataset.x=x;poly.dataset.y=y;
 
-    marker.setAttribute("id",markerId);
+poly.setAttribute("fill",unit?(unit.side==="ally"?"#b9d8f5":"#f3baba"):"#d4d0bd");poly.setAttribute("stroke","#777");poly.setAttribute("stroke-width","1");poly.style.pointerEvents="auto";board.appendChild(poly);
 
-    marker.setAttribute("markerWidth","12");
+}
 
-    marker.setAttribute("markerHeight","12");
+if(selected&&selected.side==="ally"&&!pendingMove&&!battleVisual&&!battleEnded&&!selected.moved&&!selected.acted&&!selected.waited&&currentTurn==="ally"&&!menuOpen&&!attackMode){
 
-    marker.setAttribute("refX","11");
+for(let y=0;y<rows;y++)for(let x=0;x<cols;x++)if(isMoveTarget(x,y)){
 
-    marker.setAttribute("refY","6");
+const hex=document.createElementNS(svgNS,"polygon");hex.setAttribute("points",polygonPoints(x,y));hex.setAttribute("class","move-range-hex");board.appendChild(hex);
 
-    marker.setAttribute("orient","auto");
+}}
 
-    marker.setAttribute("markerUnits","userSpaceOnUse");
+if(selected&&selected.side==="ally"&&!battleVisual&&!battleEnded&&!menuOpen&&!selected.acted&&!selected.waited&&currentTurn==="ally"){
 
-    const arrowHead=document.createElementNS(svgNS,"path");
+for(let y=0;y<rows;y++)for(let x=0;x<cols;x++)if(isAttackRangeCell(x,y)){
 
-    arrowHead.setAttribute("d","M0,0 L12,6 L0,12 Z");
+const hex=document.createElementNS(svgNS,"polygon");hex.setAttribute("points",polygonPoints(x,y));hex.setAttribute("class","attack-range-hex");board.appendChild(hex);
 
-    arrowHead.setAttribute("fill",color);
+}}
 
-    marker.appendChild(arrowHead);
+if(selectedEnemy&&selectedEnemy.hp>0&&!battleVisual&&!battleEnded&&!menuOpen&&currentTurn==="ally"){
 
-    defs.appendChild(marker);
+getReachableCells(selectedEnemy).forEach(c=>{const hex=document.createElementNS(svgNS,"polygon");hex.setAttribute("points",polygonPoints(c.x,c.y));hex.setAttribute("class","move-range-hex");board.appendChild(hex);});
 
-    board.appendChild(defs);
+for(let y=0;y<rows;y++)for(let x=0;x<cols;x++)if(isEnemyAttackCell(selectedEnemy,x,y)){
 
-    const line=document.createElementNS(svgNS,"line");
+const hex=document.createElementNS(svgNS,"polygon");hex.setAttribute("points",polygonPoints(x,y));hex.setAttribute("class","attack-range-hex");board.appendChild(hex);
 
-    line.setAttribute("x1",startX);line.setAttribute("y1",startY);
+}}
 
-    line.setAttribute("x2",endX);line.setAttribute("y2",endY);
+if(selected){
 
-    line.setAttribute("class","battle-arrow "+extraClass);
+const s=document.createElementNS(svgNS,"polygon");s.setAttribute("points",polygonPoints(selected.x,selected.y));s.setAttribute("stroke",pendingMove?"#e53935":"#e5a000");s.setAttribute("fill","none");s.setAttribute("stroke-width","4");s.style.pointerEvents="none";board.appendChild(s);
 
-    line.setAttribute("stroke",color);
+}
 
-    line.setAttribute("marker-end",`url(#${markerId})`);
+if(selectedEnemy&&selectedEnemy.hp>0){
 
-    board.appendChild(line);
+const s=document.createElementNS(svgNS,"polygon");s.setAttribute("points",polygonPoints(selectedEnemy.x,selectedEnemy.y));s.setAttribute("stroke","#1565c0");s.setAttribute("fill","none");s.setAttribute("stroke-width","4");s.style.pointerEvents="none";board.appendChild(s);
 
-    return line;
+}
 
-  }
+drawBattleVisual();
 
-  function drawCounterArrow(from,to,color,delay){
+}
 
-    const a=position(from.x,from.y),d=position(to.x,to.y);
+function drawUnits(){
 
-    const startX=a.x+28,startY=a.y+22,endX=d.x+28,endY=d.y+22;
+map.querySelectorAll(".unit-token,.defense-mark").forEach(el=>el.remove());
 
-    const midX=(startX+endX)/2,midY=(startY+endY)/2;
+units.forEach(unit=>{
 
-    const line=drawBattleArrow(from,to,color,"counter-arrow");
+if(unit.hp<=0)return;const p=position(unit.x,unit.y),token=document.createElement("div");
 
-    line.setAttribute("x2",startX);line.setAttribute("y2",startY);
+token.className="unit-token";if(unit.acted||unit.waited)token.classList.add("unit-acted");
 
-    const animateX=document.createElementNS(svgNS,"animate");
+token.dataset.x=unit.x;token.dataset.y=unit.y;token.dataset.unitId=unit.id;
 
-    animateX.setAttribute("attributeName","x2");
+token.style.left=p.x+"px";token.style.top=p.y+"px";
 
-    animateX.setAttribute("values",`${startX};${midX};${midX};${startX}`);
+token.innerHTML=`<div class="unit-content"><div class="unit-icon">${unit.icon}</div><div class="unit-name">${unit.name}</div><div class="unit-hp">${unit.hp}/${unit.maxHp}</div></div>`;
 
-    animateX.setAttribute("keyTimes","0;0.55;0.78;1");
+map.appendChild(token);
 
-    animateX.setAttribute("dur","1.8s");
+const show=battleVisual&&battleVisual.defender&&battleVisual.defender.id===unit.id&&(battleVisual.response==="defend"||battleVisual.response==="skill");
 
-    animateX.setAttribute("begin",delay+"s");
+if(show){const shield=document.createElement("div");shield.className="defense-mark";shield.textContent="🛡️";shield.style.left=(p.x+28)+"px";shield.style.top=(p.y-9)+"px";map.appendChild(shield);}
 
-    animateX.setAttribute("repeatCount","indefinite");
+});
 
-    line.appendChild(animateX);
+}
 
-    const animateY=document.createElementNS(svgNS,"animate");
+function refresh(){
 
-    animateY.setAttribute("attributeName","y2");
+drawBoard();drawUnits();
 
-    animateY.setAttribute("values",`${startY};${midY};${midY};${startY}`);
+const actionUnit=pendingMove?pendingMove.unit:selected;
 
-    animateY.setAttribute("keyTimes","0;0.55;0.78;1");
+const canAct=Boolean(actionUnit&&actionUnit.side==="ally"&&actionUnit.hp>0&&!actionUnit.acted&&!actionUnit.waited&&currentTurn==="ally"&&!battleEnded&&!combatAnimating&&!reaction&&!enemyAIActive);
 
-    animateY.setAttribute("dur","1.8s");
+const canMove=Boolean(canAct&&!pendingMove&&!actionUnit.moved);
 
-    animateY.setAttribute("begin",delay+"s");
+const showActions=Boolean(canAct&&(pendingMove||selected));
 
-    animateY.setAttribute("repeatCount","indefinite");
+document.querySelector("#actionButtons").style.display=showActions?"flex":"none";
 
-    line.appendChild(animateY);
+pendingMoveButton.style.display=canMove?"inline-block":"none";
 
-    const animateOpacity=document.createElementNS(svgNS,"animate");
+pendingAttackButton.style.display=showActions?"inline-block":"none";
 
-    animateOpacity.setAttribute("attributeName","opacity");
+pendingWaitButton.style.display=showActions?"inline-block":"none";
 
-    animateOpacity.setAttribute("values","0;1;1;0");
+systemButton.style.display=showActions?"inline-block":"none";
 
-    animateOpacity.setAttribute("keyTimes","0;.08;.78;1");
+pendingMoveButton.disabled=!canMove;
 
-    animateOpacity.setAttribute("dur","1.8s");
+pendingAttackButton.disabled=!showActions||!hasAttackTargets(actionUnit);
 
-    animateOpacity.setAttribute("begin",delay+"s");
+pendingWaitButton.disabled=!showActions;
 
-    animateOpacity.setAttribute("repeatCount","indefinite");
+systemButton.disabled=!showActions;
 
-    line.appendChild(animateOpacity);
+systemButton.textContent="メニュー";
 
-    return{midX,midY};
+turnLabel.textContent=currentTurn==="ally"?"味方のターン":"敵のターン";
 
-  }
+}
 
-  function drawBattleVisual(){
+function animateUnit(unit,className){
 
-    if(!battleVisual)return;
+const token=map.querySelector(`.unit-token[data-unit-id="${unit.id}"]`);if(!token)return;
 
-    const attacker=battleVisual.attacker,defender=battleVisual.defender;
+token.classList.remove(className);void token.offsetWidth;token.classList.add(className);
 
-    if(!attacker||!defender||attacker.hp<=0||defender.hp<=0)return;
+}
 
-    const attackerHex=document.createElementNS(svgNS,"polygon");
+function showCombatEffect(unit,value,miss){
 
-    attackerHex.setAttribute("points",polygonPoints(attacker.x,attacker.y));
+const p=position(unit.x,unit.y),effect=document.createElement("div");
 
-    attackerHex.setAttribute("class","battle-hex-attacker");
+effect.className=miss?"combat-miss":"combat-number";effect.textContent=miss?"MISS":"-"+value;
 
-    board.appendChild(attackerHex);
+effect.style.left=(p.x+28)+"px";effect.style.top=(p.y-5)+"px";map.appendChild(effect);setTimeout(()=>effect.remove(),1000);
 
-    const defenderHex=document.createElementNS(svgNS,"polygon");
+}
 
-    defenderHex.setAttribute("points",polygonPoints(defender.x,defender.y));
+function clearBattleVisual(){
 
-    defenderHex.setAttribute("class","battle-hex-defender");
+battleVisual=null;
 
-    board.appendChild(defenderHex);
+board.querySelectorAll(".battle-hex-attacker,.battle-hex-defender,.battle-arrow,defs,g").forEach(el=>{
 
-    if(battleVisual.showArrows===false)return;
+if(el.classList.contains("battle-hex-attacker")||el.classList.contains("battle-hex-defender")||el.classList.contains("battle-arrow")||el.querySelector(".counter-impact"))el.remove();
 
-    const color=attacker.side==="ally"?"#ff9800":"#29b6f6";
+});
 
-    if(battleVisual.response==="counter"){
+}
 
-      const center=drawCounterArrow(attacker,defender,color,0);
+function cancelMove(){
 
-      drawCounterArrow(defender,attacker,defender.side==="ally"?"#ff9800":"#29b6f6",0);
+if(!pendingMove)return;const unit=pendingMove.unit;
 
-      const impactGroup=document.createElementNS(svgNS,"g");
+unit.x=pendingMove.fromX;unit.y=pendingMove.fromY;unit.moved=false;
 
-      impactGroup.setAttribute("transform",`translate(${center.midX},${center.midY})`);
+pendingMove=null;moveMode=false;attackMode=false;menuOpen=false;selected=unit;selectedEnemy=null;systemMenuOpen=false;
 
-      const impact=document.createElementNS(svgNS,"text");
+clearBattleVisual();info.innerHTML=`<p>${unit.name}は元の位置に戻った。</p>`;refresh();
 
-      impact.setAttribute("x","0");impact.setAttribute("y","0");
+}
 
-      impact.setAttribute("class","counter-impact");
+function askEndTurnIfAllActed(){
 
-      impact.textContent="💥";
+if(currentTurn!=="ally"||pendingMove||battleEnded||combatAnimating)return;
 
-      const scale=document.createElementNS(svgNS,"animateTransform");
+const allies=units.filter(u=>u.side==="ally"&&u.hp>0);if(!allies.length||!allies.every(u=>u.acted||u.waited))return;
 
-      scale.setAttribute("attributeName","transform");
+if(confirm("味方全員が行動済みです。ターンを終了しますか？"))startEnemyTurn();
 
-      scale.setAttribute("type","scale");
+else{info.innerHTML="<p>味方全員が行動済みです。システムメニューからターン終了できます。</p>";refresh();}
 
-      scale.setAttribute("values","0.2;1.35;1;0.65;0.2");
+}
 
-      scale.setAttribute("keyTimes","0;0.68;0.78;0.92;1");
+function finishMoveAndWait(){
 
-      scale.setAttribute("dur","1.8s");
+if(!pendingMove)return;const unit=pendingMove.unit;
 
-      scale.setAttribute("repeatCount","indefinite");
+unit.moved=true;unit.acted=true;unit.waited=true;pendingMove=null;moveMode=false;attackMode=false;menuOpen=false;
 
-      const opacity=document.createElementNS(svgNS,"animate");
+selected=null;selectedEnemy=null;systemMenuOpen=false;clearBattleVisual();
 
-      opacity.setAttribute("attributeName","opacity");
+info.innerHTML=`<p>${unit.name}は移動して待機した。</p>`;refresh();askEndTurnIfAllActed();
 
-      opacity.setAttribute("values","0;0;1;1;0");
+}
 
-      opacity.setAttribute("keyTimes","0;0.55;0.68;0.78;1");
+function showDetails(unit){
 
-      opacity.setAttribute("dur","1.8s");
+if(!unit)return;
 
-      opacity.setAttribute("repeatCount","indefinite");
+info.innerHTML=`<h3>${unit.icon} ${unit.name}</h3><p>HP：${unit.hp}/${unit.maxHp}</p><p>攻撃：${unit.atk}　防御：${unit.def}</p><p>速さ：${unit.agi}　技量：${unit.dex}</p><p>移動：${unit.move}　射程：${unit.range}</p><p>スキル：${unit.skills.join("、")}</p><button id="detailClose">閉じる</button>`;
 
-      impact.appendChild(scale);impact.appendChild(opacity);
+menuOpen=true;attackMode=false;document.querySelector("#detailClose").onclick=()=>{
 
-      impactGroup.appendChild(impact);board.appendChild(impactGroup);
+menuOpen=false;if(unit.side==="enemy"){selectedEnemy=unit;selected=null;info.innerHTML="<p>敵の能力を確認した。</p>";}
 
-      return;
+else{selected=unit;info.innerHTML="ユニットを選択してね";}refresh();
 
-    }
+};refresh();
 
-    const line=drawBattleArrow(attacker,defender,color,attacker.side==="ally"?"ally-arrow":"enemy-arrow");
+}
 
-    const a=position(attacker.x,attacker.y),d=position(defender.x,defender.y);
+function exitAttackSelection(){
 
-    const startX=a.x+28,startY=a.y+22,endX=d.x+28,endY=d.y+22;
+attackMode=false;clearBattleVisual();selectedEnemy=null;menuOpen=false;
 
-    const animateX=document.createElementNS(svgNS,"animate");
+if(pendingMove){selected=pendingMove.unit;info.innerHTML=`<p>${selected.name}：攻撃選択を取り消した。</p>`;}
 
-    animateX.setAttribute("attributeName","x2");
+else info.innerHTML="ユニットを選択してね";refresh();
 
-    animateX.setAttribute("values",`${startX};${endX};${endX};${startX}`);
+}
 
-    animateX.setAttribute("keyTimes","0;0.72;0.9;1");
+function closeMenuByEmptyTap(){
 
-    animateX.setAttribute("dur","1.25s");
+if(pendingMove){if(attackMode){exitAttackSelection();return;}cancelMove();return;}
 
-    animateX.setAttribute("repeatCount","indefinite");
+menuOpen=false;moveMode=false;attackMode=false;selected=null;selectedEnemy=null;systemMenuOpen=false;lastTapUnitId=null;clearBattleVisual();info.innerHTML="ユニットを選択してね";refresh();
 
-    line.appendChild(animateX);
+} function showActionMenu(unit){
 
-    const animateY=document.createElementNS(svgNS,"animate");
+if(!unit||unit.hp<=0)return;
 
-    animateY.setAttribute("attributeName","y2");
+selected=unit;selectedEnemy=null;menuOpen=true;moveMode=false;attackMode=false;systemMenuOpen=false;clearBattleVisual();
 
-    animateY.setAttribute("values",`${startY};${endY};${endY};${startY}`);
+const canMove=!unit.moved&&!unit.acted&&!unit.waited,canAct=!unit.acted&&!unit.waited;
 
-    animateY.setAttribute("keyTimes","0;0.72;0.9;1");
+info.innerHTML=`<h3>${unit.icon} ${unit.name}</h3><p>HP：${unit.hp}/${unit.maxHp}</p><p>攻撃：${unit.atk}　防御：${unit.def}</p>
 
-    animateY.setAttribute("dur","1.25s");
+<button id="actMove" ${canMove?"":"disabled"}>移動</button><button id="actAttack" ${canAct?"":"disabled"}>攻撃</button>
 
-    animateY.setAttribute("repeatCount","indefinite");
+<button id="actSkill" ${canAct?"":"disabled"}>スキル</button><button id="actItem" ${canAct?"":"disabled"}>アイテム</button>
 
-    line.appendChild(animateY);
+<button id="actDetails">能力確認</button><button id="actWait">待機</button><button id="actCancel">キャンセル</button>`;
 
-    const animateOpacity=document.createElementNS(svgNS,"animate");
+document.querySelector("#actMove").onclick=()=>{if(!canMove)return;menuOpen=false;moveMode=true;attackMode=false;info.innerHTML=`<p>${unit.name}：青い範囲から移動先を選んでね。</p>`;refresh();};
 
-    animateOpacity.setAttribute("attributeName","opacity");
+document.querySelector("#actAttack").onclick=()=>{if(canAct)showAttackMenu(unit);};
 
-    animateOpacity.setAttribute("values","0;1;1;0");
+document.querySelector("#actSkill").onclick=()=>{if(canAct)showSkillMenu(unit);};
 
-    animateOpacity.setAttribute("keyTimes","0;0.12;0.78;1");
+document.querySelector("#actItem").onclick=()=>{if(canAct)showItemMenu(unit);};
 
-    animateOpacity.setAttribute("dur","1.25s");
+document.querySelector("#actDetails").onclick=()=>showDetails(unit);
 
-    animateOpacity.setAttribute("repeatCount","indefinite");
+document.querySelector("#actWait").onclick=()=>{
 
-    line.appendChild(animateOpacity);
+if(pendingMove)finishMoveAndWait();
 
-  }
+else{unit.acted=true;unit.waited=true;selected=null;menuOpen=false;clearBattleVisual();info.innerHTML=`<p>${unit.name}は待機した。</p>`;refresh();askEndTurnIfAllActed();}
 
-  function drawBoard(){
+};
 
-    board.innerHTML="";
+document.querySelector("#actCancel").onclick=()=>{
 
-    for(let y=0;y<rows;y++){
+clearBattleVisual();if(pendingMove)cancelMove();
 
-      for(let x=0;x<cols;x++){
+else{menuOpen=false;selected=null;selectedEnemy=null;info.innerHTML="ユニットを選択してね";refresh();}
 
-        const unit=getUnitAt(x,y);
+};
 
-        const poly=document.createElementNS(svgNS,"polygon");
+refresh();
 
-        poly.setAttribute("points",polygonPoints(x,y));
+}
 
-        poly.dataset.x=x;poly.dataset.y=y;
+function showAttackMenu(unit){
 
-        poly.setAttribute("fill",unit?(unit.side==="ally"?"#b9d8f5":"#f3baba"):"#d4d0bd");
+selected=unit;menuOpen=false;moveMode=false;attackMode=true;selectedEnemy=null;clearBattleVisual();
 
-        poly.setAttribute("stroke","#777");
+info.innerHTML=`<p>${unit.name}：攻撃する敵を選んでね。</p><button id="attackCancel">戻る</button>`;
 
-        poly.setAttribute("stroke-width","1");
+document.querySelector("#attackCancel").onclick=()=>{
 
-        poly.style.pointerEvents="auto";
+if(pendingMove)exitAttackSelection();else{attackMode=false;showActionMenu(unit);}
 
-        board.appendChild(poly);
+};refresh();
 
-      }
+}
 
-    }
+function showSkillMenu(unit){
 
-    if(selected&&selected.side==="ally"&&!pendingMove&&!battleVisual&&!battleEnded&&!selected.moved&&!selected.acted&&!selected.waited&&currentTurn==="ally"&&!menuOpen){
+menuOpen=true;attackMode=false;moveMode=false;clearBattleVisual();
 
-      for(let y=0;y<rows;y++)for(let x=0;x<cols;x++)if(isMoveTarget(x,y)){
+let html=`<h3>${unit.name}のスキル</h3>`;
 
-        const moveHex=document.createElementNS(svgNS,"polygon");
+unit.skills.forEach((skill,i)=>{html+=`<button data-skill="${i}">${skill}</button>`;});
 
-        moveHex.setAttribute("points",polygonPoints(x,y));
+html+=`<button id="skillBack">戻る</button>`;info.innerHTML=html;
 
-        moveHex.setAttribute("class","move-range-hex");
+info.querySelectorAll("[data-skill]").forEach(button=>{
 
-        board.appendChild(moveHex);
+button.onclick=()=>{
 
-      }
+const skill=unit.skills[Number(button.dataset.skill)];
 
-    }
+if(skill==="指揮"){
 
-    if(selected&&selected.side==="ally"&&!battleVisual&&!battleEnded&&!menuOpen&&!selected.acted&&!selected.waited&&currentTurn==="ally"){
+unit.acted=true;unit.waited=true;selected=null;menuOpen=false;pendingMove=null;
 
-      for(let y=0;y<rows;y++)for(let x=0;x<cols;x++)if(isAttackRangeCell(x,y)){
+info.innerHTML="<p>隊長は味方を鼓舞した。</p>";refresh();askEndTurnIfAllActed();return;
 
-        const attackHex=document.createElementNS(svgNS,"polygon");
+}
 
-        attackHex.setAttribute("points",polygonPoints(x,y));
+if(skill==="防御"){
 
-        attackHex.setAttribute("class","attack-range-hex");
+unit.defending=true;unit.acted=true;unit.waited=true;selected=null;menuOpen=false;pendingMove=null;
 
-        board.appendChild(attackHex);
+info.innerHTML="<p>重装兵は防御態勢を取った。</p>";refresh();askEndTurnIfAllActed();return;
 
-      }
+}
 
-    }
+if(skill==="魔法"||skill==="突撃")showAttackMenu(unit);
 
-    if(selected){
+};
 
-      const s=document.createElementNS(svgNS,"polygon");
+});
 
-      s.setAttribute("points",polygonPoints(selected.x,selected.y));
+document.querySelector("#skillBack").onclick=()=>showActionMenu(unit);refresh();
 
-      s.setAttribute("stroke",pendingMove?"#e53935":"#e5a000");
+}
 
-      s.setAttribute("fill","none");
+function showItemMenu(unit){
 
-      s.setAttribute("stroke-width","4");
+menuOpen=true;clearBattleVisual();
 
-      s.style.pointerEvents="none";
+info.innerHTML=`<h3>アイテム</h3><p>使用できるアイテムはありません。</p><button id="itemBack">戻る</button>`;
 
-      board.appendChild(s);
+document.querySelector("#itemBack").onclick=()=>showActionMenu(unit);refresh();
 
-    }
+}
 
-    drawBattleVisual();
+function calculateHit(attacker,defender){return Math.max(20,Math.min(95,75+(attacker.dex-defender.agi)*3));}
 
-  }
+function calculateDamage(attacker,defender){return Math.max(1,attacker.atk-defender.def);}
 
-  function drawUnits(){
+function calculateEvadeChance(attacker,defender){return Math.max(10,Math.min(70,30+(defender.agi-attacker.dex)*5));}
 
-    map.querySelectorAll(".unit-token,.defense-mark").forEach(el=>el.remove());
+function chooseEnemyReaction(attacker,defender){
 
-    units.forEach(unit=>{
+if(isUnitInAttackRange(defender,attacker))return "counter";
 
-      if(unit.hp<=0)return;
+return calculateEvadeChance(attacker,defender)>=40?"evade":"defend";
 
-      const p=position(unit.x,unit.y);
+}
 
-      const token=document.createElement("div");
+function getCombatPrediction(attacker,defender,response){
 
-      token.className="unit-token";
+const hit=calculateHit(attacker,defender);let damage=calculateDamage(attacker,defender);
 
-      if(unit.acted||unit.waited)token.classList.add("unit-acted");
+if(response==="defend"||response==="skill")damage=Math.max(1,Math.floor(damage/2));
 
-      token.dataset.x=unit.x;token.dataset.y=unit.y;token.dataset.unitId=unit.id;
+const evadeChance=response==="evade"?calculateEvadeChance(attacker,defender):0;
 
-      token.style.left=p.x+"px";token.style.top=p.y+"px";
+const canCounter=defender.hp>0&&isUnitInAttackRange(defender,attacker);
 
-      token.innerHTML=`
+const counterDamage=response==="counter"&&canCounter?calculateDamage(defender,attacker):0;
 
-        <div class="unit-content">
+return{hit,damage,evadeChance,counterDamage,canCounter};
 
-          <div class="unit-icon">${unit.icon}</div>
+}
 
-          <div class="unit-name">${unit.name}</div>
+function hpBarHTML(unit,predictedDamage){
 
-          <div class="unit-hp">${unit.hp}/${unit.maxHp}</div>
+const percent=Math.max(0,unit.hp/unit.maxHp*100),predicted=Math.max(0,Math.min(percent,predictedDamage/unit.maxHp*100));
 
-        </div>`;
+return `<div class="hp-track"><div class="hp-fill ${unit.side==="ally"?"hp-ally":"hp-enemy"}" style="width:${percent}%"></div>
 
-      map.appendChild(token);
+${predictedDamage>0?`<div class="hp-predicted" style="left:${Math.max(0,percent-predicted)}%;width:${predicted}%"></div>`:""}</div>
 
-      const showDefenseMark=battleVisual&&battleVisual.defender&&battleVisual.defender.id===unit.id&&(battleVisual.response==="defend"||battleVisual.response==="skill");
+<div class="battle-hp-text">${unit.hp}/${unit.maxHp}${predictedDamage>0?` → ${Math.max(0,unit.hp-predictedDamage)}`:""}</div>`;
 
-      if(showDefenseMark){
+}
 
-        const shield=document.createElement("div");
+function battlePanelHTML(attacker,defender,prediction){
 
-        shield.className="defense-mark";
+return `<div class="battle-panel"><div class="battle-side"><div class="battle-name">${attacker.icon}${attacker.name}</div>${hpBarHTML(attacker,prediction.counterDamage)}<div>攻撃 ${attacker.atk}</div></div>
 
-        shield.textContent="🛡️";
+<div class="battle-center">VS</div><div class="battle-side"><div class="battle-name">${defender.icon}${defender.name}</div>${hpBarHTML(defender,prediction.damage)}<div>攻撃 ${defender.atk}</div></div></div>`;
 
-        shield.style.left=(p.x+28)+"px";
+}
 
-        shield.style.top=(p.y-9)+"px";
+function predictionHTML(prediction,response,attacker){
 
-        map.appendChild(shield);
+let reactionText="";
 
-      }
+if(attacker.side==="ally"){
 
-    });
+if(response==="counter")reactionText="<p>敵の対応：反撃</p>";
 
-  }
+else if(response==="defend")reactionText="<p>敵の対応：防御（ダメージ半減）</p>";
 
-  function refresh(){
+else if(response==="evade")reactionText="<p>敵の対応：回避</p>";
 
-    drawBoard();drawUnits();
+}
 
-    pendingWaitButton.style.display=pendingMove?"inline-block":"none";
+if(response==="evade")return `${reactionText}<p>回避率：${prediction.evadeChance}％　通常命中率：${prediction.hit}％</p><p>回避失敗時の予測ダメージ：${prediction.damage}</p><p>反撃ダメージ：反撃なし</p>`;
 
-    turnLabel.textContent=currentTurn==="ally"?"味方のターン":"敵のターン";
+return `${reactionText}<p>命中率：${prediction.hit}％　予測ダメージ：${prediction.damage}</p><p>反撃ダメージ：${prediction.canCounter?prediction.counterDamage:"反撃不可"}</p>`;
 
-    endTurnButton.disabled=battleEnded||combatAnimating||menuOpen||pendingMove||reaction||enemyAIActive;
+}
 
-  }
+function showCombatConfirmation(attacker,defender,response){
 
-  function animateUnit(unit,className){
+if(!attacker||!defender)return;
 
-    const token=map.querySelector(`.unit-token[data-unit-id="${unit.id}"]`);
+const prediction=getCombatPrediction(attacker,defender,response);
 
-    if(!token)return;
+menuOpen=true;attackMode=false;moveMode=false;selectedEnemy=defender;
 
-    token.classList.remove(className);
+battleVisual={attacker,defender,response,showArrows:true};
 
-    void token.offsetWidth;
+info.innerHTML=`<h3>戦闘確認</h3><button id="combatStart">戦闘開始</button><button id="combatBack">戻る</button>
 
-    token.classList.add(className);
+${battlePanelHTML(attacker,defender,prediction)}${predictionHTML(prediction,response,attacker)}<p>オレンジ：攻撃側　青：防御側</p>`;
 
-  }
+document.querySelector("#combatStart").onclick=()=>{if(!combatAnimating)resolveAttack(attacker,defender,response);};
 
-  function showCombatEffect(unit,value,miss){
+document.querySelector("#combatBack").onclick=()=>{
 
-    const p=position(unit.x,unit.y);
+clearBattleVisual();if(attacker.side==="enemy")showReactionMenu(attacker,defender);else showAttackMenu(attacker);
 
-    const effect=document.createElement("div");
+};refresh();
 
-    effect.className=miss?"combat-miss":"combat-number";
+}
 
-    effect.textContent=miss?"MISS":"-"+value;
+function showReactionMenu(attacker,defender){
 
-    effect.style.left=(p.x+28)+"px";
+reaction=true;menuOpen=true;attackMode=false;moveMode=false;
 
-    effect.style.top=(p.y-5)+"px";
+battleVisual={attacker,defender,response:"normal",showArrows:true};
 
-    map.appendChild(effect);
+const canCounter=isUnitInAttackRange(defender,attacker);
 
-    setTimeout(()=>effect.remove(),1000);
+info.innerHTML=`<h3>敵の攻撃！</h3><p>${attacker.name}が${defender.name}を攻撃する。</p><p>どう対応する？</p>
 
-  }
+<button id="reactCounter" ${canCounter?"":"disabled"}>反撃</button><button id="reactDefend">防御</button>
 
-  function cancelMove(){
+<button id="reactEvade">回避</button><button id="reactSkill">スキル</button>`;
 
-    if(!pendingMove)return;
+document.querySelector("#reactCounter").onclick=()=>{reaction=false;showCombatConfirmation(attacker,defender,"counter");};
 
-    const unit=pendingMove.unit;
+document.querySelector("#reactDefend").onclick=()=>{reaction=false;showCombatConfirmation(attacker,defender,"defend");};
 
-    unit.x=pendingMove.fromX;unit.y=pendingMove.fromY;unit.moved=false;
+document.querySelector("#reactEvade").onclick=()=>{reaction=false;showCombatConfirmation(attacker,defender,"evade");};
 
-    pendingMove=null;moveMode=false;attackMode=false;menuOpen=false;selected=unit;
+document.querySelector("#reactSkill").onclick=()=>{reaction=false;showReactionSkills(attacker,defender);};refresh();
 
-    info.innerHTML=`<p>${unit.name}は元の位置に戻った。</p>`;
+}
 
-    refresh();
+function showReactionSkills(attacker,defender){
 
-  }
+menuOpen=true;reaction=true;battleVisual={attacker,defender,response:"normal",showArrows:true};
 
-  function finishMoveAndWait(){
+info.innerHTML=`<h3>防御スキル</h3><p>防御スキルを使用する。</p><button id="reactionSkillUse">防御態勢</button><button id="reactionSkillBack">戻る</button>`;
 
-    if(!pendingMove)return;
+document.querySelector("#reactionSkillUse").onclick=()=>{reaction=false;showCombatConfirmation(attacker,defender,"skill");};
 
-    const unit=pendingMove.unit;
+document.querySelector("#reactionSkillBack").onclick=()=>showReactionMenu(attacker,defender);refresh();
 
-    unit.moved=true;unit.acted=true;unit.waited=true;
+}
 
-    pendingMove=null;moveMode=false;attackMode=false;menuOpen=false;selected=null;
+function resetBattle(){
 
-    info.innerHTML=`<p>${unit.name}は移動して待機した。</p>`;
+units.forEach((unit,index)=>{
 
-    refresh();
+const initial=initialUnitStates[index];
 
-  }
+Object.assign(unit,{...initial,resistances:{...initial.resistances},skills:[...initial.skills]});
 
-  function showDetails(unit){
+});
 
-    if(!unit)return;
+selected=null;selectedEnemy=null;currentTurn="ally";turn=1;pendingMove=null;moveMode=false;attackMode=false;menuOpen=false;
 
-    info.innerHTML=`
+reaction=false;combatAnimating=false;battleEnded=false;enemyQueue=[];enemyQueueIndex=0;enemyAIActive=false;
 
-      <h3>${unit.icon} ${unit.name}</h3>
+lastTapUnitId=null;battleVisual=null;systemMenuOpen=false;
 
-      <p>HP：${unit.hp}/${unit.maxHp}</p>
+map.querySelectorAll(".combat-number,.combat-miss").forEach(el=>el.remove());
 
-      <p>攻撃：${unit.atk}　防御：${unit.def}</p>
+info.innerHTML="<p>新しい戦いが始まった。ユニットを選択してね。</p>";refresh();
 
-      <p>速さ：${unit.agi}　技量：${unit.dex}</p>
+}
 
-      <p>移動：${unit.move}　射程：${unit.range}</p>
+function showStory(title,message,buttonText,callback){
 
-      <p>スキル：${unit.skills.join("、")}</p>
+const overlay=document.createElement("div");overlay.className="story-overlay";
 
-      <button id="detailClose">閉じる</button>`;
+const panel=document.createElement("div");panel.className="story-panel";
 
-    menuOpen=true;
+const heading=document.createElement("h2");heading.textContent=title;
 
-    document.querySelector("#detailClose").onclick=()=>{
+const paragraph=document.createElement("p");paragraph.textContent=message;
 
-      menuOpen=false;info.innerHTML="ユニットを選択してね";refresh();
+const button=document.createElement("button");button.textContent=buttonText;
 
-    };
+button.onclick=()=>{overlay.remove();if(callback)callback();};
 
-    refresh();
+panel.appendChild(heading);panel.appendChild(paragraph);panel.appendChild(button);overlay.appendChild(panel);game.appendChild(overlay);
 
-  }
+} // インターミッション画面
 
-  function closeMenuByEmptyTap(){
+function showIntermission(){
 
-    if(pendingMove){cancelMove();return;}
+intermissionOpen=true;intermissionReturnMode=true;
 
-    menuOpen=false;moveMode=false;attackMode=false;selected=null;selectedEnemy=null;
+systemMenuOpen=false;menuOpen=false;selected=null;selectedEnemy=null;
 
-    lastTapUnitId=null;lastTapTime=0;battleVisual=null;
+pendingMove=null;moveMode=false;attackMode=false;clearBattleVisual();
 
-    info.innerHTML="ユニットを選択してね";
+mapViewport.style.display="none";
 
-    refresh();
+document.querySelector("#actionButtons").style.display="none";
 
-  }
+turnLabel.style.display="none";
 
-  function showActionMenu(unit){
+info.style.display="none";
 
-    if(!unit||unit.hp<=0)return;
+let old=document.querySelector("#intermissionPanel");if(old)old.remove();
 
-    selected=unit;selectedEnemy=null;menuOpen=true;moveMode=false;attackMode=false;battleVisual=null;
+const panel=document.createElement("div");panel.id="intermissionPanel";
 
-    const canMove=!unit.moved&&!unit.acted&&!unit.waited;
+panel.innerHTML=`
 
-    const canAct=!unit.acted&&!unit.waited;
+<h3>インターミッション</h3>
 
-    info.innerHTML=`
+<p>部隊の準備を整え、次の戦いに備えよう。</p>
 
-      <h3>${unit.icon} ${unit.name}</h3>
+<div class="intermission-main">
 
-      <p>HP：${unit.hp}/${unit.maxHp}</p>
+<button data-prep="装備変更">装備変更</button>
 
-      <p>攻撃：${unit.atk}　防御：${unit.def}</p>
+<button data-prep="能力強化">能力強化</button>
 
-      <button id="actMove" ${canMove?"":"disabled"}>移動</button>
+<button data-prep="アイテム管理">アイテム管理</button>
 
-      <button id="actAttack" ${canAct?"":"disabled"}>攻撃</button>
+<button data-prep="能力確認">能力確認</button>
 
-      <button id="actSkill" ${canAct?"":"disabled"}>スキル</button>
+<button data-prep="ジョブチェンジ">ジョブチェンジ</button>
 
-      <button id="actItem" ${canAct?"":"disabled"}>アイテム</button>
+<button id="intermissionSystem">システムメニュー</button>
 
-      <button id="actDetails">能力確認</button>
+</div>
 
-      <button id="actWait">待機</button>
+<p id="intermissionMessage">準備項目を選択してください。</p>
 
-      <button id="actCancel">キャンセル</button>`;
+<button class="intermission-start" id="intermissionStart">戦いへ</button>`;
 
-    document.querySelector("#actMove").onclick=()=>{
+game.appendChild(panel);
 
-      if(!canMove)return;
+panel.querySelectorAll("[data-prep]").forEach(button=>{
 
-      menuOpen=false;moveMode=true;attackMode=false;
+button.onclick=()=>{
 
-      info.innerHTML=`<p>${unit.name}：青い範囲から移動先を選んでね。</p>`;
+const name=button.dataset.prep;
 
-      refresh();
+panel.querySelector("#intermissionMessage").textContent=name+"は、今後の更新で機能を追加する予定です。";
 
-    };
+};
 
-    document.querySelector("#actAttack").onclick=()=>{if(canAct)showAttackMenu(unit);};
+});
 
-    document.querySelector("#actSkill").onclick=()=>{if(canAct)showSkillMenu(unit);};
+panel.querySelector("#intermissionSystem").onclick=()=>{
 
-    document.querySelector("#actItem").onclick=()=>{if(canAct)showItemMenu(unit);};
+intermissionOpen=true;showSystemMenu();
 
-    document.querySelector("#actDetails").onclick=()=>showDetails(unit);
+};
 
-    document.querySelector("#actWait").onclick=()=>{
+panel.querySelector("#intermissionStart").onclick=()=>{
 
-      if(pendingMove){finishMoveAndWait();}
+panel.remove();
 
-      else{
+showCurrentSituation();
 
-        unit.acted=true;unit.waited=true;selected=null;menuOpen=false;
+};
 
-        info.innerHTML=`<p>${unit.name}は待機した。</p>`;refresh();
+}
 
-      }
+// 戦闘前の状況・勝敗条件画面
 
-    };
+function showCurrentSituation(){
 
-    document.querySelector("#actCancel").onclick=()=>{
+intermissionOpen=false;
 
-      if(pendingMove)cancelMove();
+systemMenuOpen=false;
 
-      else{menuOpen=false;selected=null;info.innerHTML="ユニットを選択してね";refresh();}
+let old=document.querySelector("#intermissionPanel");if(old)old.remove();
 
-    };
+mapViewport.style.display="none";
 
-    refresh();
+document.querySelector("#actionButtons").style.display="none";
 
-  }
+turnLabel.style.display="none";
 
-  function showAttackMenu(unit){
+info.style.display="none";
 
-    selected=unit;menuOpen=false;moveMode=false;attackMode=true;battleVisual=null;
+const panel=document.createElement("div");
 
-    info.innerHTML=`<p>${unit.name}：攻撃する敵を選んでね。</p><button id="attackCancel">戻る</button>`;
+panel.id="intermissionPanel";
 
-    document.querySelector("#attackCancel").onclick=()=>{
+panel.innerHTML=`
 
-      attackMode=false;showActionMenu(unit);
+<h3>現在の状況</h3>
 
-    };
+<p>第${stageNumber}戦</p>
 
-    refresh();
+<p>敵部隊が進軍している。味方部隊は隊長を守りながら、敵の指揮官を撃破しなければならない。</p>
 
-  }
+<div style="text-align:left;margin:14px 8px;">
 
-  function showSkillMenu(unit){
+<p><strong>【作戦目標】</strong><br>敵部隊を撃破し、戦場を制圧する。</p>
 
-    menuOpen=true;attackMode=false;moveMode=false;battleVisual=null;
+<p><strong>【勝利条件】</strong><br>敵隊長を撃破する。</p>
 
-    let html=`<h3>${unit.name}のスキル</h3>`;
+<p><strong>【敗北条件】</strong><br>味方隊長が撃破される。</p>
 
-    unit.skills.forEach((skill,i)=>{html+=`<button data-skill="${i}">${skill}</button>`;});
+</div>
 
-    html+=`<button id="skillBack">戻る</button>`;
+<button class="intermission-start" id="situationStart">戦闘開始</button>
 
-    info.innerHTML=html;
+<button id="situationBack">準備に戻る</button>`;
 
-    info.querySelectorAll("[data-skill]").forEach(button=>{
+game.appendChild(panel);
 
-      button.onclick=()=>{
+panel.querySelector("#situationStart").onclick=()=>{
 
-        const skill=unit.skills[Number(button.dataset.skill)];
+panel.remove();
 
-        if(skill==="指揮"){
+intermissionOpen=false;
 
-          unit.acted=true;unit.waited=true;selected=null;menuOpen=false;
+mapViewport.style.display="block";
 
-          info.innerHTML="<p>隊長は味方を鼓舞した。</p>";refresh();return;
+document.querySelector("#actionButtons").style.display="flex";
 
-        }
+turnLabel.style.display="block";
 
-        if(skill==="防御"){
+info.style.display="block";
 
-          unit.defending=true;unit.acted=true;unit.waited=true;selected=null;menuOpen=false;
+startStage();
 
-          info.innerHTML="<p>重装兵は防御態勢を取った。</p>";refresh();return;
+};
 
-        }
+panel.querySelector("#situationBack").onclick=()=>showIntermission();
 
-        if(skill==="魔法"||skill==="突撃")showAttackMenu(unit);
+}
 
-      };
+async function startStage(){
 
-    });
+if(cameraBusy)return;
 
-    document.querySelector("#skillBack").onclick=()=>showActionMenu(unit);
+cameraBusy=true;
 
-    refresh();
+battleEnded=false;combatAnimating=false;reaction=false;
 
-  }
+selected=null;selectedEnemy=null;pendingMove=null;
 
-  function showItemMenu(unit){
+moveMode=false;attackMode=false;menuOpen=false;systemMenuOpen=false;
 
-    menuOpen=true;battleVisual=null;
+currentTurn="ally";turn=1;
 
-    info.innerHTML=`<h3>アイテム</h3><p>使用できるアイテムはありません。</p><button id="itemBack">戻る</button>`;
+units.forEach(u=>{u.moved=false;u.acted=false;u.waited=false;u.defending=false;});
 
-    document.querySelector("#itemBack").onclick=()=>showActionMenu(unit);
+refresh();
 
-    refresh();
+const captain=units.find(u=>u.side==="ally"&&u.role==="captain");
 
-  }
+if(window.innerWidth<=700&&captain){
 
-  function calculateHit(attacker,defender){
+// まず隊長を中心に置く
 
-    const chance=75+(attacker.dex-defender.agi)*3;
+centerMapOnUnit(captain);
 
-    return Math.max(20,Math.min(95,chance));
+const captainX=mapOffsetX;
 
-  }
+const captainY=mapOffsetY;
 
-  function calculateDamage(attacker,defender){
+const vw=mapViewport.clientWidth;
 
-    return Math.max(1,attacker.atk-defender.def);
+const vh=mapViewport.clientHeight;
 
-  }
+// マップの左端・右端を順に見せる
 
-  function calculateEvadeChance(attacker,defender){
+const leftX=0;
 
-    const chance=30+(defender.agi-attacker.dex)*5;
+const rightX=vw-mapWidth;
 
-    return Math.max(10,Math.min(70,chance));
+const overviewY=vh>=mapHeight?(vh-mapHeight)/2:Math.max(vh-mapHeight,Math.min(0,(vh-mapHeight)/2));
 
-  }
+// 隊長の位置から戦場全体へ視線を移す
 
-  function chooseEnemyReaction(attacker,defender){
+await animateCameraTo(leftX,overviewY,1000);
 
-    if(isUnitInAttackRange(defender,attacker))return "counter";
+await new Promise(resolve=>setTimeout(resolve,250));
 
-    const evadeChance=calculateEvadeChance(attacker,defender);
+await animateCameraTo(rightX,overviewY,1500);
 
-    return evadeChance>=40?"evade":"defend";
+await new Promise(resolve=>setTimeout(resolve,250));
 
-  }
+// 最後は隊長の位置へ滑らかに戻す
 
-  function getCombatPrediction(attacker,defender,response){
+await animateCameraTo(captainX,captainY,1200);
 
-    const hit=calculateHit(attacker,defender);
+}else{
 
-    let damage=calculateDamage(attacker,defender);
+centerMap();
 
-    if(response==="defend"||response==="skill")damage=Math.max(1,Math.floor(damage/2));
+}
 
-    const evadeChance=response==="evade"?calculateEvadeChance(attacker,defender):0;
+cameraBusy=false;
 
-    const canCounter=defender.hp>0&&isUnitInAttackRange(defender,attacker);
+info.innerHTML="<p>戦闘開始。ユニットを選択してね。</p>";
 
-    const counterDamage=response==="counter"&&canCounter?calculateDamage(defender,attacker):0;
+refresh();
 
-    return{hit,damage,evadeChance,counterDamage,canCounter};
+}
 
-  }
+function checkBattleEnd(){
 
-  function hpBarHTML(unit,predictedDamage){
+const allyCaptain=units.find(u=>u.side==="ally"&&u.role==="captain");
 
-    const percent=Math.max(0,unit.hp/unit.maxHp*100);
+const enemyCaptain=units.find(u=>u.side==="enemy"&&u.role==="captain");
 
-    const predicted=Math.max(0,Math.min(percent,predictedDamage/unit.maxHp*100));
+if(!allyCaptain||allyCaptain.hp<=0){
 
-    return`
+battleEnded=true;combatAnimating=false;battleVisual=null;
 
-      <div class="hp-track">
+showStory("敗北","隊長が倒れた。\n味方部隊は撤退した。","終了",()=>{
 
-        <div class="hp-fill ${unit.side==="ally"?"hp-ally":"hp-enemy"}" style="width:${percent}%"></div>
+resetBattle();showIntermission();
 
-        ${predictedDamage>0?`<div class="hp-predicted" style="left:${Math.max(0,percent-predicted)}%;width:${predicted}%"></div>`:""}
+});
 
-      </div>
+refresh();return true;
 
-      <div class="battle-hp-text">
+}
 
-        ${unit.hp}/${unit.maxHp}
+if(!enemyCaptain||enemyCaptain.hp<=0){
 
-        ${predictedDamage>0?` → ${Math.max(0,unit.hp-predictedDamage)}`:""}
+battleEnded=true;combatAnimating=false;battleVisual=null;
 
-      </div>`;
+showStory("勝利","敵隊長を撃破した。\n戦いは味方の勝利に終わった。","次へ",()=>{
 
-  }
+stageNumber++;resetBattle();showIntermission();
 
-  function battlePanelHTML(attacker,defender,prediction){
+});
 
-    return`
+refresh();return true;
 
-      <div class="battle-panel">
+}
 
-        <div class="battle-side">
+return false;
 
-          <div class="battle-name">${attacker.icon}${attacker.name}</div>
+}
 
-          ${hpBarHTML(attacker,prediction.counterDamage)}
+function applyDamage(attacker,defender,damage,response,evadeChance){
 
-          <div>攻撃 ${attacker.atk}</div>
+if(response==="evade"){
 
-        </div>
+const success=Math.random()*100<evadeChance;
 
-        <div class="battle-center">VS</div>
+if(success){showCombatEffect(defender,0,true);return false;}
 
-        <div class="battle-side">
+}
 
-          <div class="battle-name">${defender.icon}${defender.name}</div>
+const hit=Math.random()*100<calculateHit(attacker,defender);
 
-          ${hpBarHTML(defender,prediction.damage)}
+if(!hit){showCombatEffect(defender,0,true);return false;}
 
-          <div>攻撃 ${defender.atk}</div>
+let actualDamage=damage;
 
-        </div>
+if(Math.random()*100<CRITICAL_RATE)actualDamage*=CRITICAL_MULTIPLIER;
 
-      </div>`;
+actualDamage=Math.max(1,actualDamage);
 
-  }
+defender.hp=Math.max(0,defender.hp-actualDamage);
 
-  function predictionHTML(prediction,response,attacker){
+showCombatEffect(defender,actualDamage,false);animateUnit(defender,"combat-hit");return true;
 
-    let reactionText="";
+}
 
-    if(attacker.side==="ally"){
+function resolveAttack(attacker,defender,response){
 
-      if(response==="counter")reactionText="<p>敵の対応：反撃</p>";
+if(combatAnimating||battleEnded)return;
 
-      else if(response==="defend")reactionText="<p>敵の対応：防御（ダメージ半減）</p>";
+combatAnimating=true;menuOpen=true;
 
-      else if(response==="evade")reactionText="<p>敵の対応：回避</p>";
+const isEnemyAttack=attacker.side==="enemy",isAllyAttack=attacker.side==="ally";
 
-    }
+battleVisual={attacker,defender,response,showArrows:false};
 
-    if(response==="evade"){
+const prediction=getCombatPrediction(attacker,defender,response);
 
-      return`${reactionText}
+info.innerHTML=`<h3>戦闘中</h3>${battlePanelHTML(attacker,defender,prediction)}<p>戦闘を解決しています……</p>`;
 
-        <p>回避率：${prediction.evadeChance}％　通常命中率：${prediction.hit}％</p>
+refresh();animateUnit(attacker,"combat-attacking");
 
-        <p>回避失敗時の予測ダメージ：${prediction.damage}</p>
+setTimeout(()=>{
 
-        <p>反撃ダメージ：反撃なし</p>`;
+if(battleEnded)return;
 
-    }
+applyDamage(attacker,defender,prediction.damage,response,prediction.evadeChance);refresh();
 
-    return`${reactionText}
+setTimeout(()=>{
 
-      <p>命中率：${prediction.hit}％　予測ダメージ：${prediction.damage}</p>
+if(checkBattleEnd())return;
 
-      <p>反撃ダメージ：${prediction.canCounter?prediction.counterDamage:"反撃不可"}</p>`;
+let counterTarget=null,counterAttacker=null;
 
-  }  function showCombatConfirmation(attacker,defender,response){
+if((isEnemyAttack||isAllyAttack)&&response==="counter"&&defender.hp>0&&isUnitInAttackRange(defender,attacker)){
 
-    if(!attacker||!defender)return;
+counterAttacker=defender;counterTarget=attacker;
 
-    const prediction=getCombatPrediction(attacker,defender,response);
+}
 
-    menuOpen=true;attackMode=false;moveMode=false;selectedEnemy=defender;
+if(counterAttacker&&counterTarget){
 
-    battleVisual={attacker:attacker,defender:defender,response:response,showArrows:true};
+setTimeout(()=>{
 
-    info.innerHTML=`
+if(battleEnded)return;
 
-      <h3>戦闘確認</h3>
+animateUnit(counterAttacker,"combat-attacking");
 
-      <button id="combatStart">戦闘開始</button>
+const counterDamage=calculateDamage(counterAttacker,counterTarget);
 
-      <button id="combatBack">戻る</button>
+applyDamage(counterAttacker,counterTarget,counterDamage,"normal",0);refresh();
 
-      ${battlePanelHTML(attacker,defender,prediction)}
+setTimeout(()=>finishCombat(attacker,defender,isEnemyAttack),500);
 
-      ${predictionHTML(prediction,response,attacker)}
+},450);
 
-      <p>オレンジ：攻撃側　青：防御側</p>`;
+}else setTimeout(()=>finishCombat(attacker,defender,isEnemyAttack),500);
 
-    document.querySelector("#combatStart").onclick=()=>{
+},500);
 
-      if(!combatAnimating)resolveAttack(attacker,defender,response);
+},400);
 
-    };
+}
 
-    document.querySelector("#combatBack").onclick=()=>{
+function finishCombat(attacker,defender,isEnemyAttack){
 
-      battleVisual=null;
+combatAnimating=false;menuOpen=false;clearBattleVisual();
 
-      if(attacker.side==="enemy")showReactionMenu(attacker,defender);
+if(checkBattleEnd())return;
 
-      else showAttackMenu(attacker);
+if(isEnemyAttack){
 
-    };
+attacker.acted=true;attacker.waited=true;selected=null;reaction=false;
 
-    refresh();
+info.innerHTML="<p>敵の攻撃が終了した。</p>";refresh();
 
-  }
+setTimeout(()=>processEnemyTurn(),500);return;
 
-  function showReactionMenu(attacker,defender){
+}
 
-    reaction=true;menuOpen=true;attackMode=false;moveMode=false;
+const actingUnit=attacker;actingUnit.acted=true;
 
-    battleVisual={attacker:attacker,defender:defender,response:"normal",showArrows:true};
+actingUnit.moved=actingUnit.moved||Boolean(pendingMove);actingUnit.waited=true;
 
-    const canCounter=isUnitInAttackRange(defender,attacker);
+if(pendingMove)pendingMove=null;
 
-    info.innerHTML=`
+selected=null;selectedEnemy=null;attackMode=false;moveMode=false;
 
-      <h3>敵の攻撃！</h3>
+info.innerHTML=`<p>${actingUnit.name}の行動が終了した。</p>`;refresh();askEndTurnIfAllActed();
 
-      <p>${attacker.name}が${defender.name}を攻撃する。</p>
+} function chooseEnemyTarget(enemy){
 
-      <p>どう対応する？</p>
+const allies=units.filter(u=>u.side==="ally"&&u.hp>0);if(!allies.length)return null;
 
-      <button id="reactCounter" ${canCounter?"":"disabled"}>反撃</button>
+const captain=allies.find(u=>u.role==="captain");
 
-      <button id="reactDefend">防御</button>
+if(enemy.targetStyle==="captain"&&captain){
 
-      <button id="reactEvade">回避</button>
+const guards=allies.filter(a=>a.id!==captain.id&&getDistance(a.x,a.y,captain.x,captain.y)===1);
 
-      <button id="reactSkill">スキル</button>`;
+if(guards.length){guards.sort((a,b)=>(a.hp/a.maxHp)-(b.hp/b.maxHp));return guards[0];}
 
-    document.querySelector("#reactCounter").onclick=()=>{
+return captain;
 
-      reaction=false;showCombatConfirmation(attacker,defender,"counter");
+}
 
-    };
+const enemyCaptain=units.find(u=>u.side==="enemy"&&u.role==="captain"&&u.hp>0);
 
-    document.querySelector("#reactDefend").onclick=()=>{
+if(enemyCaptain){
 
-      reaction=false;showCombatConfirmation(attacker,defender,"defend");
+const threats=allies.filter(a=>getDistance(a.x,a.y,enemyCaptain.x,enemyCaptain.y)<=1);
 
-    };
+if(threats.length){threats.sort((a,b)=>(a.hp/a.maxHp)-(b.hp/b.maxHp));return threats[0];}
 
-    document.querySelector("#reactEvade").onclick=()=>{
+}
 
-      reaction=false;showCombatConfirmation(attacker,defender,"evade");
+allies.sort((a,b)=>{const ar=a.hp/a.maxHp,br=b.hp/b.maxHp;if(ar!==br)return ar-br;return a.hp-b.hp;});
 
-    };
+return allies[0];
 
-    document.querySelector("#reactSkill").onclick=()=>{
+}
 
-      reaction=false;showReactionSkills(attacker,defender);
+function moveEnemyToward(enemy,target){
 
-    };
+const queue=[{x:enemy.x,y:enemy.y,firstStep:null,d:0}],visited=new Set([`${enemy.x},${enemy.y}`]),goals=[];
 
-    refresh();
+while(queue.length){
 
-  }
+const c=queue.shift();
 
-  function showReactionSkills(attacker,defender){
+if(c.d>0){
 
-    menuOpen=true;reaction=true;
+const d=getDistance(c.x,c.y,target.x,target.y),canAttack=isMage(enemy)?d===2:(d>=1&&d<=enemy.range);
 
-    battleVisual={attacker:attacker,defender:defender,response:"normal",showArrows:true};
+if(canAttack){goals.push(c);continue;}
 
-    info.innerHTML=`
+}
 
-      <h3>防御スキル</h3>
+getNeighbors(c).forEach(n=>{
 
-      <p>防御スキルを使用する。</p>
+const key=`${n.x},${n.y}`;if(visited.has(key)||occupied(n.x,n.y,enemy))return;
 
-      <button id="reactionSkillUse">防御態勢</button>
+visited.add(key);queue.push({x:n.x,y:n.y,firstStep:c.firstStep||{x:n.x,y:n.y},d:c.d+1});
 
-      <button id="reactionSkillBack">戻る</button>`;
+});
 
-    document.querySelector("#reactionSkillUse").onclick=()=>{
+}
 
-      reaction=false;showCombatConfirmation(attacker,defender,"skill");
+if(!goals.length)return false;
 
-    };
+goals.sort((a,b)=>{if(a.d!==b.d)return a.d-b.d;return getDistance(a.x,a.y,target.x,target.y)-getDistance(b.x,b.y,target.x,target.y);});
 
-    document.querySelector("#reactionSkillBack").onclick=()=>showReactionMenu(attacker,defender);
+const best=goals[0];if(!best.firstStep)return false;
 
-    refresh();
+enemy.x=best.firstStep.x;enemy.y=best.firstStep.y;enemy.moved=true;return true;
 
-  }
+}
 
-  function resetBattle(){
+function startEnemyTurn(){
 
-    units.forEach((unit,index)=>{
+if(battleEnded)return;
 
-      const initial=initialUnitStates[index];
+currentTurn="enemy";turn++;selected=null;selectedEnemy=null;pendingMove=null;
 
-      Object.assign(unit,{...initial,resistances:{...initial.resistances},skills:[...initial.skills]});
+moveMode=false;attackMode=false;menuOpen=false;reaction=false;systemMenuOpen=false;clearBattleVisual();
 
-    });
+enemyAIActive=true;
 
-    selected=null;selectedEnemy=null;currentTurn="ally";turn=1;
+units.forEach(u=>{if(u.side==="enemy"){u.moved=false;u.acted=false;u.waited=false;}});
 
-    pendingMove=null;moveMode=false;attackMode=false;menuOpen=false;
+enemyQueue=units.filter(u=>u.side==="enemy"&&u.hp>0);enemyQueueIndex=0;
 
-    reaction=false;combatAnimating=false;battleEnded=false;
+info.innerHTML="<p>敵のターン。</p>";refresh();setTimeout(processEnemyTurn,500);
 
-    enemyQueue=[];enemyQueueIndex=0;enemyAIActive=false;
+}
 
-    lastTapUnitId=null;lastTapTime=0;battleVisual=null;
+function processEnemyTurn(){
 
-    map.querySelectorAll(".combat-number,.combat-miss").forEach(el=>el.remove());
+if(battleEnded)return;
 
-    info.innerHTML="<p>新しい戦いが始まった。ユニットを選択してね。</p>";
+if(enemyQueueIndex>=enemyQueue.length){startEnemyTurnFinish();return;}
 
-    refresh();
+const enemy=enemyQueue[enemyQueueIndex];
 
-  }
+if(!enemy||enemy.hp<=0){enemyQueueIndex++;processEnemyTurn();return;}
 
-  function showStory(title,message,buttonText,callback){
+const target=chooseEnemyTarget(enemy);if(!target){startEnemyTurnFinish();return;}
 
-    const overlay=document.createElement("div");
+let canAttack=isUnitInAttackRange(enemy,target);
 
-    overlay.className="story-overlay";
+if(!canAttack){moveEnemyToward(enemy,target);canAttack=isUnitInAttackRange(enemy,target);refresh();}
 
-    const panel=document.createElement("div");
+if(canAttack){
 
-    panel.className="story-panel";
+enemyQueueIndex++;reaction=true;info.innerHTML=`<p>${enemy.name}が${target.name}に迫っている。</p>`;refresh();
 
-    const heading=document.createElement("h2");
+setTimeout(()=>{if(!battleEnded)showReactionMenu(enemy,target);},350);return;
 
-    heading.textContent=title;
+}
 
-    const paragraph=document.createElement("p");
+enemy.moved=true;enemy.acted=true;enemy.waited=true;enemyQueueIndex++;refresh();setTimeout(processEnemyTurn,350);
 
-    paragraph.textContent=message;
+}
 
-    const button=document.createElement("button");
+function startEnemyTurnFinish(){
 
-    button.textContent=buttonText;
+if(battleEnded)return;
 
-    button.onclick=()=>{
+enemyAIActive=false;reaction=false;menuOpen=false;clearBattleVisual();currentTurn="ally";
 
-      overlay.remove();
+units.forEach(u=>{if(u.side==="ally"){u.moved=false;u.acted=false;u.waited=false;u.defending=false;}});
 
-      if(callback)callback();
+selected=null;selectedEnemy=null;info.innerHTML="<p>味方のターン。ユニットを選択してね。</p>";refresh();
 
-    };
+}
 
-    panel.appendChild(heading);panel.appendChild(paragraph);panel.appendChild(button);
+function readSaveSlots(){
 
-    overlay.appendChild(panel);game.appendChild(overlay);
+try{
 
-  }
+const raw=localStorage.getItem(SAVE_KEY);if(!raw)return Array(5).fill(null);
 
-  function checkBattleEnd(){
+const parsed=JSON.parse(raw);if(!Array.isArray(parsed))return Array(5).fill(null);
 
-    const allyCaptain=units.find(u=>u.side==="ally"&&u.role==="captain");
+return Array.from({length:5},(_,i)=>parsed[i]||null);
 
-    const enemyCaptain=units.find(u=>u.side==="enemy"&&u.role==="captain");
+}catch(e){console.error("セーブデータを読み込めません",e);return Array(5).fill(null);}
 
-    if(!allyCaptain||allyCaptain.hp<=0){
+}
 
-      battleEnded=true;combatAnimating=false;battleVisual=null;
+function writeSaveSlots(slots){
 
-      showStory("敗北","隊長が倒れた。\n味方部隊は撤退した。","終了",resetBattle);
+try{localStorage.setItem(SAVE_KEY,JSON.stringify(slots));return true;}
 
-      refresh();return true;
+catch(e){console.error("セーブに失敗しました",e);alert("保存できませんでした。ブラウザの保存容量や設定を確認してください。");return false;}
 
-    }
+}
 
-    if(!enemyCaptain||enemyCaptain.hp<=0){
+function makeSaveData(){
 
-      battleEnded=true;combatAnimating=false;battleVisual=null;
+return{version:1,savedAt:new Date().toISOString(),turn,currentTurn,stageNumber,
 
-      showStory("勝利","敵隊長を撃破した。\n戦いは味方の勝利に終わった。","終了",resetBattle);
+units:units.map(u=>({id:u.id,x:u.x,y:u.y,hp:u.hp,maxHp:u.maxHp,moved:u.moved,acted:u.acted,waited:u.waited,defending:Boolean(u.defending)}))};
 
-      refresh();return true;
+}
 
-    }
+function saveToSlot(index){
 
-    return false;
+const slots=readSaveSlots();
 
-  }
+if(slots[index]&&!confirm(`セーブ枠${index+1}を上書きしますか？`))return;
 
-  function applyDamage(attacker,defender,damage,response,evadeChance){
+slots[index]=makeSaveData();if(!writeSaveSlots(slots))return;
 
-    if(response==="evade"){
+alert(`セーブ枠${index+1}に保存しました。`);
 
-      const evadeSuccess=Math.random()*100<evadeChance;
+if(intermissionOpen)showSystemMenu();else showSaveMenu();
 
-      if(evadeSuccess){
+}
 
-        showCombatEffect(defender,0,true);
+function loadFromSlot(index){
 
-        return false;
+const slots=readSaveSlots(),data=slots[index];if(!data)return;
 
-      }
+if(!confirm(`セーブ枠${index+1}をロードしますか？\n現在の進行状況は置き換わります。`))return;
 
-    }
+if(!Array.isArray(data.units)||data.units.length!==units.length){alert("このセーブデータは読み込めません。");return;}
 
-    const hit=Math.random()*100<calculateHit(attacker,defender);
+data.units.forEach(saved=>{
 
-    if(!hit){
+const unit=units.find(u=>u.id===saved.id);if(!unit)return;
 
-      showCombatEffect(defender,0,true);
+unit.x=saved.x;unit.y=saved.y;unit.hp=saved.hp;unit.maxHp=saved.maxHp;
 
-      return false;
+unit.moved=Boolean(saved.moved);unit.acted=Boolean(saved.acted);unit.waited=Boolean(saved.waited);unit.defending=Boolean(saved.defending);
 
-    }
+});
 
-    let actualDamage=damage;
+turn=Number(data.turn)||1;stageNumber=Number(data.stageNumber)||1;
 
-    const critical=Math.random()*100<CRITICAL_RATE;
+currentTurn=data.currentTurn==="enemy"?"enemy":"ally";
 
-    if(critical)actualDamage*=CRITICAL_MULTIPLIER;
+selected=null;selectedEnemy=null;pendingMove=null;moveMode=false;attackMode=false;menuOpen=false;reaction=false;
 
-    actualDamage=Math.max(1,actualDamage);
+combatAnimating=false;battleEnded=false;enemyAIActive=false;enemyQueue=[];enemyQueueIndex=0;systemMenuOpen=false;lastTapUnitId=null;clearBattleVisual();
 
-    defender.hp=Math.max(0,defender.hp-actualDamage);
+if(intermissionOpen){showIntermission();return;}
 
-    showCombatEffect(defender,actualDamage,false);
+info.innerHTML=`<p>セーブ枠${index+1}をロードした。</p>`;refresh();
 
-    animateUnit(defender,"combat-hit");
+if(currentTurn==="enemy"){
 
-    return true;
+enemyAIActive=true;enemyQueue=units.filter(u=>u.side==="enemy"&&u.hp>0);enemyQueueIndex=0;setTimeout(processEnemyTurn,400);
 
-  }
+}
 
-  function resolveAttack(attacker,defender,response){
+}
 
-    if(combatAnimating||battleEnded)return;
+function showSaveMenu(){
 
-    combatAnimating=true;menuOpen=true;
+systemMenuOpen=true;menuOpen=true;
 
-    const isEnemyAttack=attacker.side==="enemy";
+const slots=readSaveSlots();let html="<h3>セーブ</h3><p>保存する枠を選んでね。</p>";
 
-    const isAllyAttack=attacker.side==="ally";
+slots.forEach((slot,i)=>{
 
-    battleVisual={attacker:attacker,defender:defender,response:response,showArrows:false};
+if(slot){
 
-    const prediction=getCombatPrediction(attacker,defender,response);
+const date=new Date(slot.savedAt),dateText=isNaN(date.getTime())?"日時不明":date.toLocaleString("ja-JP");
 
-    info.innerHTML=`
+html+=`<p>枠${i+1}：保存済み<br>${dateText}／${slot.turn}ターン</p><button data-save="${i}">この枠に保存</button>`;
 
-      <h3>戦闘中</h3>
+}else html+=`<p>枠${i+1}：空き</p><button data-save="${i}">新規保存</button>`;
 
-      ${battlePanelHTML(attacker,defender,prediction)}
+});
 
-      <p>戦闘を解決しています……</p>`;
+html+=`<button id="saveBack">戻る</button>`;info.innerHTML=html;
 
-    refresh();
+info.querySelectorAll("[data-save]").forEach(b=>{b.onclick=()=>saveToSlot(Number(b.dataset.save));});
 
-    animateUnit(attacker,"combat-attacking");
+document.querySelector("#saveBack").onclick=showSystemMenu;refresh();
 
-    setTimeout(()=>{
+}
 
-      if(battleEnded)return;
+function showLoadMenu(){
 
-      applyDamage(attacker,defender,prediction.damage,response,prediction.evadeChance);
+systemMenuOpen=true;menuOpen=true;
 
-      refresh();
+const slots=readSaveSlots();let html="<h3>ロード</h3><p>読み込む枠を選んでね。</p>";
 
-      setTimeout(()=>{
+slots.forEach((slot,i)=>{
 
-        if(checkBattleEnd())return;
+if(slot){
 
-        let counterTarget=null;
+const date=new Date(slot.savedAt),dateText=isNaN(date.getTime())?"日時不明":date.toLocaleString("ja-JP");
 
-        let counterAttacker=null;
+html+=`<p>枠${i+1}：保存済み<br>${dateText}／${slot.turn}ターン</p><button data-load="${i}">ロード</button>`;
 
-        if(isEnemyAttack&&response==="counter"&&defender.hp>0&&isUnitInAttackRange(defender,attacker)){
+}else html+=`<p>枠${i+1}：空き</p><button disabled>データなし</button>`;
 
-          counterAttacker=defender;counterTarget=attacker;
+});
 
-        }
+html+=`<button id="loadBack">戻る</button>`;info.innerHTML=html;
 
-        if(isAllyAttack&&response==="counter"&&defender.hp>0&&isUnitInAttackRange(defender,attacker)){
+info.querySelectorAll("[data-load]").forEach(b=>{b.onclick=()=>loadFromSlot(Number(b.dataset.load));});
 
-          counterAttacker=defender;counterTarget=attacker;
+document.querySelector("#loadBack").onclick=showSystemMenu;refresh();
 
-        }
+}
 
-        if(counterAttacker&&counterTarget){
+function showSettingsMenu(){
 
-          setTimeout(()=>{
+systemMenuOpen=true;menuOpen=true;
 
-            if(battleEnded)return;
+info.innerHTML=`<h3>設定</h3><p>現在の設定項目はありません。</p><button id="settingsBack">戻る</button>`;
 
-            animateUnit(counterAttacker,"combat-attacking");
+document.querySelector("#settingsBack").onclick=showSystemMenu;refresh();
 
-            const counterDamage=calculateDamage(counterAttacker,counterTarget);
+} function returnToBattleFromSystemMenu(){
 
-            applyDamage(counterAttacker,counterTarget,counterDamage,"normal",0);
+systemMenuOpen=false;menuOpen=false;
 
-            refresh();
+if(intermissionOpen){showIntermission();return;}
 
-            setTimeout(()=>finishCombat(attacker,defender,isEnemyAttack),500);
+selected=null;selectedEnemy=null;moveMode=false;attackMode=false;lastTapUnitId=null;clearBattleVisual();
 
-          },450);
+info.innerHTML="<p>戦闘に戻った。</p>";refresh();
 
-        }else{
+}
 
-          setTimeout(()=>finishCombat(attacker,defender,isEnemyAttack),500);
+function showSystemMenu(){
 
-        }
+if(battleEnded||combatAnimating||reaction||enemyAIActive)return;
 
-      },500);
+systemMenuOpen=true;menuOpen=true;attackMode=false;moveMode=false;clearBattleVisual();
 
-    },400);
+info.innerHTML=`
 
-  }
+<h3>システムメニュー</h3>
 
-  function finishCombat(attacker,defender,isEnemyAttack){
+<button id="systemSave">セーブ</button>
 
-    combatAnimating=false;menuOpen=false;battleVisual=null;
+<button id="systemLoad">ロード</button>
 
-    if(checkBattleEnd())return;
+<button id="systemSettings">設定</button>
 
-    if(isEnemyAttack){
+<button id="systemEndTurn" ${intermissionOpen?"disabled":""}>ターン終了</button>
 
-      attacker.acted=true;attacker.waited=true;
+<button id="systemBack">${intermissionOpen?"インターミッションに戻る":"戦闘に戻る"}</button>
 
-      selected=null;reaction=false;
+<button id="systemExit">ゲーム終了</button>`;
 
-      info.innerHTML="<p>敵の攻撃が終了した。</p>";
+document.querySelector("#systemSave").onclick=()=>{
 
-      refresh();
+if(!intermissionOpen&&currentTurn!=="ally"){alert("味方のターンにセーブしてください。");return;}
 
-      setTimeout(()=>processEnemyTurn(),500);
+showSaveMenu();
 
-      return;
+};
 
-    }
+document.querySelector("#systemLoad").onclick=showLoadMenu;
 
-    const actingUnit=attacker;
+document.querySelector("#systemSettings").onclick=showSettingsMenu;
 
-    actingUnit.acted=true;
+document.querySelector("#systemEndTurn").onclick=()=>{
 
-    actingUnit.moved=actingUnit.moved||Boolean(pendingMove);
+if(intermissionOpen||currentTurn!=="ally"||pendingMove)return;
 
-    actingUnit.waited=true;
+systemMenuOpen=false;menuOpen=false;selected=null;selectedEnemy=null;clearBattleVisual();startEnemyTurn();
 
-    if(pendingMove)pendingMove=null;
+};
 
-    selected=null;selectedEnemy=null;attackMode=false;moveMode=false;
+document.querySelector("#systemBack").onclick=returnToBattleFromSystemMenu;
 
-    info.innerHTML=`<p>${actingUnit.name}の行動が終了した。</p>`;
+document.querySelector("#systemExit").onclick=()=>{
 
-    refresh();
+if(!confirm("ゲームを終了しますか？"))return;
 
-  }
+if(!confirm("本当に終了しますか？\nセーブしていない進行状況は失われます。"))return;
 
-  function chooseEnemyTarget(enemy){
+info.innerHTML="<p>ゲームを終了しています……</p>";refresh();window.close();
 
-    const allies=units.filter(u=>u.side==="ally"&&u.hp>0);
+setTimeout(()=>{
 
-    if(!allies.length)return null;
+info.innerHTML=`<h3>ゲーム終了</h3><p>ブラウザの仕様により、このページを閉じられませんでした。</p><p>Safariのタブ一覧から、このタブを閉じてください。</p><button id="exitBack">ゲームに戻る</button>`;
 
-    const allyCaptain=allies.find(u=>u.role==="captain");
+const back=document.querySelector("#exitBack");if(back)back.onclick=returnToBattleFromSystemMenu;
 
-    if(enemy.targetStyle==="captain"&&allyCaptain){
+},500);
 
-      const guards=allies.filter(u=>u.id!==allyCaptain.id&&getDistance(u.x,u.y,allyCaptain.x,allyCaptain.y)===1);
+};
 
-      if(guards.length){
+refresh();
 
-        guards.sort((a,b)=>(a.hp/a.maxHp)-(b.hp/b.maxHp));
+}
 
-        return guards[0];
+function handleCellTap(x,y){
 
-      }
+if(battleEnded||combatAnimating||currentTurn!=="ally"||enemyAIActive)return;
 
-      return allyCaptain;
+const unit=getUnitAt(x,y);
 
-    }
+if(systemMenuOpen){if(!unit)returnToBattleFromSystemMenu();return;}
 
-    const enemyCaptain=units.find(u=>u.side==="enemy"&&u.role==="captain"&&u.hp>0);
+if(menuOpen){menuOpen=false;attackMode=false;moveMode=false;}
 
-    if(enemyCaptain){
+if(attackMode){
 
-      const threats=allies.filter(u=>getDistance(u.x,u.y,enemyCaptain.x,enemyCaptain.y)<=1);
+if(unit&&unit.side==="enemy"&&selected&&isAllyAttackCell(x,y)){
 
-      if(threats.length){
+showCombatConfirmation(selected,unit,chooseEnemyReaction(selected,unit));return;
 
-        threats.sort((a,b)=>(a.hp/a.maxHp)-(b.hp/b.maxHp));
+}
 
-        return threats[0];
+if(pendingMove)exitAttackSelection();else closeMenuByEmptyTap();return;
 
-      }
+}
 
-    }
+if(pendingMove){
 
-    allies.sort((a,b)=>{
+if(unit&&unit.side==="ally"&&unit.id===pendingMove.unit.id){showActionMenu(unit);return;}
 
-      const aRate=a.hp/a.maxHp,bRate=b.hp/b.maxHp;
+if(unit&&unit.side==="enemy"&&selected&&isAllyAttackCell(x,y)){
 
-      if(aRate!==bRate)return aRate-bRate;
+showCombatConfirmation(selected,unit,chooseEnemyReaction(selected,unit));return;
 
-      return a.hp-b.hp;
+}
 
-    });
+if(x===pendingMove.fromX&&y===pendingMove.fromY){cancelMove();return;}
 
-    return allies[0];
+cancelMove();return;
 
-  }
+}
 
-  function moveEnemyToward(enemy,target){
+if(unit&&unit.side==="enemy"){
 
-    const queue=[{x:enemy.x,y:enemy.y,firstStep:null,d:0}];
+if(selected&&selected.side==="ally"&&isAllyAttackCell(x,y)){
 
-    const visited=new Set([`${enemy.x},${enemy.y}`]);
+showCombatConfirmation(selected,unit,chooseEnemyReaction(selected,unit));return;
 
-    const goals=[];
+}
 
-    while(queue.length){
+if(selectedEnemy&&selectedEnemy.id===unit.id){showDetails(unit);return;}
 
-      const current=queue.shift();
+selected=null;selectedEnemy=unit;menuOpen=false;moveMode=false;attackMode=false;lastTapUnitId=null;clearBattleVisual();
 
-      if(current.d>0){
+info.innerHTML=`<p>${unit.icon} ${unit.name}を選択中。</p><p>青：移動可能範囲</p><p>赤：攻撃可能範囲</p><p>もう一度クリックで能力確認</p>`;
 
-        const distance=getDistance(current.x,current.y,target.x,target.y);
+refresh();return;
 
-        const canAttack=isMage(enemy)?distance===2:(distance>=1&&distance<=enemy.range);
+}
 
-        if(canAttack){goals.push(current);continue;}
+if(unit&&unit.side==="ally"){
 
-      }
+if(selected&&selected.id===unit.id){lastTapUnitId=null;showActionMenu(unit);return;}
 
-      getNeighbors(current).forEach(next=>{
+selected=unit;selectedEnemy=null;lastTapUnitId=unit.id;menuOpen=false;moveMode=false;attackMode=false;clearBattleVisual();
 
-        const key=`${next.x},${next.y}`;
+info.innerHTML=`<p>${unit.icon} ${unit.name}を選択中。</p><p>青：移動可能範囲</p><p>赤：攻撃可能範囲</p><p>もう一度クリックで行動メニュー</p>`;
 
-        if(visited.has(key)||occupied(next.x,next.y,enemy))return;
+refresh();return;
 
-        visited.add(key);
+}
 
-        queue.push({
+if(selected&&selected.side==="ally"&&!selected.moved&&!selected.acted&&!selected.waited){
 
-          x:next.x,y:next.y,
+const reachable=getReachableCells(selected),valid=reachable.some(c=>c.x===x&&c.y===y);
 
-          firstStep:current.firstStep||{x:next.x,y:next.y},
+if(valid){
 
-          d:current.d+1
+const mover=selected;pendingMove={unit:mover,fromX:mover.x,fromY:mover.y};
 
-        });
+mover.x=x;mover.y=y;mover.moved=true;moveMode=false;attackMode=false;menuOpen=false;
 
-      });
+lastTapUnitId=null;selectedEnemy=null;clearBattleVisual();
 
-    }
+info.innerHTML=`<p>${mover.name}が移動した。</p><p>赤く点滅する範囲が攻撃可能範囲。</p><p>赤い範囲内の敵を選ぶと攻撃できる。</p><p>「待機」で行動終了。</p>`;
 
-    if(!goals.length)return false;
+refresh();return;
 
-    goals.sort((a,b)=>{
+}
 
-      if(a.d!==b.d)return a.d-b.d;
+}
 
-      const da=getDistance(a.x,a.y,target.x,target.y);
+if(!selected&&!selectedEnemy){showSystemMenu();return;}
 
-      const db=getDistance(b.x,b.y,target.x,target.y);
+closeMenuByEmptyTap();
 
-      return da-db;
+}
 
-    });
+map.addEventListener("click",function(e){
 
-    const best=goals[0];
+if(suppressNextClick){e.preventDefault();e.stopPropagation();suppressNextClick=false;return;}
 
-    if(!best.firstStep)return false;
+const cell=e.target.closest("[data-x][data-y]");
 
-    enemy.x=best.firstStep.x;enemy.y=best.firstStep.y;enemy.moved=true;
+if(!cell){
 
-    return true;
+if(!reaction&&!combatAnimating){
 
-  }
+if(systemMenuOpen)returnToBattleFromSystemMenu();
 
-  function startEnemyTurn(){
+else if(pendingMove)cancelMove();
 
-    if(battleEnded)return;
+else if(!selected&&!selectedEnemy)showSystemMenu();
 
-    currentTurn="enemy";turn++;
+else closeMenuByEmptyTap();
 
-    selected=null;selectedEnemy=null;pendingMove=null;
+}
 
-    moveMode=false;attackMode=false;menuOpen=false;reaction=false;battleVisual=null;
+return;
 
-    enemyAIActive=true;
+}
 
-    units.forEach(unit=>{
+handleCellTap(Number(cell.dataset.x),Number(cell.dataset.y));
 
-      if(unit.side==="enemy"){
+});
 
-        unit.moved=false;unit.acted=false;unit.waited=false;
+pendingMoveButton.addEventListener("click",function(){
 
-      }
+const unit=pendingMove?pendingMove.unit:selected;
 
-    });
+if(!unit||unit.side!=="ally")return;
 
-    enemyQueue=units.filter(u=>u.side==="enemy"&&u.hp>0);
+if(unit.moved||unit.acted||unit.waited||pendingMove)return;
 
-    enemyQueueIndex=0;
+selected=unit;
 
-    info.innerHTML="<p>敵のターン。</p>";
+selectedEnemy=null;
 
-    refresh();
+menuOpen=false;
 
-    setTimeout(processEnemyTurn,500);
+moveMode=true;
 
-  }
+attackMode=false;
 
-  function processEnemyTurn(){
+systemMenuOpen=false;
 
-    if(battleEnded)return;
+info.innerHTML=`<p>${unit.name}：青い範囲から移動先を選んでね。</p>`;
 
-    if(enemyQueueIndex>=enemyQueue.length){startEnemyTurnFinish();return;}
+refresh();
 
-    const enemy=enemyQueue[enemyQueueIndex];
+});
 
-    if(!enemy||enemy.hp<=0){enemyQueueIndex++;processEnemyTurn();return;}
+pendingAttackButton.addEventListener("click",function(){
 
-    const target=chooseEnemyTarget(enemy);
+const unit=pendingMove?pendingMove.unit:selected;
 
-    if(!target){startEnemyTurnFinish();return;}
+if(!unit||!hasAttackTargets(unit))return;
 
-    let canAttack=isUnitInAttackRange(enemy,target);
+showAttackMenu(unit);
 
-    if(!canAttack){
+});
 
-      moveEnemyToward(enemy,target);
+pendingWaitButton.addEventListener("click",function(){
 
-      canAttack=isUnitInAttackRange(enemy,target);
+if(pendingMove){finishMoveAndWait();return;}
 
-      refresh();
+const unit=selected;
 
-    }
+if(!unit||unit.side!=="ally"||unit.acted||unit.waited)return;
 
-    if(canAttack){
+unit.acted=true;
 
-      enemyQueueIndex++;
+unit.waited=true;
 
-      reaction=true;
+selected=null;
 
-      info.innerHTML=`<p>${enemy.name}が${target.name}に迫っている。</p>`;
+selectedEnemy=null;
 
-      refresh();
+menuOpen=false;
 
-      setTimeout(()=>{if(!battleEnded)showReactionMenu(enemy,target);},350);
+moveMode=false;
 
-      return;
+attackMode=false;
 
-    }
+systemMenuOpen=false;
 
-    enemy.moved=true;enemy.acted=true;enemy.waited=true;
+clearBattleVisual();
 
-    enemyQueueIndex++;
+info.innerHTML=`<p>${unit.name}はその場で待機した。</p>`;
 
-    refresh();
+refresh();
 
-    setTimeout(processEnemyTurn,350);
+askEndTurnIfAllActed();
 
-  }
+});
 
-  function startEnemyTurnFinish(){
+systemButton.addEventListener("click",function(){
 
-    if(battleEnded)return;
+const unit=pendingMove?pendingMove.unit:selected;
 
-    enemyAIActive=false;reaction=false;menuOpen=false;battleVisual=null;
+if(!unit)return;
 
-    currentTurn="ally";
+showActionMenu(unit);
 
-    units.forEach(unit=>{
+});
 
-      if(unit.side==="ally"){
+// インターミッションからシステムメニューを開く場合は、
 
-        unit.moved=false;unit.acted=false;unit.waited=false;unit.defending=false;
+// 準備画面を一時的に隠して既存のシステムメニューを表示する。
 
-      }
+const originalShowSystemMenu=showSystemMenu;
 
-    });
+showSystemMenu=function(){
 
-    selected=null;selectedEnemy=null;
+if(intermissionOpen){
 
-    info.innerHTML="<p>味方のターン。ユニットを選択してね。</p>";
+const panel=document.querySelector("#intermissionPanel");
 
-    refresh();
+if(panel)panel.style.display="none";
 
-  }  function handleCellTap(x,y){
+info.style.display="block";
 
-    if(battleEnded||combatAnimating||currentTurn!=="ally"||enemyAIActive)return;
+}
 
-    const unit=getUnitAt(x,y);
+originalShowSystemMenu();
 
-    if(menuOpen){menuOpen=false;attackMode=false;moveMode=false;}
+};
 
-    if(attackMode){
+// 初期状態
 
-      if(unit&&unit.side==="enemy"&&selected&&isAllyAttackCell(x,y)){
+selected=null;selectedEnemy=null;currentTurn="ally";turn=1;
 
-        const response=chooseEnemyReaction(selected,unit);
+pendingMove=null;moveMode=false;attackMode=false;menuOpen=false;
 
-        showCombatConfirmation(selected,unit,response);
+reaction=false;combatAnimating=false;battleEnded=false;
 
-        return;
+enemyQueue=[];enemyQueueIndex=0;enemyAIActive=false;
 
-      }
+lastTapUnitId=null;battleVisual=null;systemMenuOpen=false;
 
-      closeMenuByEmptyTap();return;
+intermissionOpen=false;cameraBusy=false;
 
-    }
+info.innerHTML="<p>ユニットを選択してね。</p>";
 
-    if(pendingMove){
+refresh();centerMap();
 
-      if(unit&&unit.side==="enemy"&&selected&&isAllyAttackCell(x,y)){
+// 起動時はストーリーを挟まず、インターミッションから開始
 
-        const response=chooseEnemyReaction(selected,unit);
-
-        showCombatConfirmation(selected,unit,response);
-
-        return;
-
-      }
-
-      if(x===pendingMove.fromX&&y===pendingMove.fromY){cancelMove();return;}
-
-      if(unit&&unit.side==="ally"){
-
-        cancelMove();selected=unit;
-
-        lastTapUnitId=unit.id;lastTapTime=Date.now();
-
-        info.innerHTML=`<p>${unit.name}を選択した。もう一度タップで行動メニュー。</p>`;
-
-        refresh();return;
-
-      }
-
-      cancelMove();return;
-
-    }
-
-    if(unit&&unit.side==="enemy"){
-
-      if(selected&&selected.side==="ally"&&isAllyAttackCell(x,y)){
-
-        const response=chooseEnemyReaction(selected,unit);
-
-        showCombatConfirmation(selected,unit,response);
-
-        return;
-
-      }
-
-      selected=null;selectedEnemy=unit;showDetails(unit);return;
-
-    }
-
-    if(unit&&unit.side==="ally"){
-
-      const now=Date.now();
-
-      if(selected&&selected.id===unit.id&&lastTapUnitId===unit.id&&now-lastTapTime<=DOUBLE_TAP_TIME){
-
-        lastTapUnitId=null;lastTapTime=0;showActionMenu(unit);return;
-
-      }
-
-      selected=unit;selectedEnemy=null;lastTapUnitId=unit.id;lastTapTime=now;
-
-      menuOpen=false;moveMode=false;attackMode=false;battleVisual=null;
-
-      info.innerHTML=`
-
-        <p>
-
-          ${unit.icon} ${unit.name}を選択中。
-
-          <br>青：移動可能範囲
-
-          <br>赤：攻撃可能範囲
-
-          <br>もう一度タップで行動メニュー
-
-        </p>`;
-
-      refresh();return;
-
-    }
-
-    if(selected&&selected.side==="ally"&&!selected.moved&&!selected.acted&&!selected.waited){
-
-      const reachable=getReachableCells(selected);
-
-      const valid=reachable.some(c=>c.x===x&&c.y===y);
-
-      if(valid){
-
-        const mover=selected;
-
-        pendingMove={unit:mover,fromX:mover.x,fromY:mover.y};
-
-        mover.x=x;mover.y=y;mover.moved=true;
-
-        moveMode=false;attackMode=false;menuOpen=false;
-
-        lastTapUnitId=null;lastTapTime=0;
-
-        info.innerHTML=`
-
-          <p>
-
-            ${mover.name}が移動した。
-
-            <br>赤く点滅する範囲が攻撃可能範囲。
-
-            <br>赤い範囲内の敵をタップすると攻撃できる。
-
-            <br>「移動して待機」で行動終了。
-
-          </p>`;
-
-        refresh();return;
-
-      }
-
-    }
-
-    closeMenuByEmptyTap();
-
-  }
-
-  map.addEventListener("click",function(e){
-
-    if(suppressNextClick){
-
-      e.preventDefault();
-
-      e.stopPropagation();
-
-      suppressNextClick=false;
-
-      return;
-
-    }
-
-    const cell=e.target.closest("[data-x][data-y]");
-
-    if(!cell){
-
-      if(!reaction&&!combatAnimating)closeMenuByEmptyTap();
-
-      return;
-
-    }
-
-    const x=Number(cell.dataset.x),y=Number(cell.dataset.y);
-
-    handleCellTap(x,y);
-
-  });
-
-  endTurnButton.addEventListener("click",function(){
-
-    if(battleEnded||combatAnimating||reaction||enemyAIActive||currentTurn!=="ally")return;
-
-    if(pendingMove){cancelMove();return;}
-
-    if(menuOpen){menuOpen=false;selected=null;}
-
-    lastTapUnitId=null;lastTapTime=0;
-
-    startEnemyTurn();
-
-  });
-
-  pendingWaitButton.addEventListener("click",function(){
-
-    if(pendingMove)finishMoveAndWait();
-
-  });
-
-  selected=null;selectedEnemy=null;currentTurn="ally";turn=1;
-
-  pendingMove=null;moveMode=false;attackMode=false;menuOpen=false;
-
-  reaction=false;combatAnimating=false;battleEnded=false;
-
-  enemyQueue=[];enemyQueueIndex=0;enemyAIActive=false;
-
-  lastTapUnitId=null;lastTapTime=0;battleVisual=null;
-
-  info.innerHTML="<p>ユニットを選択してね。</p>";
-
-  refresh();
-
-  centerMap();
-
-  showStory(
-
-    "戦端",
-
-    "敵部隊が進軍を開始した。\n\n味方部隊は隊長を守りながら、敵の指揮官を撃破しなければならない。\n\n【勝利条件】\n敵隊長を撃破する。\n\n【敗北条件】\n味方隊長が撃破される。",
-
-    "戦闘開始",
-
-    function(){
-
-      info.innerHTML="<p>戦闘開始。ユニットを選択してね。</p>";
-
-      refresh();
-
-    }
-
-  );
+showIntermission();
 
 });
