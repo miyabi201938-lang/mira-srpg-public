@@ -1,5 +1,20 @@
 window.addEventListener("load", function () {
 
+/* BGM管理 */
+const titleBgm=new Audio("https://raw.githubusercontent.com/miyabi201938-lang/mira-srpg-public/main/%E5%B8%9D%E5%9B%BD%E3%81%AE%E9%BB%84%E6%98%8F.mp3");
+const storyBgm=new Audio("https://raw.githubusercontent.com/miyabi201938-lang/mira-srpg-public/main/%E8%88%88%E4%BA%A1%E3%81%AE%E3%83%AC%E3%82%AF%E3%82%A4%E3%82%A8%E3%83%A0.mp3");
+const intermissionBgm=new Audio("https://raw.githubusercontent.com/miyabi201938-lang/mira-srpg-public/main/%E3%82%A4%E3%83%B3%E3%82%BF%E3%83%BC%E3%83%9F%E3%83%83%E3%82%B7%E3%83%A7%E3%83%B3.mp3");
+titleBgm.loop=true;storyBgm.loop=true;intermissionBgm.loop=true;titleBgm.volume=0.55;storyBgm.volume=0.5;intermissionBgm.volume=0.5;
+let musicEnabled=false;let musicScene="title";
+function stopTitleBgm(){titleBgm.pause();titleBgm.currentTime=0;}
+function stopStoryBgm(){storyBgm.pause();storyBgm.currentTime=0;}
+function stopIntermissionBgm(){intermissionBgm.pause();intermissionBgm.currentTime=0;}
+function getSceneTrack(){return musicScene==="title"?titleBgm:musicScene==="intermission"?intermissionBgm:storyBgm;}
+function stopAllBgm(){stopTitleBgm();stopStoryBgm();stopIntermissionBgm();}
+function setMusicScene(scene){if(scene===musicScene){if(musicEnabled)getSceneTrack().play().catch(()=>{});return;}musicScene=scene;stopAllBgm();if(musicEnabled)getSceneTrack().play().catch(()=>{});}
+function makeMusicButton(){const b=document.createElement("button");b.className="music-toggle";b.type="button";function update(){b.textContent="♫";b.title=musicEnabled?"BGM ON":"BGM OFF";b.setAttribute("aria-label",b.title);b.style.opacity=musicEnabled?"1":"0.55";}update();b.onclick=()=>{musicEnabled=!musicEnabled;if(musicEnabled)getSceneTrack().play().catch(()=>{});else stopAllBgm();update();};return b;}
+
+
 const test=document.querySelector("#test");
 
 if(!test){console.error("#test が見つかりません");return;}
@@ -166,7 +181,7 @@ style.textContent=`
 
 .story-panel button{min-width:150px;padding:11px 20px;font-size:15px;border:1px solid #d5bd83;border-radius:7px;background:#d5bd83;color:#202020;font-weight:bold;}
 
-#intermissionPanel{width:94%;max-width:520px;margin:12px auto;padding:14px;box-sizing:border-box;border:2px solid #a78b55;border-radius:10px;background:linear-gradient(160deg,#28364a,#111923);color:#fff;text-align:center;}
+#intermissionPanel{width:94%;max-width:520px;margin:12px auto;padding:14px 14px 92px;box-sizing:border-box;border:2px solid #a78b55;border-radius:10px;background:linear-gradient(160deg,#28364a,#111923);color:#fff;text-align:center;}
 
 #intermissionPanel h3{font-size:19px;color:#f0d99b;margin:5px;}
 
@@ -182,36 +197,33 @@ style.textContent=`
 
 /* タイトル画面：タイトル文字を枠内に収める */
 
-#titleScreen{position:fixed;inset:0;z-index:20000;display:flex;align-items:center;justify-content:center;box-sizing:border-box;padding:18px;background:radial-gradient(ellipse at center,#34445a 0%,#172333 65%,#0b111b 100%);color:#fff;text-align:center;overflow:hidden;}
-
-.title-inner{width:100%;max-width:440px;padding:30px 12px;border:1px solid #9d8656;background:linear-gradient(160deg,rgba(43,55,70,.96),rgba(12,19,29,.98));box-shadow:0 12px 40px #0009;box-sizing:border-box;}
-
-.title-logo{font-family:serif;font-size:clamp(24px,7.2vw,40px);font-weight:bold;letter-spacing:0;line-height:1.35;color:#e8d29a;text-shadow:0 3px 0 #66512d,0 5px 12px #000;white-space:nowrap;max-width:100%;}
-
-.title-subtitle{margin-top:5px;font-family:serif;font-size:clamp(10px,2.8vw,14px);letter-spacing:2px;color:#d7c69d;text-shadow:0 2px 5px #000;}
-
-.title-menu{display:flex;flex-direction:column;gap:12px;width:78%;max-width:260px;margin:24px auto 0;}
-
-.title-menu button{padding:13px 10px;border:1px solid #c8b17b;background:linear-gradient(#e8d6a9,#b99b5d);color:#20202a;font-family:serif;font-size:15px;font-weight:bold;letter-spacing:2px;border-radius:3px;}
-
-.title-menu button:active{transform:translateY(1px);filter:brightness(.9);}
+#titleScreen{position:fixed;inset:0;z-index:20000;background:#05070b;overflow-y:auto;display:flex;flex-direction:column;align-items:center;}
+.title-art{width:100%;height:42vh;min-height:220px;max-height:420px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;background:#05070b;}
+.title-background{display:block;width:100%;height:100%;object-fit:contain;object-position:center;}
+.title-menu{width:min(88%,460px);display:flex;flex-direction:column;gap:9px;padding:14px 0 26px;box-sizing:border-box;}
+.title-menu button{width:100%;min-height:48px;padding:10px 12px;border:1px solid #c8b17b;border-radius:7px;background:linear-gradient(140deg,#251817,#090b10);color:#e8d5a6;font-size:17px;letter-spacing:.08em;}
+.title-menu button:active{background:#514126;}
+.title-music{position:fixed;right:16px;bottom:calc(22px + env(safe-area-inset-bottom));top:auto;z-index:30000;width:58px;height:58px;border-radius:50%;border:2px solid #c8b17b;background:rgba(12,18,28,.96);color:#e8c879;font-size:30px;box-shadow:0 4px 14px #0009;display:flex;align-items:center;justify-content:center;}
 
 /* オープニング：地図全体を表示し、文章を画面下部の字幕帯に置く */
 
-.opening-overlay{display:block;padding:0;background:#080e17;overflow:hidden;}
+.opening-overlay{display:flex;flex-direction:column;padding:0;background:#080e17;overflow:hidden;gap:0;}
 
-.opening-map{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center center;z-index:0;opacity:1;}
+.opening-map{position:relative;display:block;flex:0 0 43vh;width:100%;height:43vh;min-height:190px;max-height:360px;object-fit:contain;object-position:center center;z-index:0;opacity:1;background:#080e17;}
 
-.opening-panel{position:absolute;left:0;right:0;bottom:0;width:100%;max-width:none;margin:0;padding:12px 18px calc(12px + env(safe-area-inset-bottom));box-sizing:border-box;border:0;border-top:1px solid #c3a66c;border-radius:0;background:linear-gradient(180deg,rgba(17,25,35,.86),rgba(10,16,24,.97));box-shadow:0 -5px 24px #0009;text-align:center;z-index:2;}
+.opening-panel{position:relative;left:auto;right:auto;bottom:auto;flex:1;min-height:0;width:100%;max-width:none;margin:0;padding:12px 18px calc(84px + env(safe-area-inset-bottom));box-sizing:border-box;border:0;border-top:1px solid #c3a66c;border-radius:0;background:linear-gradient(180deg,rgba(17,25,35,.86),rgba(10,16,24,.97));box-shadow:0 -5px 24px #0009;text-align:center;z-index:2;overflow-y:auto;}
 
-.opening-panel p{min-height:0;margin:7px 0 10px;font-size:13px;line-height:1.65;text-align:center;text-shadow:0 1px 3px #000;white-space:pre-line;}
+.opening-panel p{min-height:0;margin:7px 0 16px;font-size:17px;line-height:1.8;text-align:left;text-shadow:0 1px 3px #000;white-space:pre-line;}
 
 .opening-controls{display:flex;justify-content:center;gap:10px;align-items:center;}
 
-.opening-panel button{min-width:120px;padding:9px 16px;font-size:13px;}
+.opening-panel button{min-width:120px;padding:11px 16px;font-size:15px;}
 
 .opening-panel button:disabled{opacity:.35;}
 
+.music-toggle{position:fixed;right:16px;bottom:calc(22px + env(safe-area-inset-bottom));z-index:30000;width:58px;height:58px;min-width:0;padding:0;border-radius:50%;border:2px solid #c8b17b;background:rgba(12,18,28,.96);color:#e8c879;font-size:30px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px #0009;}
+#intermissionPanel+.music-toggle,.music-toggle{box-sizing:border-box;appearance:none;-webkit-appearance:none;min-width:0;width:58px;height:58px;padding:0;margin:0;border-radius:50%;border:2px solid #c8b17b;background:rgba(12,18,28,.96);color:#e8c879;font-size:30px;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px #0009;}
+.opening-panel{padding-bottom:calc(96px + env(safe-area-inset-bottom));}
 .title-load-list{max-height:55vh;overflow-y:auto;text-align:left;margin:12px 0;}
 
 .title-load-list button{width:100%;padding:9px;margin:4px 0;}
@@ -1080,6 +1092,8 @@ const heading=document.createElement("h2");heading.textContent=title;
 
 const paragraph=document.createElement("p");paragraph.textContent=message;
 
+overlay.appendChild(makeMusicButton());
+
 const button=document.createElement("button");button.textContent=buttonText;
 
 button.onclick=()=>{overlay.remove();if(callback)callback();};
@@ -1088,35 +1102,26 @@ panel.appendChild(heading);panel.appendChild(paragraph);panel.appendChild(button
 
 }
 
-/* オープニング：既存の世界地図を背景に、タップでページ送り */
-
-const WORLD_MAP_URL="https://raw.githubusercontent.com/miyabi201938-lang/mira-srpg-public/refs/heads/main/384D718F-C277-44D8-965A-91141D5EE85D.png";
-
+/* オープニング：勢力図2枚を切り替えながら歴史を紹介 */
+const MAP_PRE_EMPIRE="https://raw.githubusercontent.com/miyabi201938-lang/mira-srpg-public/main/%E5%B8%9D%E5%9B%BD%E6%88%90%E7%AB%8B%E5%89%8D.PNG";
+const MAP_EARLY_EMPIRE="https://raw.githubusercontent.com/miyabi201938-lang/mira-srpg-public/main/%E5%B8%9D%E5%9B%BD%E5%88%9D%E6%9C%9F.PNG";
 const openingPages=[
-
-{text:"かつて、この大陸には多くの国が栄えていた。しかし、国境をめぐる争いは長い戦争へと発展し、各地の町や村は荒廃していった。"},
-
-{text:"戦火は農地を焼き、交易路を断ち、収穫を奪った。飢えと貧困が広がり、各国の支配者たちは民衆の不満を抑えられなくなっていた。"},
-
-{text:"その混乱の中、ヴァルグランという男が頭角を現す。彼は国の再建を掲げ、非常時に限った強い権限を評議会に認めさせた。"},
-
-{text:"ヴァルグランは荒れた農地や水路を整え、街道や橋、城壁を修復した。市場と交易路を再び開き、鍛冶職人たちは農具や武具を作り、人々の暮らしは少しずつ立ち直っていった。"},
-
-{text:"やがて国力を取り戻した国は周辺地域へ勢力を広げ、ヴァルグランは皇帝となる。こうして、ヴァルディア帝国が成立した。"},
-
-{text:"帝国は秩序と繁栄をもたらし、多くの民衆は皇帝を称えた。だが、その強大な権力の陰では、反対者への弾圧と粛清も始まっていた。"},
-
-{text:"帝国の栄光は、いつまで続くのか。一人の若き女性士官が、国家と軍、そして自らの信念の狭間で選択を迫られる。興亡のヴァルディア――その物語が始まる。"}
-
-];
+{map:MAP_PRE_EMPIRE,text:"大陸中央に位置するミルディア評議国。議会は派閥争いに明け暮れ、地方では反乱や衝突が続いていた。国境の脅威に対処する力も、民の暮らしを立て直す力も失われつつあった。"},
+{map:MAP_PRE_EMPIRE,text:"税と食料は不足し、街道は荒れ、各地の領主や軍は中央の命令に従わなくなった。評議会は決断できず、国民の不満と不安は膨らんでいく。政治の行き詰まりを打開しようとする声が、各地で高まり始めた。"},
+{map:MAP_PRE_EMPIRE,text:"その頃、改革を訴えるヴァルグランが演説と政策で注目を集め始める。古い言葉で「ヴェル」は偉大なる者を意味する称号とされ、支持者たちは彼を「ヴェル」と呼ぶようになった。「ヴェル、ヴァルグラン」――その呼び声は、変革を望む人々の合言葉となっていく。"},
+{map:MAP_PRE_EMPIRE,text:"一度は急進派が力ずくで政権を動かそうとしたが、その試みは失敗し、国はさらに混乱した。ヴァルグランは武力による決着ではなく、選挙活動と議会内の交渉、各勢力との合意形成に力を注ぐ。彼の政策と演説は支持を広げ、政治の主導権は少しずつ移っていった。"},
+{map:MAP_EARLY_EMPIRE,text:"選挙で勢力を伸ばしたヴァルグランは、議会の承認を得て国家再建の全権を託される。ミルディア評議国の体制は改められ、ヴァルディア帝国が成立した。行政と軍の再編、街道や農地の復旧が始まり、人々はようやく暮らしが立ち直る兆しを感じ始めた。"},
+{map:MAP_EARLY_EMPIRE,text:"新たな体制のもと、周辺諸国との関係も動き始める。西のアルメリア王国、北のノルトラント王国、南部諸侯連合、東方連合国。帝国の再建が進む中、若き女性士官は所属部隊とともに任務へ向かう。"}
+]
 
 function showOpeningStory(){
 
+setMusicScene("story");
 let page=0;
 
 const overlay=document.createElement("div");overlay.className="story-overlay opening-overlay";
 
-const bg=document.createElement("img");bg.className="opening-map";bg.src=WORLD_MAP_URL;bg.alt="ヴァルディア大陸地図";overlay.appendChild(bg);
+const bg=document.createElement("img");bg.className="opening-map";bg.alt="ヴァルディア大陸勢力図";overlay.appendChild(bg);
 
 const panel=document.createElement("div");panel.className="story-panel opening-panel";
 
@@ -1130,11 +1135,12 @@ const nextButton=document.createElement("button");
 
 controls.appendChild(backButton);controls.appendChild(nextButton);
 
-panel.appendChild(paragraph);panel.appendChild(controls);overlay.appendChild(panel);game.appendChild(overlay);
+panel.appendChild(paragraph);panel.appendChild(controls);overlay.appendChild(panel);overlay.appendChild(makeMusicButton());game.appendChild(overlay);
 
 function render(){
 
 paragraph.textContent=openingPages[page].text;
+bg.src=openingPages[page].map;
 
 backButton.disabled=page===0;
 
@@ -1148,7 +1154,7 @@ nextButton.onclick=()=>{
 
 if(page<openingPages.length-1){page++;render();return;}
 
-overlay.remove();showIntermission();
+overlay.remove();stopStoryBgm();showIntermission();
 
 };
 
@@ -1182,6 +1188,8 @@ b.textContent=`枠${i+1}　${dateText}　${slot.turn}ターン`;
 
 b.onclick=()=>{
 
+stopTitleBgm();
+
 overlay.remove();
 
 intermissionOpen=true;
@@ -1210,69 +1218,29 @@ panel.appendChild(list);panel.appendChild(back);overlay.appendChild(panel);game.
 
 }
 
-/* タイトル画面：英語の装飾文字を削除 */
-
+/* タイトル画面：画像内メニューに透明な操作領域を重ねる */
+const TITLE_IMAGE_URL="https://raw.githubusercontent.com/miyabi201938-lang/mira-srpg-public/main/%E3%82%BF%E3%82%A4%E3%83%88%E3%83%AB1.PNG";
 function showTitleScreen(){
-
 intermissionOpen=false;
-
 mapViewport.style.display="none";
-
 document.querySelector("#actionButtons").style.display="none";
-
 turnLabel.style.display="none";
-
 info.style.display="none";
-
 const old=document.querySelector("#intermissionPanel");if(old)old.remove();
-
 const oldTitle=document.querySelector("#titleScreen");if(oldTitle)oldTitle.remove();
-
 const screen=document.createElement("div");screen.id="titleScreen";
-
-screen.innerHTML=`
-
-<div class="title-inner">
-
-<div class="title-logo">興亡のヴァルディア</div>
-
-<div class="title-subtitle">RISE AND FALL OF VALDIA</div>
-
-<div class="title-menu">
-
-<button id="titleNew">NEW GAME</button>
-
-<button id="titleLoad">LOAD GAME</button>
-
-<button id="titleOptions">OPTIONS</button>
-
-</div>
-
-</div>`;
-
+screen.innerHTML=`<div class="title-art"><img class="title-background" src="${TITLE_IMAGE_URL}" alt="興亡のヴァルディア タイトル背景"></div><div class="title-menu"><button id="titleNew">新しく始める</button><button id="titleContinue">続きから</button><button id="titleLoad">ロード</button><button id="titleOptions">設定</button><button id="titleCredits">クレジット</button></div>`;
 game.appendChild(screen);
-
-screen.querySelector("#titleNew").onclick=()=>{
-
-screen.remove();
-
-resetBattle();
-
-stageNumber=1;
-
-showOpeningStory();
-
-};
-
+setMusicScene("title");
+screen.appendChild(makeMusicButton());
+const startNew=()=>{stopTitleBgm();screen.remove();resetBattle();stageNumber=1;showOpeningStory();};
+screen.querySelector("#titleNew").onclick=startNew;
+screen.querySelector("#titleContinue").onclick=()=>{const slots=readSaveSlots();let candidates=slots.map((slot,i)=>slot?{slot,i}:null).filter(Boolean).sort((a,b)=>(b.slot.savedAt||0)-(a.slot.savedAt||0));if(!candidates.length){alert("セーブデータがありません。");return;}const i=candidates[0].i;stopTitleBgm();screen.remove();intermissionOpen=true;loadFromSlot(i);showIntermission();};
 screen.querySelector("#titleLoad").onclick=()=>{screen.remove();showTitleLoadMenu();};
-
-screen.querySelector("#titleOptions").onclick=()=>{
-
-showStory("OPTIONS","現在、設定項目はありません。","戻る",()=>showTitleScreen());
-
-};
-
+screen.querySelector("#titleOptions").onclick=()=>{showStory("設定","現在、設定項目はありません。","戻る",()=>showTitleScreen());};
+screen.querySelector("#titleCredits").onclick=()=>{showStory("クレジット","興亡のヴァルディア\n企画・制作：個人制作","戻る",()=>showTitleScreen());};
 }
+
 
 function showIntermission(){
 
@@ -1305,6 +1273,8 @@ panel.innerHTML=`
 <button class="intermission-start" id="intermissionStart">戦いへ</button>`;
 
 game.appendChild(panel);
+game.appendChild(makeMusicButton());
+setMusicScene("intermission");
 
 panel.querySelectorAll("[data-prep]").forEach(button=>{
 
