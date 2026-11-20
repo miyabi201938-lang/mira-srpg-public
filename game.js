@@ -43,6 +43,8 @@ test.innerHTML=`
 
 <div id="info">ユニットを選択してね</div>
 
+<div id="miraPortraitPanel" aria-live="polite"></div>
+
 </div>`;
 
 const game=document.querySelector("#game");
@@ -228,13 +230,29 @@ style.textContent=`
 
 .title-load-list button{width:100%;padding:9px;margin:4px 0;}
 
+/* ミラ選択時の下部顔グラ・ステータス */
+#miraPortraitPanel{display:none;position:fixed;left:0;right:0;bottom:0;z-index:25000;padding:7px 10px calc(7px + env(safe-area-inset-bottom));box-sizing:border-box;background:rgba(12,18,28,.97);border-top:1px solid #c8b17b;color:#f3e8cb;}
+#miraPortraitPanel.visible{display:flex;align-items:center;gap:10px;}
+#miraPortraitPanel img{width:82px;height:82px;flex:0 0 82px;object-fit:contain;object-position:center;border:1px solid #c8b17b;border-radius:6px;background:#111;}
+#miraPortraitPanel .mira-status{min-width:0;flex:1;font-size:13px;line-height:1.5;}
+#miraPortraitPanel .mira-name{font-weight:bold;font-size:15px;color:#e8c879;}
+#miraPortraitPanel .mira-hp{margin-top:3px;font-weight:bold;}
+#miraPortraitPanel .mira-hpbar{height:8px;margin-top:5px;border:1px solid #777;border-radius:5px;background:#333;overflow:hidden;}
+#miraPortraitPanel .mira-hpfill{height:100%;background:#42a5f5;}
+#game.has-mira-portrait #info{margin-bottom:112px;}
+.unit-details-layout{display:flex;align-items:flex-start;gap:12px;}
+.unit-details-text{flex:1;min-width:0;}
+.unit-details-portrait{width:42%;max-width:180px;flex:0 0 42%;object-fit:contain;border:1px solid #c8b17b;border-radius:8px;background:#111;}
+.unit-details-text p{margin:7px 0;}
+@media(max-width:420px){.unit-details-portrait{width:38%;flex-basis:38%;max-width:140px;}}
+
 `;
 
 document.head.appendChild(style);
 
 const units=[
 
-{id:1,name:"隊長",side:"ally",job:"ロード",role:"captain",x:1,y:2,hp:20,maxHp:20,icon:"👑",moved:false,acted:false,waited:false,atk:6,def:3,agi:5,dex:6,move:1,range:1,skills:["指揮"],resistances:{物理:"未設定",魔法:"未設定",炎:"未設定",氷:"未設定"}},
+{id:1,name:"ミラ",side:"ally",job:"機動歩兵",role:"captain",x:1,y:2,hp:20,maxHp:20,icon:"👑",moved:false,acted:false,waited:false,atk:6,def:3,agi:5,dex:6,move:1,range:1,skills:["指揮"],resistances:{物理:"未設定",魔法:"未設定",炎:"未設定",氷:"未設定"}},
 
 {id:2,name:"重装兵",side:"ally",job:"ヘビーアーマー",x:0,y:3,hp:16,maxHp:16,icon:"🪖",moved:false,acted:false,waited:false,atk:7,def:6,agi:2,dex:4,move:1,range:1,skills:["防御"],resistances:{物理:"未設定",魔法:"未設定",炎:"未設定",氷:"未設定"}},
 
@@ -411,6 +429,27 @@ if(touchPanMoved){suppressNextClick=true;setTimeout(()=>{suppressNextClick=false
 });
 
 mapViewport.addEventListener("touchcancel",()=>{touchPanActive=false;});
+
+let blankPanPointer=null,blankPanStartX=0,blankPanStartY=0,blankPanOriginX=0,blankPanOriginY=0,blankPanMoved=false;
+mapViewport.addEventListener("pointerdown",function(e){
+if(e.pointerType==="mouse"||e.button!==0)return;
+if(e.target!==mapViewport&&e.target.id!=="terrainBackground")return;
+blankPanPointer=e.pointerId;blankPanStartX=e.clientX;blankPanStartY=e.clientY;blankPanOriginX=mapOffsetX;blankPanOriginY=mapOffsetY;blankPanMoved=false;
+},{passive:true});
+mapViewport.addEventListener("pointermove",function(e){
+if(blankPanPointer!==e.pointerId)return;
+const dx=e.clientX-blankPanStartX,dy=e.clientY-blankPanStartY;
+if(!blankPanMoved&&Math.abs(dx)+Math.abs(dy)>5){blankPanMoved=true;mapViewport.classList.add("panning");}
+if(blankPanMoved){mapOffsetX=blankPanOriginX+dx;mapOffsetY=blankPanOriginY+dy;clampMapOffset();}
+});
+function finishBlankPan(e){
+if(blankPanPointer!==e.pointerId)return;
+if(blankPanMoved){suppressNextClick=true;setTimeout(()=>{suppressNextClick=false;},450);mapViewport.classList.remove("panning");}
+blankPanPointer=null;
+blankPanMoved=false;
+}
+mapViewport.addEventListener("pointerup",finishBlankPan);
+mapViewport.addEventListener("pointercancel",finishBlankPan);
 
 mapViewport.addEventListener("mousedown",function(e){
 
@@ -726,7 +765,7 @@ token.dataset.x=unit.x;token.dataset.y=unit.y;token.dataset.unitId=unit.id;token
 
 const visual=unit.image?`<img class="unit-image" src="${unit.image}" alt="">`:`<div class="unit-icon">${unit.icon}</div>`;
 
-token.innerHTML=`<div class="unit-content">${visual}<div class="unit-name">${unit.name}</div><div class="unit-hp">${unit.hp}/${unit.maxHp}</div></div>`;map.appendChild(token);
+token.innerHTML=`<div class="unit-content">${visual}<div class="unit-name">${unit.id===1?"ミラ":unit.name}</div><div class="unit-hp">${unit.hp}/${unit.maxHp}</div></div>`;map.appendChild(token);
 
 const show=battleVisual&&battleVisual.defender&&battleVisual.defender.id===unit.id&&(battleVisual.response==="defend"||battleVisual.response==="skill");
 
@@ -734,6 +773,27 @@ if(show){const shield=document.createElement("div");shield.className="defense-ma
 
 });
 
+}
+
+const MIRA_PORTRAIT_URLS={
+healthy:"https://raw.githubusercontent.com/miyabi201938-lang/mira-srpg-public/main/mira_portrait_healthy.webp",
+mild:"https://raw.githubusercontent.com/miyabi201938-lang/mira-srpg-public/main/mira_portrait_mild.webp",
+severe:"https://raw.githubusercontent.com/miyabi201938-lang/mira-srpg-public/main/mira_portrait_severe.webp"
+};
+function getMiraPortraitState(unit){
+const damage=Math.max(0,unit.maxHp-unit.hp),ratio=unit.maxHp>0?damage/unit.maxHp:0;
+if(ratio>=0.70)return "severe";
+if(ratio>=0.20)return "mild";
+return "healthy";
+}
+function updateMiraPortraitPanel(){
+const panel=document.querySelector("#miraPortraitPanel");if(!panel)return;
+const displayUnit=pendingMove?pendingMove.unit:selected;
+if(!displayUnit||displayUnit.id!==1||displayUnit.hp<=0){panel.classList.remove("visible");game.classList.remove("has-mira-portrait");panel.innerHTML="";return;}
+const state=getMiraPortraitState(displayUnit),src=MIRA_PORTRAIT_URLS[state],pct=Math.max(0,Math.min(100,displayUnit.hp/displayUnit.maxHp*100));
+const stateLabel=state==="healthy"?"無傷":state==="mild"?"軽症":"重症";
+panel.innerHTML=`<img src="${src}" alt="ミラ・ローゼン ${stateLabel}"><div class="mira-status"><div class="mira-name">ミラ・ローゼン 機動歩兵</div><div class="mira-hp">HP ${displayUnit.hp}/${displayUnit.maxHp}　${stateLabel}</div><div class="mira-hpbar"><div class="mira-hpfill" style="width:${pct}%"></div></div></div>`;
+panel.classList.add("visible");game.classList.add("has-mira-portrait");
 }
 
 function refresh(){
@@ -753,6 +813,8 @@ pendingMoveButton.style.display=canMove?"inline-block":"none";pendingAttackButto
 pendingMoveButton.disabled=!canMove;pendingAttackButton.disabled=!showActions||!hasAttackTargets(actionUnit);pendingWaitButton.disabled=!showActions;systemButton.disabled=!showActions;systemButton.textContent="メニュー";
 
 turnLabel.textContent=currentTurn==="ally"?"味方のターン":"敵のターン";
+
+updateMiraPortraitPanel();
 
 }
 
@@ -808,8 +870,9 @@ function showDetails(unit){
 
 if(!unit)return;
 
-info.innerHTML=`<h3>${unit.icon} ${unit.name}</h3><p>HP：${unit.hp}/${unit.maxHp}</p><p>攻撃：${unit.atk}　防御：${unit.def}</p><p>速さ：${unit.agi}　技量：${unit.dex}</p><p>移動：${unit.move}　射程：${unit.range}</p><p>スキル：${unit.skills.join("、")}</p><button id="detailClose">閉じる</button>`;
-
+const portraitMarkup=unit.id===1?`<img class="unit-details-portrait" src="${MIRA_PORTRAIT_URLS[getMiraPortraitState(unit)]}" alt="ミラ・ローゼン">`:"";
+const textMarkup=`<div class="unit-details-text"><h3>${unit.icon} ${unit.id===1?"ミラ・ローゼン":unit.name}</h3><p>兵種：${unit.job}</p><p>HP：${unit.hp}/${unit.maxHp}</p><p>攻撃：${unit.atk}　防御：${unit.def}</p><p>速さ：${unit.agi}　技量：${unit.dex}</p><p>移動：${unit.move}　射程：${unit.range}</p><p>スキル：${unit.skills.join("、")}</p><button id="detailClose">閉じる</button></div>`;
+info.innerHTML=unit.id===1?`<div class="unit-details-layout">${textMarkup}${portraitMarkup}</div>`:textMarkup;
 menuOpen=true;attackMode=false;
 
 document.querySelector("#detailClose").onclick=()=>{
@@ -1310,7 +1373,7 @@ panel.innerHTML=`
 
 <p><strong>【勝利条件】</strong><br>敵隊長を撃破する。</p>
 
-<p><strong>【敗北条件】</strong><br>味方隊長が撃破される。</p>
+<p><strong>【敗北条件】</strong><br>ミラ・ローゼンが撃破される。</p>
 
 </div>
 
@@ -1400,7 +1463,7 @@ if(!allyCaptain||allyCaptain.hp<=0){
 
 battleEnded=true;combatAnimating=false;battleVisual=null;
 
-showStory("敗北","隊長が倒れた。\n味方部隊は撤退した。","終了",()=>{resetBattle();showIntermission();});refresh();return true;
+showStory("敗北","ミラ・ローゼンが倒れた。\n味方部隊は撤退した。","終了",()=>{resetBattle();showIntermission();});refresh();return true;
 
 }
 
