@@ -54,19 +54,155 @@ style.textContent=`
 
 #game{position:relative;}
 
-#mapViewport{position:relative;width:94%;max-width:900px;height:65vh;min-height:310px;max-height:700px;margin:0 auto;overflow:hidden;border:1px solid #777;border-radius:6px;background:#b8b5a8;touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:grab;}
+#mapViewport{
+
+position:relative;
+
+width:94%;
+
+max-width:900px;
+
+height:65vh;
+
+min-height:310px;
+
+max-height:700px;
+
+margin:0 auto;
+
+overflow:hidden;
+
+border:1px solid #777;
+
+border-radius:6px;
+
+background:#b8b5a8;
+
+touch-action:pan-y;
+
+user-select:none;
+
+-webkit-user-select:none;
+
+cursor:grab;
+
+}
 
 #mapViewport.panning{cursor:grabbing;}
 
-#map{position:absolute;left:0;top:0;margin:0;overflow:visible;transform-origin:0 0;will-change:transform;touch-action:manipulation;}
+#map{
 
-#actionButtons{display:flex;justify-content:center;align-items:center;gap:5px;width:94%;max-width:420px;margin:8px auto;}
+position:absolute;
 
-#actionButtons button{flex:1;min-width:0;padding:9px 3px;font-size:11px;border-radius:6px;}
+left:0;
+
+top:0;
+
+margin:0;
+
+overflow:visible;
+
+transform-origin:0 0;
+
+will-change:transform;
+
+touch-action:manipulation;
+
+}
+
+#terrainBackground{
+
+position:absolute;
+
+left:0;
+
+top:0;
+
+width:100%;
+
+height:100%;
+
+z-index:1;
+
+pointer-events:none;
+
+background-color:#477b39;
+
+background-image:url("https://raw.githubusercontent.com/miyabi201938-lang/mira-srpg-public/refs/heads/main/a_high_resolution_top_down_oblique_pixel_art_rpg.png");
+
+background-size:150% 100%;
+
+background-position:left center;
+
+background-repeat:no-repeat;
+
+}
+
+#actionButtons{
+
+display:flex;
+
+justify-content:center;
+
+align-items:center;
+
+gap:5px;
+
+width:94%;
+
+max-width:420px;
+
+margin:8px auto;
+
+}
+
+#actionButtons button{
+
+flex:1;
+
+min-width:0;
+
+padding:9px 3px;
+
+font-size:11px;
+
+border-radius:6px;
+
+}
 
 #actionButtons button:disabled{opacity:.35;filter:grayscale(1);}
 
-#info{position:relative;z-index:15;width:94%;max-width:340px;box-sizing:border-box;margin:8px auto;padding:7px;background:rgba(255,255,255,.97);border:1px solid #777;border-radius:8px;color:#222;font-size:12px;line-height:1.3;min-height:35px;}
+#info{
+
+position:relative;
+
+z-index:15;
+
+width:94%;
+
+max-width:340px;
+
+box-sizing:border-box;
+
+margin:8px auto;
+
+padding:7px;
+
+background:rgba(255,255,255,.97);
+
+border:1px solid #777;
+
+border-radius:8px;
+
+color:#222;
+
+font-size:12px;
+
+line-height:1.3;
+
+min-height:35px;
+
+}
 
 #info h3{font-size:14px;margin:4px 0;}
 
@@ -76,27 +212,221 @@ style.textContent=`
 
 #info button{font-size:11px;padding:5px 7px;margin:2px;}
 
-.unit-token{position:absolute;box-sizing:border-box;width:56px;height:44px;z-index:5;display:flex;align-items:center;justify-content:center;border-radius:8px;background:transparent;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+/* ユニットはヘックスと同じ寸法に固定 */
+
+.unit-token{
+
+position:absolute!important;
+
+box-sizing:border-box!important;
+
+width:56px!important;
+
+height:44px!important;
+
+min-width:56px!important;
+
+max-width:56px!important;
+
+min-height:44px!important;
+
+max-height:44px!important;
+
+padding:0!important;
+
+margin:0!important;
+
+z-index:5;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+overflow:hidden;
+
+border-radius:7px;
+
+background:rgba(20,25,31,.88);
+
+border:1px solid rgba(255,255,255,.9);
+
+box-shadow:0 2px 5px #000b,inset 0 0 0 1px #0005;
+
+touch-action:manipulation;
+
+-webkit-tap-highlight-color:transparent;
+
+}
+
+.unit-token[data-side="ally"]{
+
+border-color:#8ec8ff;
+
+box-shadow:0 2px 5px #000b,inset 0 0 0 1px #2879db;
+
+}
+
+.unit-token[data-side="enemy"]{
+
+border-color:#ffaaaa;
+
+box-shadow:0 2px 5px #000b,inset 0 0 0 1px #c62828;
+
+}
 
 .unit-token.unit-acted{filter:brightness(.55) saturate(.7);}
 
-.unit-content{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;line-height:1;pointer-events:none;color:#17202a;font-weight:bold;width:100%;height:100%;}
+.unit-content{
 
-.unit-icon{font-size:16px;line-height:17px;}
+display:flex;
 
-.unit-name{font-size:9px;line-height:10px;max-width:54px;overflow-wrap:anywhere;}
+flex-direction:column;
 
-.unit-hp{font-size:8px;line-height:9px;}
+align-items:center;
 
-.defense-mark{position:absolute;z-index:12;font-size:15px;line-height:15px;filter:drop-shadow(0 1px 2px #000);pointer-events:none;transform:translateX(-50%);}
+justify-content:center;
 
-.battle-panel{display:flex;align-items:center;justify-content:space-between;gap:5px;margin:5px 0;padding:5px;border:2px solid #777;border-radius:8px;background:#fff;color:#222;}
+text-align:center;
+
+line-height:1;
+
+pointer-events:none;
+
+color:#fff;
+
+font-weight:bold;
+
+width:100%;
+
+height:100%;
+
+overflow:hidden;
+
+text-shadow:1px 1px 2px #000,-1px -1px 2px #000;
+
+}
+
+.unit-icon{
+
+font-size:19px;
+
+line-height:20px;
+
+max-height:21px;
+
+filter:drop-shadow(0 1px 2px #000);
+
+}
+
+.unit-name{
+
+font-size:8px;
+
+line-height:9px;
+
+max-width:52px;
+
+overflow:hidden;
+
+white-space:nowrap;
+
+text-overflow:clip;
+
+}
+
+.unit-hp{
+
+font-size:8px;
+
+line-height:9px;
+
+color:#fff;
+
+}
+
+.unit-image{
+
+width:23px;
+
+height:23px;
+
+max-width:23px;
+
+max-height:23px;
+
+object-fit:contain;
+
+image-rendering:pixelated;
+
+}
+
+.defense-mark{
+
+position:absolute;
+
+z-index:12;
+
+font-size:15px;
+
+line-height:15px;
+
+filter:drop-shadow(0 1px 2px #000);
+
+pointer-events:none;
+
+transform:translateX(-50%);
+
+}
+
+.battle-panel{
+
+display:flex;
+
+align-items:center;
+
+justify-content:space-between;
+
+gap:5px;
+
+margin:5px 0;
+
+padding:5px;
+
+border:2px solid #777;
+
+border-radius:8px;
+
+background:#fff;
+
+color:#222;
+
+}
 
 .battle-side{width:42%;min-width:0;text-align:center;}
 
 .battle-name{font-weight:bold;overflow-wrap:anywhere;margin-bottom:3px;font-size:10px;}
 
-.hp-track{position:relative;width:100%;height:16px;background:#ddd;border:1px solid #777;border-radius:5px;overflow:hidden;box-sizing:border-box;}
+.hp-track{
+
+position:relative;
+
+width:100%;
+
+height:16px;
+
+background:#ddd;
+
+border:1px solid #777;
+
+border-radius:5px;
+
+overflow:hidden;
+
+box-sizing:border-box;
+
+}
 
 .hp-fill{position:absolute;left:0;top:0;height:100%;transition:width 300ms ease;}
 
@@ -104,21 +434,91 @@ style.textContent=`
 
 .hp-enemy{background:#e53935;}
 
-@keyframes hpBlink{0%,100%{opacity:1;filter:brightness(1);}50%{opacity:.12;filter:brightness(2);}}
+@keyframes hpBlink{
 
-.hp-predicted{position:absolute;top:0;z-index:3;height:100%;animation:hpBlink .5s steps(2,end) infinite;background:repeating-linear-gradient(135deg,#fff 0,#fff 3px,#ffb300 3px,#ffb300 6px);border-left:2px solid #222;box-sizing:border-box;pointer-events:none;}
+0%,100%{opacity:1;filter:brightness(1);}
+
+50%{opacity:.12;filter:brightness(2);}
+
+}
+
+.hp-predicted{
+
+position:absolute;
+
+top:0;
+
+z-index:3;
+
+height:100%;
+
+animation:hpBlink .5s steps(2,end) infinite;
+
+background:repeating-linear-gradient(135deg,#fff 0,#fff 3px,#ffb300 3px,#ffb300 6px);
+
+border-left:2px solid #222;
+
+box-sizing:border-box;
+
+pointer-events:none;
+
+}
 
 .battle-center{font-size:15px;font-weight:bold;text-align:center;}
 
 .battle-hp-text{font-size:10px;margin-top:3px;}
 
-@keyframes combatLunge{0%{transform:translateX(0) scale(1);}35%{transform:translateX(9px) scale(1.08);}100%{transform:translateX(0) scale(1);}}
+@keyframes combatLunge{
 
-@keyframes combatHit{0%,100%{transform:translateX(0);}20%{transform:translateX(-5px);}40%{transform:translateX(5px);}60%{transform:translateX(-4px);}80%{transform:translateX(3px);}}
+0%{transform:translateX(0) scale(1);}
 
-@keyframes combatFloat{0%{opacity:0;transform:translate(-50%,8px) scale(.7);}15%{opacity:1;transform:translate(-50%,0) scale(1.15);}100%{opacity:0;transform:translate(-50%,-38px) scale(1);}}
+35%{transform:translateX(9px) scale(1.08);}
 
-.combat-number,.combat-miss{position:absolute;z-index:30;pointer-events:none;font-weight:900;-webkit-text-stroke:1px white;text-shadow:1px 2px 2px #0008;animation:combatFloat 950ms ease-out forwards;}
+100%{transform:translateX(0) scale(1);}
+
+}
+
+@keyframes combatHit{
+
+0%,100%{transform:translateX(0);}
+
+20%{transform:translateX(-5px);}
+
+40%{transform:translateX(5px);}
+
+60%{transform:translateX(-4px);}
+
+80%{transform:translateX(3px);}
+
+}
+
+@keyframes combatFloat{
+
+0%{opacity:0;transform:translate(-50%,8px) scale(.7);}
+
+15%{opacity:1;transform:translate(-50%,0) scale(1.15);}
+
+100%{opacity:0;transform:translate(-50%,-38px) scale(1);}
+
+}
+
+.combat-number,.combat-miss{
+
+position:absolute;
+
+z-index:30;
+
+pointer-events:none;
+
+font-weight:900;
+
+-webkit-text-stroke:1px white;
+
+text-shadow:1px 2px 2px #0008;
+
+animation:combatFloat 950ms ease-out forwards;
+
+}
 
 .combat-number{font-size:25px;color:#e53935;}
 
@@ -128,55 +528,267 @@ style.textContent=`
 
 .unit-token.combat-hit{animation:combatHit 420ms ease-in-out;}
 
-@keyframes rangePulse{0%,100%{fill-opacity:.08;stroke-opacity:.35;}50%{fill-opacity:.34;stroke-opacity:1;}}
+@keyframes rangePulse{
 
-.move-range-hex{fill:#2196f3;fill-opacity:.2;stroke:#1565c0;stroke-width:2;animation:rangePulse 1s ease-in-out infinite;pointer-events:none;}
+0%,100%{fill-opacity:.08;stroke-opacity:.35;}
 
-.attack-range-hex{fill:#e53935;fill-opacity:.2;stroke:#b71c1c;stroke-width:2;animation:rangePulse 1s ease-in-out infinite;animation-delay:-.5s;pointer-events:none;}
+50%{fill-opacity:.34;stroke-opacity:1;}
 
-@keyframes battleHexPulse{0%,100%{opacity:.55;stroke-width:3;}50%{opacity:1;stroke-width:5;}}
+}
 
-.battle-hex-attacker{fill:#ff9800;fill-opacity:.28;stroke:#e65100;stroke-width:3;animation:battleHexPulse .65s ease-in-out infinite;pointer-events:none;}
+.move-range-hex{
 
-.battle-hex-defender{fill:#29b6f6;fill-opacity:.28;stroke:#0277bd;stroke-width:3;animation:battleHexPulse .65s ease-in-out infinite;pointer-events:none;}
+fill:#2196f3;
 
-.battle-arrow{fill:none;stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 3px #222);pointer-events:none;}
+fill-opacity:.2;
+
+stroke:#1565c0;
+
+stroke-width:2;
+
+animation:rangePulse 1s ease-in-out infinite;
+
+pointer-events:none;
+
+}
+
+.attack-range-hex{
+
+fill:#e53935;
+
+fill-opacity:.2;
+
+stroke:#b71c1c;
+
+stroke-width:2;
+
+animation:rangePulse 1s ease-in-out infinite;
+
+animation-delay:-.5s;
+
+pointer-events:none;
+
+}
+
+@keyframes battleHexPulse{
+
+0%,100%{opacity:.55;stroke-width:3;}
+
+50%{opacity:1;stroke-width:5;}
+
+}
+
+.battle-hex-attacker{
+
+fill:#ff9800;
+
+fill-opacity:.28;
+
+stroke:#e65100;
+
+stroke-width:3;
+
+animation:battleHexPulse .65s ease-in-out infinite;
+
+pointer-events:none;
+
+}
+
+.battle-hex-defender{
+
+fill:#29b6f6;
+
+fill-opacity:.28;
+
+stroke:#0277bd;
+
+stroke-width:3;
+
+animation:battleHexPulse .65s ease-in-out infinite;
+
+pointer-events:none;
+
+}
+
+.battle-arrow{
+
+fill:none;
+
+stroke-width:3.5;
+
+stroke-linecap:round;
+
+stroke-linejoin:round;
+
+filter:drop-shadow(0 0 3px #222);
+
+pointer-events:none;
+
+}
 
 .battle-arrow.ally-arrow{stroke:#ff9800;}
 
 .battle-arrow.enemy-arrow{stroke:#29b6f6;}
 
-.counter-impact{font-size:25px;font-weight:bold;text-anchor:middle;dominant-baseline:middle;pointer-events:none;}
+.counter-impact{
 
-.story-overlay{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;box-sizing:border-box;padding:20px;background:rgba(10,16,27,.94);color:#fff;}
+font-size:25px;
 
-.story-panel{width:100%;max-width:420px;box-sizing:border-box;padding:24px 20px;border:1px solid #b9a16b;border-radius:12px;background:linear-gradient(160deg,#28364a,#111923);text-align:center;}
+font-weight:bold;
+
+text-anchor:middle;
+
+dominant-baseline:middle;
+
+pointer-events:none;
+
+}
+
+.story-overlay{
+
+position:fixed;
+
+inset:0;
+
+z-index:10000;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+box-sizing:border-box;
+
+padding:20px;
+
+background:rgba(10,16,27,.94);
+
+color:#fff;
+
+}
+
+.story-panel{
+
+width:100%;
+
+max-width:420px;
+
+box-sizing:border-box;
+
+padding:24px 20px;
+
+border:1px solid #b9a16b;
+
+border-radius:12px;
+
+background:linear-gradient(160deg,#28364a,#111923);
+
+text-align:center;
+
+}
 
 .story-panel h2{font-size:22px;color:#f0d99b;}
 
 .story-panel p{font-size:16px;line-height:2;text-align:left;white-space:pre-line;}
 
-.story-panel button{min-width:150px;padding:11px 20px;font-size:15px;border:1px solid #d5bd83;border-radius:7px;background:#d5bd83;color:#202020;font-weight:bold;}
+.story-panel button{
 
-#intermissionPanel{width:94%;max-width:520px;margin:12px auto;padding:14px;box-sizing:border-box;border:2px solid #a78b55;border-radius:10px;background:linear-gradient(160deg,#28364a,#111923);color:#fff;text-align:center;}
+min-width:150px;
+
+padding:11px 20px;
+
+font-size:15px;
+
+border:1px solid #d5bd83;
+
+border-radius:7px;
+
+background:#d5bd83;
+
+color:#202020;
+
+font-weight:bold;
+
+}
+
+#intermissionPanel{
+
+width:94%;
+
+max-width:520px;
+
+margin:12px auto;
+
+padding:14px;
+
+box-sizing:border-box;
+
+border:2px solid #a78b55;
+
+border-radius:10px;
+
+background:linear-gradient(160deg,#28364a,#111923);
+
+color:#fff;
+
+text-align:center;
+
+}
 
 #intermissionPanel h3{font-size:19px;color:#f0d99b;margin:5px;}
 
 #intermissionPanel p{font-size:12px;line-height:1.6;}
 
-#intermissionPanel button{padding:9px 10px;margin:4px;border:1px solid #b9a16b;border-radius:6px;background:#e4d2a6;color:#202020;font-weight:bold;font-size:12px;}
+#intermissionPanel button{
 
-#intermissionPanel .intermission-main{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:12px 0;}
+padding:9px 10px;
+
+margin:4px;
+
+border:1px solid #b9b6a1;
+
+border-radius:6px;
+
+background:#e4d2a6;
+
+color:#202020;
+
+font-weight:bold;
+
+font-size:12px;
+
+}
+
+#intermissionPanel .intermission-main{
+
+display:grid;
+
+grid-template-columns:1fr 1fr;
+
+gap:5px;
+
+margin:12px 0;
+
+}
 
 #intermissionPanel .intermission-main button{min-height:42px;}
 
-#intermissionPanel .intermission-start{width:90%;margin-top:12px;background:#d5bd83;font-size:15px;}
+#intermissionPanel .intermission-start{
+
+width:90%;
+
+margin-top:12px;
+
+background:#d5bd83;
+
+font-size:15px;
+
+}
 
 `;
 
-document.head.appendChild(style);
-
-const units=[
+document.head.appendChild(style); const units=[
 
 {id:1,name:"隊長",side:"ally",job:"ロード",role:"captain",x:1,y:2,hp:20,maxHp:20,icon:"👑",moved:false,acted:false,waited:false,atk:6,def:3,agi:5,dex:6,move:1,range:1,skills:["指揮"],resistances:{物理:"未設定",魔法:"未設定",炎:"未設定",氷:"未設定"}},
 
@@ -210,7 +822,7 @@ let lastTapUnitId=null,battleVisual=null;
 
 let systemMenuOpen=false,intermissionOpen=false,intermissionReturnMode=false;
 
-let stageNumber=1,cameraBusy=false;
+let stageNumber=1,cameraBusy=false,cameraSkipRequested=false;
 
 const CRITICAL_RATE=10,CRITICAL_MULTIPLIER=2;
 
@@ -220,7 +832,29 @@ const mapWidth=dx*(cols-1)+w;
 
 const mapHeight=(rows-1)*dy+h+h/2;
 
-Object.assign(map.style,{width:mapWidth+"px",height:mapHeight+"px",position:"absolute",left:"0",top:"0",overflow:"visible",touchAction:"manipulation"});
+Object.assign(map.style,{
+
+width:mapWidth+"px",
+
+height:mapHeight+"px",
+
+position:"absolute",
+
+left:"0",
+
+top:"0",
+
+overflow:"visible",
+
+touchAction:"manipulation"
+
+});
+
+const terrainBackground=document.createElement("div");
+
+terrainBackground.id="terrainBackground";
+
+map.appendChild(terrainBackground);
 
 let mapOffsetX=0,mapOffsetY=0;
 
@@ -242,7 +876,15 @@ map.style.transform=`translate(${mapOffsetX}px,${mapOffsetY}px)`;
 
 }
 
-function centerMap(){mapOffsetX=(mapViewport.clientWidth-mapWidth)/2;mapOffsetY=(mapViewport.clientHeight-mapHeight)/2;clampMapOffset();}
+function centerMap(){
+
+mapOffsetX=(mapViewport.clientWidth-mapWidth)/2;
+
+mapOffsetY=(mapViewport.clientHeight-mapHeight)/2;
+
+clampMapOffset();
+
+}
 
 function centerMapOnUnit(unit){
 
@@ -266,6 +908,14 @@ const startX=mapOffsetX,startY=mapOffsetY,start=performance.now();
 
 function frame(now){
 
+if(cameraSkipRequested){
+
+resolve();
+
+return;
+
+}
+
 const t=Math.min(1,(now-start)/duration);
 
 const eased=t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
@@ -276,7 +926,9 @@ mapOffsetY=startY+(targetY-startY)*eased;
 
 clampMapOffset();
 
-if(t<1)requestAnimationFrame(frame);else resolve();
+if(t<1)requestAnimationFrame(frame);
+
+else resolve();
 
 }
 
@@ -286,61 +938,153 @@ requestAnimationFrame(frame);
 
 }
 
-function getTouchCenter(touches){return{x:(touches[0].clientX+touches[1].clientX)/2,y:(touches[0].clientY+touches[1].clientY)/2};}
+/* カメラ演出中のタップは演出スキップ専用。
+
+   通常プレイ中のタップ処理には影響させない。 */
+
+game.addEventListener("click",function(e){
+
+if(!cameraBusy)return;
+
+e.preventDefault();
+
+e.stopPropagation();
+
+if(e.stopImmediatePropagation)e.stopImmediatePropagation();
+
+cameraSkipRequested=true;
+
+},{capture:true});
+
+function getTouchCenter(touches){
+
+return{
+
+x:(touches[0].clientX+touches[1].clientX)/2,
+
+y:(touches[0].clientY+touches[1].clientY)/2
+
+};
+
+}
 
 mapViewport.addEventListener("touchstart",function(e){
 
-if(e.touches.length!==2)return;e.preventDefault();
+if(e.touches.length!==2)return;
 
-const c=getTouchCenter(e.touches);touchPanActive=true;touchPanMoved=false;touchPanLastX=c.x;touchPanLastY=c.y;
+e.preventDefault();
+
+const c=getTouchCenter(e.touches);
+
+touchPanActive=true;
+
+touchPanMoved=false;
+
+touchPanLastX=c.x;
+
+touchPanLastY=c.y;
 
 },{passive:false});
 
 mapViewport.addEventListener("touchmove",function(e){
 
-if(!touchPanActive||e.touches.length!==2)return;e.preventDefault();
+if(!touchPanActive||e.touches.length!==2)return;
 
-const c=getTouchCenter(e.touches),mx=c.x-touchPanLastX,my=c.y-touchPanLastY;
+e.preventDefault();
+
+const c=getTouchCenter(e.touches);
+
+const mx=c.x-touchPanLastX,my=c.y-touchPanLastY;
 
 if(Math.abs(mx)+Math.abs(my)>2)touchPanMoved=true;
 
-mapOffsetX+=mx;mapOffsetY+=my;touchPanLastX=c.x;touchPanLastY=c.y;clampMapOffset();
+mapOffsetX+=mx;
+
+mapOffsetY+=my;
+
+touchPanLastX=c.x;
+
+touchPanLastY=c.y;
+
+clampMapOffset();
 
 },{passive:false});
 
 mapViewport.addEventListener("touchend",function(){
 
-if(!touchPanActive)return;touchPanActive=false;
+if(!touchPanActive)return;
 
-if(touchPanMoved){suppressNextClick=true;setTimeout(()=>{suppressNextClick=false;},450);}
+touchPanActive=false;
+
+if(touchPanMoved){
+
+suppressNextClick=true;
+
+setTimeout(()=>{suppressNextClick=false;},450);
+
+}
 
 });
 
-mapViewport.addEventListener("touchcancel",function(){touchPanActive=false;});
+mapViewport.addEventListener("touchcancel",function(){
+
+touchPanActive=false;
+
+});
 
 mapViewport.addEventListener("mousedown",function(e){
 
-if(e.button!==1)return;e.preventDefault();mousePanning=true;
+if(e.button!==1)return;
 
-mouseStartX=e.clientX;mouseStartY=e.clientY;mouseOriginX=mapOffsetX;mouseOriginY=mapOffsetY;mapViewport.classList.add("panning");
+e.preventDefault();
+
+mousePanning=true;
+
+mouseStartX=e.clientX;
+
+mouseStartY=e.clientY;
+
+mouseOriginX=mapOffsetX;
+
+mouseOriginY=mapOffsetY;
+
+mapViewport.classList.add("panning");
 
 });
 
 document.addEventListener("mousemove",function(e){
 
-if(!mousePanning)return;mapOffsetX=mouseOriginX+(e.clientX-mouseStartX);mapOffsetY=mouseOriginY+(e.clientY-mouseStartY);clampMapOffset();
+if(!mousePanning)return;
+
+mapOffsetX=mouseOriginX+(e.clientX-mouseStartX);
+
+mapOffsetY=mouseOriginY+(e.clientY-mouseStartY);
+
+clampMapOffset();
 
 });
 
 document.addEventListener("mouseup",function(e){
 
-if(!mousePanning||e.button!==1)return;mousePanning=false;mapViewport.classList.remove("panning");
+if(!mousePanning||e.button!==1)return;
+
+mousePanning=false;
+
+mapViewport.classList.remove("panning");
 
 });
 
-mapViewport.addEventListener("auxclick",function(e){if(e.button===1)e.preventDefault();});
+mapViewport.addEventListener("auxclick",function(e){
 
-window.addEventListener("resize",()=>{if(!cameraBusy)clampMapOffset();});
+if(e.button===1)e.preventDefault();
+
+});
+
+window.addEventListener("resize",()=>{
+
+if(!cameraBusy)clampMapOffset();
+
+});
 
 centerMap();
 
@@ -350,23 +1094,59 @@ const board=document.createElementNS(svgNS,"svg");
 
 board.setAttribute("viewBox",`0 0 ${mapWidth} ${mapHeight}`);
 
-board.setAttribute("width",mapWidth);board.setAttribute("height",mapHeight);
+board.setAttribute("width",mapWidth);
 
-Object.assign(board.style,{position:"absolute",left:"0",top:"0",width:mapWidth+"px",height:mapHeight+"px",pointerEvents:"auto",zIndex:"2",display:"block"});
+board.setAttribute("height",mapHeight);
+
+Object.assign(board.style,{
+
+position:"absolute",
+
+left:"0",
+
+top:"0",
+
+width:mapWidth+"px",
+
+height:mapHeight+"px",
+
+pointerEvents:"auto",
+
+zIndex:"2",
+
+display:"block"
+
+});
 
 map.appendChild(board);
 
 const points=[[14,0],[42,0],[56,22],[42,44],[14,44],[0,22]];
 
-function position(x,y){return{x:x*dx,y:y*dy+(x%2)*(h/2)};}
+function position(x,y){
 
-function polygonPoints(x,y){const p=position(x,y);return points.map(([px,py])=>`${p.x+px},${p.y+py}`).join(" ");}
+return{x:x*dx,y:y*dy+(x%2)*(h/2)};
+
+}
+
+function polygonPoints(x,y){
+
+const p=position(x,y);
+
+return points.map(([px,py])=>`${p.x+px},${p.y+py}`).join(" ");
+
+}
 
 function getNeighbors(unit){
 
-const offsets=unit.x%2===0?[[0,-1],[0,1],[-1,0],[-1,-1],[1,0],[1,-1]]:[[0,-1],[0,1],[-1,0],[-1,1],[1,0],[1,1]];
+const offsets=unit.x%2===0
 
-return offsets.map(([ox,oy])=>({x:unit.x+ox,y:unit.y+oy})).filter(c=>c.x>=0&&c.x<cols&&c.y>=0&&c.y<rows);
+?[[0,-1],[0,1],[-1,0],[-1,-1],[1,0],[1,-1]]
+
+:[[0,-1],[0,1],[-1,0],[-1,1],[1,0],[1,1]];
+
+return offsets.map(([ox,oy])=>({x:unit.x+ox,y:unit.y+oy}))
+
+.filter(c=>c.x>=0&&c.x<cols&&c.y>=0&&c.y<rows);
 
 }
 
@@ -374,37 +1154,93 @@ function getDistance(x1,y1,x2,y2){
 
 const queue=[{x:x1,y:y1,d:0}],visited=new Set([`${x1},${y1}`]);
 
-while(queue.length){const c=queue.shift();if(c.x===x2&&c.y===y2)return c.d;
+while(queue.length){
 
-getNeighbors(c).forEach(n=>{const key=`${n.x},${n.y}`;if(!visited.has(key)){visited.add(key);queue.push({x:n.x,y:n.y,d:c.d+1});}});}
+const c=queue.shift();
+
+if(c.x===x2&&c.y===y2)return c.d;
+
+getNeighbors(c).forEach(n=>{
+
+const key=`${n.x},${n.y}`;
+
+if(!visited.has(key)){
+
+visited.add(key);
+
+queue.push({x:n.x,y:n.y,d:c.d+1});
+
+}
+
+});
+
+}
 
 return Infinity;
 
 }
 
-function getUnitAt(x,y){return units.find(u=>u.x===x&&u.y===y&&u.hp>0)||null;}
+function getUnitAt(x,y){
 
-function occupied(x,y,except){return units.some(u=>u!==except&&u.x===x&&u.y===y&&u.hp>0);}
+return units.find(u=>u.x===x&&u.y===y&&u.hp>0)||null;
+
+}
+
+function occupied(x,y,except){
+
+return units.some(u=>u!==except&&u.x===x&&u.y===y&&u.hp>0);
+
+}
 
 function getReachableCells(unit){
 
-const queue=[{x:unit.x,y:unit.y,d:0}],visited=new Set([`${unit.x},${unit.y}`]),reachable=[];
+const queue=[{x:unit.x,y:unit.y,d:0}];
 
-while(queue.length){const c=queue.shift();if(c.d>=unit.move)continue;
+const visited=new Set([`${unit.x},${unit.y}`]);
 
-getNeighbors(c).forEach(n=>{const key=`${n.x},${n.y}`;if(visited.has(key)||occupied(n.x,n.y,unit))return;visited.add(key);reachable.push({x:n.x,y:n.y});queue.push({x:n.x,y:n.y,d:c.d+1});});}
+const reachable=[];
+
+while(queue.length){
+
+const c=queue.shift();
+
+if(c.d>=unit.move)continue;
+
+getNeighbors(c).forEach(n=>{
+
+const key=`${n.x},${n.y}`;
+
+if(visited.has(key)||occupied(n.x,n.y,unit))return;
+
+visited.add(key);
+
+reachable.push({x:n.x,y:n.y});
+
+queue.push({x:n.x,y:n.y,d:c.d+1});
+
+});
+
+}
 
 return reachable;
 
 }
 
-function isMage(unit){return unit.name==="魔道士"||unit.name==="敵魔道士";}
+function isMage(unit){
+
+return unit.name==="魔道士"||unit.name==="敵魔道士";
+
+}
 
 function isUnitInAttackRange(a,d){
 
-if(!a||!d)return false;const distance=getDistance(a.x,a.y,d.x,d.y);
+if(!a||!d)return false;
 
-if(isMage(a))return distance===2;return distance>=1&&distance<=a.range;
+const distance=getDistance(a.x,a.y,d.x,d.y);
+
+if(isMage(a))return distance===2;
+
+return distance>=1&&distance<=a.range;
 
 }
 
@@ -420,9 +1256,15 @@ function isAttackRangeCell(x,y){
 
 if(!selected||selected.acted||selected.waited||battleVisual||battleEnded)return false;
 
-const target=getUnitAt(x,y);if(target&&target.side===selected.side)return false;
+const target=getUnitAt(x,y);
 
-const d=getDistance(selected.x,selected.y,x,y);if(isMage(selected))return d===2;return d>=1&&d<=selected.range;
+if(target&&target.side===selected.side)return false;
+
+const d=getDistance(selected.x,selected.y,x,y);
+
+if(isMage(selected))return d===2;
+
+return d>=1&&d<=selected.range;
 
 }
 
@@ -430,21 +1272,33 @@ function isAllyAttackCell(x,y){
 
 if(!selected||selected.side!=="ally"||selected.acted||selected.waited)return false;
 
-const target=getUnitAt(x,y);return Boolean(target&&target.side==="enemy"&&isUnitInAttackRange(selected,target));
+const target=getUnitAt(x,y);
+
+return Boolean(target&&target.side==="enemy"&&isUnitInAttackRange(selected,target));
 
 }
 
 function isEnemyAttackCell(enemy,x,y){
 
-if(!enemy||enemy.side!=="enemy")return false;const target=getUnitAt(x,y);if(target&&target.side!=="ally")return false;
+if(!enemy||enemy.side!=="enemy")return false;
 
-const d=getDistance(enemy.x,enemy.y,x,y);if(isMage(enemy))return d===2;return d>=1&&d<=enemy.range;
+const target=getUnitAt(x,y);
+
+if(target&&target.side!=="ally")return false;
+
+const d=getDistance(enemy.x,enemy.y,x,y);
+
+if(isMage(enemy))return d===2;
+
+return d>=1&&d<=enemy.range;
 
 }
 
 function hasAttackTargets(unit){
 
-if(!unit||unit.hp<=0)return false;const side=unit.side==="ally"?"enemy":"ally";
+if(!unit||unit.hp<=0)return false;
+
+const side=unit.side==="ally"?"enemy":"ally";
 
 return units.some(t=>t.hp>0&&t.side===side&&isUnitInAttackRange(unit,t));
 
@@ -454,39 +1308,95 @@ const a=position(from.x,from.y),d=position(to.x,to.y);
 
 const sx=a.x+28,sy=a.y+22,ex=d.x+28,ey=d.y+22;
 
-const defs=document.createElementNS(svgNS,"defs"),marker=document.createElementNS(svgNS,"marker");
+const defs=document.createElementNS(svgNS,"defs");
+
+const marker=document.createElementNS(svgNS,"marker");
 
 const markerId="battleArrowHead"+board.querySelectorAll("marker").length;
 
-marker.setAttribute("id",markerId);marker.setAttribute("markerWidth","12");marker.setAttribute("markerHeight","12");marker.setAttribute("refX","11");marker.setAttribute("refY","6");marker.setAttribute("orient","auto");marker.setAttribute("markerUnits","userSpaceOnUse");
+marker.setAttribute("id",markerId);
 
-const head=document.createElementNS(svgNS,"path");head.setAttribute("d","M0,0 L12,6 L0,12 Z");head.setAttribute("fill",color);
+marker.setAttribute("markerWidth","12");
 
-marker.appendChild(head);defs.appendChild(marker);board.appendChild(defs);
+marker.setAttribute("markerHeight","12");
+
+marker.setAttribute("refX","11");
+
+marker.setAttribute("refY","6");
+
+marker.setAttribute("orient","auto");
+
+marker.setAttribute("markerUnits","userSpaceOnUse");
+
+const head=document.createElementNS(svgNS,"path");
+
+head.setAttribute("d","M0,0 L12,6 L0,12 Z");
+
+head.setAttribute("fill",color);
+
+marker.appendChild(head);
+
+defs.appendChild(marker);
+
+board.appendChild(defs);
 
 const line=document.createElementNS(svgNS,"line");
 
-line.setAttribute("x1",sx);line.setAttribute("y1",sy);line.setAttribute("x2",ex);line.setAttribute("y2",ey);
+line.setAttribute("x1",sx);
 
-line.setAttribute("class","battle-arrow "+extraClass);line.setAttribute("stroke",color);line.setAttribute("marker-end",`url(#${markerId})`);board.appendChild(line);return line;
+line.setAttribute("y1",sy);
+
+line.setAttribute("x2",ex);
+
+line.setAttribute("y2",ey);
+
+line.setAttribute("class","battle-arrow "+extraClass);
+
+line.setAttribute("stroke",color);
+
+line.setAttribute("marker-end",`url(#${markerId})`);
+
+board.appendChild(line);
+
+return line;
 
 }
 
 function drawCounterArrow(from,to,color,delay){
 
-const a=position(from.x,from.y),d=position(to.x,to.y),sx=a.x+28,sy=a.y+22,ex=d.x+28,ey=d.y+22;
+const a=position(from.x,from.y),d=position(to.x,to.y);
 
-const midX=(sx+ex)/2,midY=(sy+ey)/2,line=drawBattleArrow(from,to,color,"counter-arrow");
+const sx=a.x+28,sy=a.y+22,ex=d.x+28,ey=d.y+22;
 
-line.setAttribute("x2",sx);line.setAttribute("y2",sy);
+const midX=(sx+ex)/2,midY=(sy+ey)/2;
 
-[["x2",`${sx};${midX};${midX};${sx}`],["y2",`${sy};${midY};${midY};${sy}`],["opacity","0;1;1;0"]].forEach(([attr,values])=>{
+const line=drawBattleArrow(from,to,color,"counter-arrow");
 
-const anim=document.createElementNS(svgNS,"animate");anim.setAttribute("attributeName",attr);anim.setAttribute("values",values);
+line.setAttribute("x2",sx);
+
+line.setAttribute("y2",sy);
+
+[["x2",`${sx};${midX};${midX};${sx}`],
+
+["y2",`${sy};${midY};${midY};${sy}`],
+
+["opacity","0;1;1;0"]].forEach(([attr,values])=>{
+
+const anim=document.createElementNS(svgNS,"animate");
+
+anim.setAttribute("attributeName",attr);
+
+anim.setAttribute("values",values);
 
 anim.setAttribute("keyTimes",attr==="opacity"?"0;.08;.78;1":"0;0.55;0.78;1");
 
-anim.setAttribute("dur","1.8s");anim.setAttribute("begin",delay+"s");anim.setAttribute("repeatCount","indefinite");line.appendChild(anim);
+anim.setAttribute("dur","1.8s");
+
+anim.setAttribute("begin",delay+"s");
+
+anim.setAttribute("repeatCount","indefinite");
+
+line.appendChild(anim);
 
 });
 
@@ -502,9 +1412,21 @@ const a=battleVisual.attacker,d=battleVisual.defender;
 
 if(!a||!d||a.hp<=0||d.hp<=0)return;
 
-const ah=document.createElementNS(svgNS,"polygon");ah.setAttribute("points",polygonPoints(a.x,a.y));ah.setAttribute("class","battle-hex-attacker");board.appendChild(ah);
+const ah=document.createElementNS(svgNS,"polygon");
 
-const dh=document.createElementNS(svgNS,"polygon");dh.setAttribute("points",polygonPoints(d.x,d.y));dh.setAttribute("class","battle-hex-defender");board.appendChild(dh);
+ah.setAttribute("points",polygonPoints(a.x,a.y));
+
+ah.setAttribute("class","battle-hex-attacker");
+
+board.appendChild(ah);
+
+const dh=document.createElementNS(svgNS,"polygon");
+
+dh.setAttribute("points",polygonPoints(d.x,d.y));
+
+dh.setAttribute("class","battle-hex-defender");
+
+board.appendChild(dh);
 
 if(battleVisual.showArrows===false)return;
 
@@ -516,27 +1438,83 @@ const center=drawCounterArrow(a,d,color,0);
 
 drawCounterArrow(d,a,d.side==="ally"?"#ff9800":"#29b6f6",0);
 
-const group=document.createElementNS(svgNS,"g");group.setAttribute("transform",`translate(${center.midX},${center.midY})`);
+const group=document.createElementNS(svgNS,"g");
 
-const impact=document.createElementNS(svgNS,"text");impact.setAttribute("x","0");impact.setAttribute("y","0");impact.setAttribute("class","counter-impact");impact.textContent="💥";
+group.setAttribute("transform",`translate(${center.midX},${center.midY})`);
 
-const scale=document.createElementNS(svgNS,"animateTransform");scale.setAttribute("attributeName","transform");scale.setAttribute("type","scale");scale.setAttribute("values","0.2;1.35;1;0.65;0.2");scale.setAttribute("keyTimes","0;0.68;0.78;0.92;1");scale.setAttribute("dur","1.8s");scale.setAttribute("repeatCount","indefinite");
+const impact=document.createElementNS(svgNS,"text");
 
-const opacity=document.createElementNS(svgNS,"animate");opacity.setAttribute("attributeName","opacity");opacity.setAttribute("values","0;0;1;1;0");opacity.setAttribute("keyTimes","0;0.55;0.68;0.78;1");opacity.setAttribute("dur","1.8s");opacity.setAttribute("repeatCount","indefinite");
+impact.setAttribute("x","0");
 
-impact.appendChild(scale);impact.appendChild(opacity);group.appendChild(impact);board.appendChild(group);return;
+impact.setAttribute("y","0");
+
+impact.setAttribute("class","counter-impact");
+
+impact.textContent="💥";
+
+const scale=document.createElementNS(svgNS,"animateTransform");
+
+scale.setAttribute("attributeName","transform");
+
+scale.setAttribute("type","scale");
+
+scale.setAttribute("values","0.2;1.35;1;0.65;0.2");
+
+scale.setAttribute("keyTimes","0;0.68;0.78;0.92;1");
+
+scale.setAttribute("dur","1.8s");
+
+scale.setAttribute("repeatCount","indefinite");
+
+const opacity=document.createElementNS(svgNS,"animate");
+
+opacity.setAttribute("attributeName","opacity");
+
+opacity.setAttribute("values","0;0;1;1;0");
+
+opacity.setAttribute("keyTimes","0;0.55;0.68;0.78;1");
+
+opacity.setAttribute("dur","1.8s");
+
+opacity.setAttribute("repeatCount","indefinite");
+
+impact.appendChild(scale);
+
+impact.appendChild(opacity);
+
+group.appendChild(impact);
+
+board.appendChild(group);
+
+return;
 
 }
 
 const line=drawBattleArrow(a,d,color,a.side==="ally"?"ally-arrow":"enemy-arrow");
 
-const ap=position(a.x,a.y),dp=position(d.x,d.y),sx=ap.x+28,sy=ap.y+22,ex=dp.x+28,ey=dp.y+22;
+const ap=position(a.x,a.y),dp=position(d.x,d.y);
 
-[["x2",`${sx};${ex};${ex};${sx}`],["y2",`${sy};${ey};${ey};${sy}`],["opacity","0;1;1;0"]].forEach(([attr,values])=>{
+const sx=ap.x+28,sy=ap.y+22,ex=dp.x+28,ey=dp.y+22;
 
-const anim=document.createElementNS(svgNS,"animate");anim.setAttribute("attributeName",attr);anim.setAttribute("values",values);
+[["x2",`${sx};${ex};${ex};${sx}`],
 
-anim.setAttribute("keyTimes",attr==="opacity"?"0;0.12;0.78;1":"0;0.72;0.9;1");anim.setAttribute("dur","1.25s");anim.setAttribute("repeatCount","indefinite");line.appendChild(anim);
+["y2",`${sy};${ey};${ey};${sy}`],
+
+["opacity","0;1;1;0"]].forEach(([attr,values])=>{
+
+const anim=document.createElementNS(svgNS,"animate");
+
+anim.setAttribute("attributeName",attr);
+
+anim.setAttribute("values",values);
+
+anim.setAttribute("keyTimes",attr==="opacity"?"0;0.12;0.78;1":"0;0.72;0.9;1");
+
+anim.setAttribute("dur","1.25s");
+
+anim.setAttribute("repeatCount","indefinite");
+
+line.appendChild(anim);
 
 });
 
@@ -548,11 +1526,23 @@ board.innerHTML="";
 
 for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
 
-const unit=getUnitAt(x,y),poly=document.createElementNS(svgNS,"polygon");
+const poly=document.createElementNS(svgNS,"polygon");
 
-poly.setAttribute("points",polygonPoints(x,y));poly.dataset.x=x;poly.dataset.y=y;
+poly.setAttribute("points",polygonPoints(x,y));
 
-poly.setAttribute("fill",unit?(unit.side==="ally"?"#b9d8f5":"#f3baba"):"#d4d0bd");poly.setAttribute("stroke","#777");poly.setAttribute("stroke-width","1");poly.style.pointerEvents="auto";board.appendChild(poly);
+poly.dataset.x=x;
+
+poly.dataset.y=y;
+
+poly.setAttribute("fill","transparent");
+
+poly.setAttribute("stroke","#777");
+
+poly.setAttribute("stroke-width","1");
+
+poly.style.pointerEvents="auto";
+
+board.appendChild(poly);
 
 }
 
@@ -560,37 +1550,95 @@ if(selected&&selected.side==="ally"&&!pendingMove&&!battleVisual&&!battleEnded&&
 
 for(let y=0;y<rows;y++)for(let x=0;x<cols;x++)if(isMoveTarget(x,y)){
 
-const hex=document.createElementNS(svgNS,"polygon");hex.setAttribute("points",polygonPoints(x,y));hex.setAttribute("class","move-range-hex");board.appendChild(hex);
+const hex=document.createElementNS(svgNS,"polygon");
 
-}}
+hex.setAttribute("points",polygonPoints(x,y));
+
+hex.setAttribute("class","move-range-hex");
+
+board.appendChild(hex);
+
+}
+
+}
 
 if(selected&&selected.side==="ally"&&!battleVisual&&!battleEnded&&!menuOpen&&!selected.acted&&!selected.waited&&currentTurn==="ally"){
 
 for(let y=0;y<rows;y++)for(let x=0;x<cols;x++)if(isAttackRangeCell(x,y)){
 
-const hex=document.createElementNS(svgNS,"polygon");hex.setAttribute("points",polygonPoints(x,y));hex.setAttribute("class","attack-range-hex");board.appendChild(hex);
+const hex=document.createElementNS(svgNS,"polygon");
 
-}}
+hex.setAttribute("points",polygonPoints(x,y));
+
+hex.setAttribute("class","attack-range-hex");
+
+board.appendChild(hex);
+
+}
+
+}
 
 if(selectedEnemy&&selectedEnemy.hp>0&&!battleVisual&&!battleEnded&&!menuOpen&&currentTurn==="ally"){
 
-getReachableCells(selectedEnemy).forEach(c=>{const hex=document.createElementNS(svgNS,"polygon");hex.setAttribute("points",polygonPoints(c.x,c.y));hex.setAttribute("class","move-range-hex");board.appendChild(hex);});
+getReachableCells(selectedEnemy).forEach(c=>{
+
+const hex=document.createElementNS(svgNS,"polygon");
+
+hex.setAttribute("points",polygonPoints(c.x,c.y));
+
+hex.setAttribute("class","move-range-hex");
+
+board.appendChild(hex);
+
+});
 
 for(let y=0;y<rows;y++)for(let x=0;x<cols;x++)if(isEnemyAttackCell(selectedEnemy,x,y)){
 
-const hex=document.createElementNS(svgNS,"polygon");hex.setAttribute("points",polygonPoints(x,y));hex.setAttribute("class","attack-range-hex");board.appendChild(hex);
+const hex=document.createElementNS(svgNS,"polygon");
 
-}}
+hex.setAttribute("points",polygonPoints(x,y));
+
+hex.setAttribute("class","attack-range-hex");
+
+board.appendChild(hex);
+
+}
+
+}
 
 if(selected){
 
-const s=document.createElementNS(svgNS,"polygon");s.setAttribute("points",polygonPoints(selected.x,selected.y));s.setAttribute("stroke",pendingMove?"#e53935":"#e5a000");s.setAttribute("fill","none");s.setAttribute("stroke-width","4");s.style.pointerEvents="none";board.appendChild(s);
+const s=document.createElementNS(svgNS,"polygon");
+
+s.setAttribute("points",polygonPoints(selected.x,selected.y));
+
+s.setAttribute("stroke",pendingMove?"#e53935":"#e5a000");
+
+s.setAttribute("fill","none");
+
+s.setAttribute("stroke-width","4");
+
+s.style.pointerEvents="none";
+
+board.appendChild(s);
 
 }
 
 if(selectedEnemy&&selectedEnemy.hp>0){
 
-const s=document.createElementNS(svgNS,"polygon");s.setAttribute("points",polygonPoints(selectedEnemy.x,selectedEnemy.y));s.setAttribute("stroke","#1565c0");s.setAttribute("fill","none");s.setAttribute("stroke-width","4");s.style.pointerEvents="none";board.appendChild(s);
+const s=document.createElementNS(svgNS,"polygon");
+
+s.setAttribute("points",polygonPoints(selectedEnemy.x,selectedEnemy.y));
+
+s.setAttribute("stroke","#1565c0");
+
+s.setAttribute("fill","none");
+
+s.setAttribute("stroke-width","4");
+
+s.style.pointerEvents="none";
+
+board.appendChild(s);
 
 }
 
@@ -604,21 +1652,59 @@ map.querySelectorAll(".unit-token,.defense-mark").forEach(el=>el.remove());
 
 units.forEach(unit=>{
 
-if(unit.hp<=0)return;const p=position(unit.x,unit.y),token=document.createElement("div");
+if(unit.hp<=0)return;
 
-token.className="unit-token";if(unit.acted||unit.waited)token.classList.add("unit-acted");
+const p=position(unit.x,unit.y);
 
-token.dataset.x=unit.x;token.dataset.y=unit.y;token.dataset.unitId=unit.id;
+const token=document.createElement("div");
 
-token.style.left=p.x+"px";token.style.top=p.y+"px";
+token.className="unit-token";
 
-token.innerHTML=`<div class="unit-content"><div class="unit-icon">${unit.icon}</div><div class="unit-name">${unit.name}</div><div class="unit-hp">${unit.hp}/${unit.maxHp}</div></div>`;
+if(unit.acted||unit.waited)token.classList.add("unit-acted");
+
+token.dataset.x=unit.x;
+
+token.dataset.y=unit.y;
+
+token.dataset.unitId=unit.id;
+
+token.dataset.side=unit.side;
+
+token.style.left=p.x+"px";
+
+token.style.top=p.y+"px";
+
+token.style.width="56px";
+
+token.style.height="44px";
+
+const visual=unit.image
+
+?`<img class="unit-image" src="${unit.image}" alt="">`
+
+:`<div class="unit-icon">${unit.icon}</div>`;
+
+token.innerHTML=`<div class="unit-content">${visual}<div class="unit-name">${unit.name}</div><div class="unit-hp">${unit.hp}/${unit.maxHp}</div></div>`;
 
 map.appendChild(token);
 
 const show=battleVisual&&battleVisual.defender&&battleVisual.defender.id===unit.id&&(battleVisual.response==="defend"||battleVisual.response==="skill");
 
-if(show){const shield=document.createElement("div");shield.className="defense-mark";shield.textContent="🛡️";shield.style.left=(p.x+28)+"px";shield.style.top=(p.y-9)+"px";map.appendChild(shield);}
+if(show){
+
+const shield=document.createElement("div");
+
+shield.className="defense-mark";
+
+shield.textContent="🛡️";
+
+shield.style.left=(p.x+28)+"px";
+
+shield.style.top=(p.y-9)+"px";
+
+map.appendChild(shield);
+
+}
 
 });
 
@@ -626,7 +1712,9 @@ if(show){const shield=document.createElement("div");shield.className="defense-ma
 
 function refresh(){
 
-drawBoard();drawUnits();
+drawBoard();
+
+drawUnits();
 
 const actionUnit=pendingMove?pendingMove.unit:selected;
 
@@ -662,19 +1750,35 @@ turnLabel.textContent=currentTurn==="ally"?"味方のターン":"敵のターン
 
 function animateUnit(unit,className){
 
-const token=map.querySelector(`.unit-token[data-unit-id="${unit.id}"]`);if(!token)return;
+const token=map.querySelector(`.unit-token[data-unit-id="${unit.id}"]`);
 
-token.classList.remove(className);void token.offsetWidth;token.classList.add(className);
+if(!token)return;
+
+token.classList.remove(className);
+
+void token.offsetWidth;
+
+token.classList.add(className);
 
 }
 
 function showCombatEffect(unit,value,miss){
 
-const p=position(unit.x,unit.y),effect=document.createElement("div");
+const p=position(unit.x,unit.y);
 
-effect.className=miss?"combat-miss":"combat-number";effect.textContent=miss?"MISS":"-"+value;
+const effect=document.createElement("div");
 
-effect.style.left=(p.x+28)+"px";effect.style.top=(p.y-5)+"px";map.appendChild(effect);setTimeout(()=>effect.remove(),1000);
+effect.className=miss?"combat-miss":"combat-number";
+
+effect.textContent=miss?"MISS":"-"+value;
+
+effect.style.left=(p.x+28)+"px";
+
+effect.style.top=(p.y-5)+"px";
+
+map.appendChild(effect);
+
+setTimeout(()=>effect.remove(),1000);
 
 }
 
@@ -688,17 +1792,37 @@ if(el.classList.contains("battle-hex-attacker")||el.classList.contains("battle-h
 
 });
 
-}
+} function cancelMove(){
 
-function cancelMove(){
+if(!pendingMove)return;
 
-if(!pendingMove)return;const unit=pendingMove.unit;
+const unit=pendingMove.unit;
 
-unit.x=pendingMove.fromX;unit.y=pendingMove.fromY;unit.moved=false;
+unit.x=pendingMove.fromX;
 
-pendingMove=null;moveMode=false;attackMode=false;menuOpen=false;selected=unit;selectedEnemy=null;systemMenuOpen=false;
+unit.y=pendingMove.fromY;
 
-clearBattleVisual();info.innerHTML=`<p>${unit.name}は元の位置に戻った。</p>`;refresh();
+unit.moved=false;
+
+pendingMove=null;
+
+moveMode=false;
+
+attackMode=false;
+
+menuOpen=false;
+
+selected=unit;
+
+selectedEnemy=null;
+
+systemMenuOpen=false;
+
+clearBattleVisual();
+
+info.innerHTML=`<p>${unit.name}は元の位置に戻った。</p>`;
+
+refresh();
 
 }
 
@@ -706,23 +1830,55 @@ function askEndTurnIfAllActed(){
 
 if(currentTurn!=="ally"||pendingMove||battleEnded||combatAnimating)return;
 
-const allies=units.filter(u=>u.side==="ally"&&u.hp>0);if(!allies.length||!allies.every(u=>u.acted||u.waited))return;
+const allies=units.filter(u=>u.side==="ally"&&u.hp>0);
+
+if(!allies.length||!allies.every(u=>u.acted||u.waited))return;
 
 if(confirm("味方全員が行動済みです。ターンを終了しますか？"))startEnemyTurn();
 
-else{info.innerHTML="<p>味方全員が行動済みです。システムメニューからターン終了できます。</p>";refresh();}
+else{
+
+info.innerHTML="<p>味方全員が行動済みです。システムメニューからターン終了できます。</p>";
+
+refresh();
+
+}
 
 }
 
 function finishMoveAndWait(){
 
-if(!pendingMove)return;const unit=pendingMove.unit;
+if(!pendingMove)return;
 
-unit.moved=true;unit.acted=true;unit.waited=true;pendingMove=null;moveMode=false;attackMode=false;menuOpen=false;
+const unit=pendingMove.unit;
 
-selected=null;selectedEnemy=null;systemMenuOpen=false;clearBattleVisual();
+unit.moved=true;
 
-info.innerHTML=`<p>${unit.name}は移動して待機した。</p>`;refresh();askEndTurnIfAllActed();
+unit.acted=true;
+
+unit.waited=true;
+
+pendingMove=null;
+
+moveMode=false;
+
+attackMode=false;
+
+menuOpen=false;
+
+selected=null;
+
+selectedEnemy=null;
+
+systemMenuOpen=false;
+
+clearBattleVisual();
+
+info.innerHTML=`<p>${unit.name}は移動して待機した。</p>`;
+
+refresh();
+
+askEndTurnIfAllActed();
 
 }
 
@@ -732,39 +1888,115 @@ if(!unit)return;
 
 info.innerHTML=`<h3>${unit.icon} ${unit.name}</h3><p>HP：${unit.hp}/${unit.maxHp}</p><p>攻撃：${unit.atk}　防御：${unit.def}</p><p>速さ：${unit.agi}　技量：${unit.dex}</p><p>移動：${unit.move}　射程：${unit.range}</p><p>スキル：${unit.skills.join("、")}</p><button id="detailClose">閉じる</button>`;
 
-menuOpen=true;attackMode=false;document.querySelector("#detailClose").onclick=()=>{
+menuOpen=true;
 
-menuOpen=false;if(unit.side==="enemy"){selectedEnemy=unit;selected=null;info.innerHTML="<p>敵の能力を確認した。</p>";}
+attackMode=false;
 
-else{selected=unit;info.innerHTML="ユニットを選択してね";}refresh();
+document.querySelector("#detailClose").onclick=()=>{
 
-};refresh();
+menuOpen=false;
+
+if(unit.side==="enemy"){
+
+selectedEnemy=unit;
+
+selected=null;
+
+info.innerHTML="<p>敵の能力を確認した。</p>";
+
+}else{
+
+selected=unit;
+
+info.innerHTML="ユニットを選択してね";
+
+}
+
+refresh();
+
+};
+
+refresh();
 
 }
 
 function exitAttackSelection(){
 
-attackMode=false;clearBattleVisual();selectedEnemy=null;menuOpen=false;
+attackMode=false;
 
-if(pendingMove){selected=pendingMove.unit;info.innerHTML=`<p>${selected.name}：攻撃選択を取り消した。</p>`;}
+clearBattleVisual();
 
-else info.innerHTML="ユニットを選択してね";refresh();
+selectedEnemy=null;
+
+menuOpen=false;
+
+if(pendingMove){
+
+selected=pendingMove.unit;
+
+info.innerHTML=`<p>${selected.name}：攻撃選択を取り消した。</p>`;
+
+}else info.innerHTML="ユニットを選択してね";
+
+refresh();
 
 }
 
 function closeMenuByEmptyTap(){
 
-if(pendingMove){if(attackMode){exitAttackSelection();return;}cancelMove();return;}
+if(pendingMove){
 
-menuOpen=false;moveMode=false;attackMode=false;selected=null;selectedEnemy=null;systemMenuOpen=false;lastTapUnitId=null;clearBattleVisual();info.innerHTML="ユニットを選択してね";refresh();
+if(attackMode){exitAttackSelection();return;}
 
-} function showActionMenu(unit){
+cancelMove();
+
+return;
+
+}
+
+menuOpen=false;
+
+moveMode=false;
+
+attackMode=false;
+
+selected=null;
+
+selectedEnemy=null;
+
+systemMenuOpen=false;
+
+lastTapUnitId=null;
+
+clearBattleVisual();
+
+info.innerHTML="ユニットを選択してね";
+
+refresh();
+
+}
+
+function showActionMenu(unit){
 
 if(!unit||unit.hp<=0)return;
 
-selected=unit;selectedEnemy=null;menuOpen=true;moveMode=false;attackMode=false;systemMenuOpen=false;clearBattleVisual();
+selected=unit;
 
-const canMove=!unit.moved&&!unit.acted&&!unit.waited,canAct=!unit.acted&&!unit.waited;
+selectedEnemy=null;
+
+menuOpen=true;
+
+moveMode=false;
+
+attackMode=false;
+
+systemMenuOpen=false;
+
+clearBattleVisual();
+
+const canMove=!unit.moved&&!unit.acted&&!unit.waited;
+
+const canAct=!unit.acted&&!unit.waited;
 
 info.innerHTML=`<h3>${unit.icon} ${unit.name}</h3><p>HP：${unit.hp}/${unit.maxHp}</p><p>攻撃：${unit.atk}　防御：${unit.def}</p>
 
@@ -774,13 +2006,39 @@ info.innerHTML=`<h3>${unit.icon} ${unit.name}</h3><p>HP：${unit.hp}/${unit.maxH
 
 <button id="actDetails">能力確認</button><button id="actWait">待機</button><button id="actCancel">キャンセル</button>`;
 
-document.querySelector("#actMove").onclick=()=>{if(!canMove)return;menuOpen=false;moveMode=true;attackMode=false;info.innerHTML=`<p>${unit.name}：青い範囲から移動先を選んでね。</p>`;refresh();};
+document.querySelector("#actMove").onclick=()=>{
 
-document.querySelector("#actAttack").onclick=()=>{if(canAct)showAttackMenu(unit);};
+if(!canMove)return;
 
-document.querySelector("#actSkill").onclick=()=>{if(canAct)showSkillMenu(unit);};
+menuOpen=false;
 
-document.querySelector("#actItem").onclick=()=>{if(canAct)showItemMenu(unit);};
+moveMode=true;
+
+attackMode=false;
+
+info.innerHTML=`<p>${unit.name}：青い範囲から移動先を選んでね。</p>`;
+
+refresh();
+
+};
+
+document.querySelector("#actAttack").onclick=()=>{
+
+if(canAct)showAttackMenu(unit);
+
+};
+
+document.querySelector("#actSkill").onclick=()=>{
+
+if(canAct)showSkillMenu(unit);
+
+};
+
+document.querySelector("#actItem").onclick=()=>{
+
+if(canAct)showItemMenu(unit);
+
+};
 
 document.querySelector("#actDetails").onclick=()=>showDetails(unit);
 
@@ -788,15 +2046,47 @@ document.querySelector("#actWait").onclick=()=>{
 
 if(pendingMove)finishMoveAndWait();
 
-else{unit.acted=true;unit.waited=true;selected=null;menuOpen=false;clearBattleVisual();info.innerHTML=`<p>${unit.name}は待機した。</p>`;refresh();askEndTurnIfAllActed();}
+else{
+
+unit.acted=true;
+
+unit.waited=true;
+
+selected=null;
+
+menuOpen=false;
+
+clearBattleVisual();
+
+info.innerHTML=`<p>${unit.name}は待機した。</p>`;
+
+refresh();
+
+askEndTurnIfAllActed();
+
+}
 
 };
 
 document.querySelector("#actCancel").onclick=()=>{
 
-clearBattleVisual();if(pendingMove)cancelMove();
+clearBattleVisual();
 
-else{menuOpen=false;selected=null;selectedEnemy=null;info.innerHTML="ユニットを選択してね";refresh();}
+if(pendingMove)cancelMove();
+
+else{
+
+menuOpen=false;
+
+selected=null;
+
+selectedEnemy=null;
+
+info.innerHTML="ユニットを選択してね";
+
+refresh();
+
+}
 
 };
 
@@ -806,27 +2096,59 @@ refresh();
 
 function showAttackMenu(unit){
 
-selected=unit;menuOpen=false;moveMode=false;attackMode=true;selectedEnemy=null;clearBattleVisual();
+selected=unit;
+
+menuOpen=false;
+
+moveMode=false;
+
+attackMode=true;
+
+selectedEnemy=null;
+
+clearBattleVisual();
 
 info.innerHTML=`<p>${unit.name}：攻撃する敵を選んでね。</p><button id="attackCancel">戻る</button>`;
 
 document.querySelector("#attackCancel").onclick=()=>{
 
-if(pendingMove)exitAttackSelection();else{attackMode=false;showActionMenu(unit);}
+if(pendingMove)exitAttackSelection();
 
-};refresh();
+else{
+
+attackMode=false;
+
+showActionMenu(unit);
+
+}
+
+};
+
+refresh();
 
 }
 
 function showSkillMenu(unit){
 
-menuOpen=true;attackMode=false;moveMode=false;clearBattleVisual();
+menuOpen=true;
+
+attackMode=false;
+
+moveMode=false;
+
+clearBattleVisual();
 
 let html=`<h3>${unit.name}のスキル</h3>`;
 
-unit.skills.forEach((skill,i)=>{html+=`<button data-skill="${i}">${skill}</button>`;});
+unit.skills.forEach((skill,i)=>{
 
-html+=`<button id="skillBack">戻る</button>`;info.innerHTML=html;
+html+=`<button data-skill="${i}">${skill}</button>`;
+
+});
+
+html+=`<button id="skillBack">戻る</button>`;
+
+info.innerHTML=html;
 
 info.querySelectorAll("[data-skill]").forEach(button=>{
 
@@ -836,17 +2158,47 @@ const skill=unit.skills[Number(button.dataset.skill)];
 
 if(skill==="指揮"){
 
-unit.acted=true;unit.waited=true;selected=null;menuOpen=false;pendingMove=null;
+unit.acted=true;
 
-info.innerHTML="<p>隊長は味方を鼓舞した。</p>";refresh();askEndTurnIfAllActed();return;
+unit.waited=true;
+
+selected=null;
+
+menuOpen=false;
+
+pendingMove=null;
+
+info.innerHTML="<p>隊長は味方を鼓舞した。</p>";
+
+refresh();
+
+askEndTurnIfAllActed();
+
+return;
 
 }
 
 if(skill==="防御"){
 
-unit.defending=true;unit.acted=true;unit.waited=true;selected=null;menuOpen=false;pendingMove=null;
+unit.defending=true;
 
-info.innerHTML="<p>重装兵は防御態勢を取った。</p>";refresh();askEndTurnIfAllActed();return;
+unit.acted=true;
+
+unit.waited=true;
+
+selected=null;
+
+menuOpen=false;
+
+pendingMove=null;
+
+info.innerHTML="<p>重装兵は防御態勢を取った。</p>";
+
+refresh();
+
+askEndTurnIfAllActed();
+
+return;
 
 }
 
@@ -856,25 +2208,43 @@ if(skill==="魔法"||skill==="突撃")showAttackMenu(unit);
 
 });
 
-document.querySelector("#skillBack").onclick=()=>showActionMenu(unit);refresh();
+document.querySelector("#skillBack").onclick=()=>showActionMenu(unit);
+
+refresh();
 
 }
 
 function showItemMenu(unit){
 
-menuOpen=true;clearBattleVisual();
+menuOpen=true;
+
+clearBattleVisual();
 
 info.innerHTML=`<h3>アイテム</h3><p>使用できるアイテムはありません。</p><button id="itemBack">戻る</button>`;
 
-document.querySelector("#itemBack").onclick=()=>showActionMenu(unit);refresh();
+document.querySelector("#itemBack").onclick=()=>showActionMenu(unit);
+
+refresh();
 
 }
 
-function calculateHit(attacker,defender){return Math.max(20,Math.min(95,75+(attacker.dex-defender.agi)*3));}
+function calculateHit(attacker,defender){
 
-function calculateDamage(attacker,defender){return Math.max(1,attacker.atk-defender.def);}
+return Math.max(20,Math.min(95,75+(attacker.dex-defender.agi)*3));
 
-function calculateEvadeChance(attacker,defender){return Math.max(10,Math.min(70,30+(defender.agi-attacker.dex)*5));}
+}
+
+function calculateDamage(attacker,defender){
+
+return Math.max(1,attacker.atk-defender.def);
+
+}
+
+function calculateEvadeChance(attacker,defender){
+
+return Math.max(10,Math.min(70,30+(defender.agi-attacker.dex)*5));
+
+}
 
 function chooseEnemyReaction(attacker,defender){
 
@@ -886,7 +2256,9 @@ return calculateEvadeChance(attacker,defender)>=40?"evade":"defend";
 
 function getCombatPrediction(attacker,defender,response){
 
-const hit=calculateHit(attacker,defender);let damage=calculateDamage(attacker,defender);
+const hit=calculateHit(attacker,defender);
+
+let damage=calculateDamage(attacker,defender);
 
 if(response==="defend"||response==="skill")damage=Math.max(1,Math.floor(damage/2));
 
@@ -902,7 +2274,9 @@ return{hit,damage,evadeChance,counterDamage,canCounter};
 
 function hpBarHTML(unit,predictedDamage){
 
-const percent=Math.max(0,unit.hp/unit.maxHp*100),predicted=Math.max(0,Math.min(percent,predictedDamage/unit.maxHp*100));
+const percent=Math.max(0,unit.hp/unit.maxHp*100);
+
+const predicted=Math.max(0,Math.min(percent,predictedDamage/unit.maxHp*100));
 
 return `<div class="hp-track"><div class="hp-fill ${unit.side==="ally"?"hp-ally":"hp-enemy"}" style="width:${percent}%"></div>
 
@@ -946,7 +2320,13 @@ if(!attacker||!defender)return;
 
 const prediction=getCombatPrediction(attacker,defender,response);
 
-menuOpen=true;attackMode=false;moveMode=false;selectedEnemy=defender;
+menuOpen=true;
+
+attackMode=false;
+
+moveMode=false;
+
+selectedEnemy=defender;
 
 battleVisual={attacker,defender,response,showArrows:true};
 
@@ -954,19 +2334,35 @@ info.innerHTML=`<h3>戦闘確認</h3><button id="combatStart">戦闘開始</butt
 
 ${battlePanelHTML(attacker,defender,prediction)}${predictionHTML(prediction,response,attacker)}<p>オレンジ：攻撃側　青：防御側</p>`;
 
-document.querySelector("#combatStart").onclick=()=>{if(!combatAnimating)resolveAttack(attacker,defender,response);};
+document.querySelector("#combatStart").onclick=()=>{
+
+if(!combatAnimating)resolveAttack(attacker,defender,response);
+
+};
 
 document.querySelector("#combatBack").onclick=()=>{
 
-clearBattleVisual();if(attacker.side==="enemy")showReactionMenu(attacker,defender);else showAttackMenu(attacker);
+clearBattleVisual();
 
-};refresh();
+if(attacker.side==="enemy")showReactionMenu(attacker,defender);
+
+else showAttackMenu(attacker);
+
+};
+
+refresh();
 
 }
 
 function showReactionMenu(attacker,defender){
 
-reaction=true;menuOpen=true;attackMode=false;moveMode=false;
+reaction=true;
+
+menuOpen=true;
+
+attackMode=false;
+
+moveMode=false;
 
 battleVisual={attacker,defender,response:"normal",showArrows:true};
 
@@ -978,75 +2374,187 @@ info.innerHTML=`<h3>敵の攻撃！</h3><p>${attacker.name}が${defender.name}�
 
 <button id="reactEvade">回避</button><button id="reactSkill">スキル</button>`;
 
-document.querySelector("#reactCounter").onclick=()=>{reaction=false;showCombatConfirmation(attacker,defender,"counter");};
+document.querySelector("#reactCounter").onclick=()=>{
 
-document.querySelector("#reactDefend").onclick=()=>{reaction=false;showCombatConfirmation(attacker,defender,"defend");};
+reaction=false;
 
-document.querySelector("#reactEvade").onclick=()=>{reaction=false;showCombatConfirmation(attacker,defender,"evade");};
+showCombatConfirmation(attacker,defender,"counter");
 
-document.querySelector("#reactSkill").onclick=()=>{reaction=false;showReactionSkills(attacker,defender);};refresh();
+};
+
+document.querySelector("#reactDefend").onclick=()=>{
+
+reaction=false;
+
+showCombatConfirmation(attacker,defender,"defend");
+
+};
+
+document.querySelector("#reactEvade").onclick=()=>{
+
+reaction=false;
+
+showCombatConfirmation(attacker,defender,"evade");
+
+};
+
+document.querySelector("#reactSkill").onclick=()=>{
+
+reaction=false;
+
+showReactionSkills(attacker,defender);
+
+};
+
+refresh();
 
 }
 
 function showReactionSkills(attacker,defender){
 
-menuOpen=true;reaction=true;battleVisual={attacker,defender,response:"normal",showArrows:true};
+menuOpen=true;
+
+reaction=true;
+
+battleVisual={attacker,defender,response:"normal",showArrows:true};
 
 info.innerHTML=`<h3>防御スキル</h3><p>防御スキルを使用する。</p><button id="reactionSkillUse">防御態勢</button><button id="reactionSkillBack">戻る</button>`;
 
-document.querySelector("#reactionSkillUse").onclick=()=>{reaction=false;showCombatConfirmation(attacker,defender,"skill");};
+document.querySelector("#reactionSkillUse").onclick=()=>{
 
-document.querySelector("#reactionSkillBack").onclick=()=>showReactionMenu(attacker,defender);refresh();
+reaction=false;
 
-}
+showCombatConfirmation(attacker,defender,"skill");
 
-function resetBattle(){
+};
+
+document.querySelector("#reactionSkillBack").onclick=()=>showReactionMenu(attacker,defender);
+
+refresh();
+
+} function resetBattle(){
 
 units.forEach((unit,index)=>{
 
 const initial=initialUnitStates[index];
 
-Object.assign(unit,{...initial,resistances:{...initial.resistances},skills:[...initial.skills]});
+Object.assign(unit,{
+
+...initial,
+
+resistances:{...initial.resistances},
+
+skills:[...initial.skills]
 
 });
 
-selected=null;selectedEnemy=null;currentTurn="ally";turn=1;pendingMove=null;moveMode=false;attackMode=false;menuOpen=false;
+});
 
-reaction=false;combatAnimating=false;battleEnded=false;enemyQueue=[];enemyQueueIndex=0;enemyAIActive=false;
+selected=null;
 
-lastTapUnitId=null;battleVisual=null;systemMenuOpen=false;
+selectedEnemy=null;
+
+currentTurn="ally";
+
+turn=1;
+
+pendingMove=null;
+
+moveMode=false;
+
+attackMode=false;
+
+menuOpen=false;
+
+reaction=false;
+
+combatAnimating=false;
+
+battleEnded=false;
+
+enemyQueue=[];
+
+enemyQueueIndex=0;
+
+enemyAIActive=false;
+
+lastTapUnitId=null;
+
+battleVisual=null;
+
+systemMenuOpen=false;
 
 map.querySelectorAll(".combat-number,.combat-miss").forEach(el=>el.remove());
 
-info.innerHTML="<p>新しい戦いが始まった。ユニットを選択してね。</p>";refresh();
+info.innerHTML="<p>新しい戦いが始まった。ユニットを選択してね。</p>";
+
+refresh();
 
 }
 
 function showStory(title,message,buttonText,callback){
 
-const overlay=document.createElement("div");overlay.className="story-overlay";
+const overlay=document.createElement("div");
 
-const panel=document.createElement("div");panel.className="story-panel";
+overlay.className="story-overlay";
 
-const heading=document.createElement("h2");heading.textContent=title;
+const panel=document.createElement("div");
 
-const paragraph=document.createElement("p");paragraph.textContent=message;
+panel.className="story-panel";
 
-const button=document.createElement("button");button.textContent=buttonText;
+const heading=document.createElement("h2");
 
-button.onclick=()=>{overlay.remove();if(callback)callback();};
+heading.textContent=title;
 
-panel.appendChild(heading);panel.appendChild(paragraph);panel.appendChild(button);overlay.appendChild(panel);game.appendChild(overlay);
+const paragraph=document.createElement("p");
 
-} // インターミッション画面
+paragraph.textContent=message;
+
+const button=document.createElement("button");
+
+button.textContent=buttonText;
+
+button.onclick=()=>{
+
+overlay.remove();
+
+if(callback)callback();
+
+};
+
+panel.appendChild(heading);
+
+panel.appendChild(paragraph);
+
+panel.appendChild(button);
+
+overlay.appendChild(panel);
+
+game.appendChild(overlay);
+
+}
 
 function showIntermission(){
 
-intermissionOpen=true;intermissionReturnMode=true;
+intermissionOpen=true;
 
-systemMenuOpen=false;menuOpen=false;selected=null;selectedEnemy=null;
+intermissionReturnMode=true;
 
-pendingMove=null;moveMode=false;attackMode=false;clearBattleVisual();
+systemMenuOpen=false;
+
+menuOpen=false;
+
+selected=null;
+
+selectedEnemy=null;
+
+pendingMove=null;
+
+moveMode=false;
+
+attackMode=false;
+
+clearBattleVisual();
 
 mapViewport.style.display="none";
 
@@ -1056,9 +2564,13 @@ turnLabel.style.display="none";
 
 info.style.display="none";
 
-let old=document.querySelector("#intermissionPanel");if(old)old.remove();
+let old=document.querySelector("#intermissionPanel");
 
-const panel=document.createElement("div");panel.id="intermissionPanel";
+if(old)old.remove();
+
+const panel=document.createElement("div");
+
+panel.id="intermissionPanel";
 
 panel.innerHTML=`
 
@@ -1102,7 +2614,9 @@ panel.querySelector("#intermissionMessage").textContent=name+"は、今後の更
 
 panel.querySelector("#intermissionSystem").onclick=()=>{
 
-intermissionOpen=true;showSystemMenu();
+intermissionOpen=true;
+
+showSystemMenu();
 
 };
 
@@ -1116,15 +2630,15 @@ showCurrentSituation();
 
 }
 
-// 戦闘前の状況・勝敗条件画面
-
 function showCurrentSituation(){
 
 intermissionOpen=false;
 
 systemMenuOpen=false;
 
-let old=document.querySelector("#intermissionPanel");if(old)old.remove();
+let old=document.querySelector("#intermissionPanel");
+
+if(old)old.remove();
 
 mapViewport.style.display="none";
 
@@ -1184,21 +2698,155 @@ panel.querySelector("#situationBack").onclick=()=>showIntermission();
 
 }
 
+/* スマホ専用：隊長から出発し、左端→右端→隊長へ連続移動 */
+
+function animateBattlefieldOverview(captain){
+
+return new Promise(resolve=>{
+
+const vw=mapViewport.clientWidth;
+
+const vh=mapViewport.clientHeight;
+
+const startX=mapOffsetX;
+
+const startY=mapOffsetY;
+
+const leftX=Math.min(0,vw-mapWidth);
+
+const rightX=0;
+
+const endX=startX;
+
+const overviewY=vh>=mapHeight?(vh-mapHeight)/2:Math.max(vh-mapHeight,Math.min(0,(vh-mapHeight)/2));
+
+const pointsX=[startX,leftX,rightX,endX];
+
+const totalDistance=
+
+Math.abs(pointsX[1]-pointsX[0])+
+
+Math.abs(pointsX[2]-pointsX[1])+
+
+Math.abs(pointsX[3]-pointsX[2]);
+
+const start=performance.now();
+
+const duration=6500;
+
+function frame(now){
+
+if(cameraSkipRequested){
+
+centerMapOnUnit(captain);
+
+resolve();
+
+return;
+
+}
+
+const progress=Math.min(1,(now-start)/duration);
+
+const distance=totalDistance*progress;
+
+let remaining=distance;
+
+let currentX=pointsX[0];
+
+for(let i=0;i<pointsX.length-1;i++){
+
+const segment=Math.abs(pointsX[i+1]-pointsX[i]);
+
+if(remaining<=segment){
+
+const ratio=segment===0?1:remaining/segment;
+
+currentX=pointsX[i]+(pointsX[i+1]-pointsX[i])*ratio;
+
+break;
+
+}
+
+remaining-=segment;
+
+currentX=pointsX[i+1];
+
+}
+
+const verticalProgress=progress<0.15?progress/0.15:1;
+
+const easedVertical=verticalProgress*verticalProgress*(3-2*verticalProgress);
+
+mapOffsetX=currentX;
+
+mapOffsetY=startY+(overviewY-startY)*easedVertical;
+
+clampMapOffset();
+
+if(progress<1){
+
+requestAnimationFrame(frame);
+
+}else{
+
+centerMapOnUnit(captain);
+
+resolve();
+
+}
+
+}
+
+requestAnimationFrame(frame);
+
+});
+
+}
+
 async function startStage(){
 
 if(cameraBusy)return;
 
 cameraBusy=true;
 
-battleEnded=false;combatAnimating=false;reaction=false;
+cameraSkipRequested=false;
 
-selected=null;selectedEnemy=null;pendingMove=null;
+battleEnded=false;
 
-moveMode=false;attackMode=false;menuOpen=false;systemMenuOpen=false;
+combatAnimating=false;
 
-currentTurn="ally";turn=1;
+reaction=false;
 
-units.forEach(u=>{u.moved=false;u.acted=false;u.waited=false;u.defending=false;});
+selected=null;
+
+selectedEnemy=null;
+
+pendingMove=null;
+
+moveMode=false;
+
+attackMode=false;
+
+menuOpen=false;
+
+systemMenuOpen=false;
+
+currentTurn="ally";
+
+turn=1;
+
+units.forEach(u=>{
+
+u.moved=false;
+
+u.acted=false;
+
+u.waited=false;
+
+u.defending=false;
+
+});
 
 refresh();
 
@@ -1206,39 +2854,9 @@ const captain=units.find(u=>u.side==="ally"&&u.role==="captain");
 
 if(window.innerWidth<=700&&captain){
 
-// まず隊長を中心に置く
-
 centerMapOnUnit(captain);
 
-const captainX=mapOffsetX;
-
-const captainY=mapOffsetY;
-
-const vw=mapViewport.clientWidth;
-
-const vh=mapViewport.clientHeight;
-
-// マップの左端・右端を順に見せる
-
-const leftX=0;
-
-const rightX=vw-mapWidth;
-
-const overviewY=vh>=mapHeight?(vh-mapHeight)/2:Math.max(vh-mapHeight,Math.min(0,(vh-mapHeight)/2));
-
-// 隊長の位置から戦場全体へ視線を移す
-
-await animateCameraTo(leftX,overviewY,1000);
-
-await new Promise(resolve=>setTimeout(resolve,250));
-
-await animateCameraTo(rightX,overviewY,1500);
-
-await new Promise(resolve=>setTimeout(resolve,250));
-
-// 最後は隊長の位置へ滑らかに戻す
-
-await animateCameraTo(captainX,captainY,1200);
+await animateBattlefieldOverview(captain);
 
 }else{
 
@@ -1247,6 +2865,8 @@ centerMap();
 }
 
 cameraBusy=false;
+
+cameraSkipRequested=false;
 
 info.innerHTML="<p>戦闘開始。ユニットを選択してね。</p>";
 
@@ -1262,29 +2882,47 @@ const enemyCaptain=units.find(u=>u.side==="enemy"&&u.role==="captain");
 
 if(!allyCaptain||allyCaptain.hp<=0){
 
-battleEnded=true;combatAnimating=false;battleVisual=null;
+battleEnded=true;
+
+combatAnimating=false;
+
+battleVisual=null;
 
 showStory("敗北","隊長が倒れた。\n味方部隊は撤退した。","終了",()=>{
 
-resetBattle();showIntermission();
+resetBattle();
+
+showIntermission();
 
 });
 
-refresh();return true;
+refresh();
+
+return true;
 
 }
 
 if(!enemyCaptain||enemyCaptain.hp<=0){
 
-battleEnded=true;combatAnimating=false;battleVisual=null;
+battleEnded=true;
+
+combatAnimating=false;
+
+battleVisual=null;
 
 showStory("勝利","敵隊長を撃破した。\n戦いは味方の勝利に終わった。","次へ",()=>{
 
-stageNumber++;resetBattle();showIntermission();
+stageNumber++;
+
+resetBattle();
+
+showIntermission();
 
 });
 
-refresh();return true;
+refresh();
+
+return true;
 
 }
 
@@ -1298,13 +2936,25 @@ if(response==="evade"){
 
 const success=Math.random()*100<evadeChance;
 
-if(success){showCombatEffect(defender,0,true);return false;}
+if(success){
+
+showCombatEffect(defender,0,true);
+
+return false;
+
+}
 
 }
 
 const hit=Math.random()*100<calculateHit(attacker,defender);
 
-if(!hit){showCombatEffect(defender,0,true);return false;}
+if(!hit){
+
+showCombatEffect(defender,0,true);
+
+return false;
+
+}
 
 let actualDamage=damage;
 
@@ -1314,7 +2964,11 @@ actualDamage=Math.max(1,actualDamage);
 
 defender.hp=Math.max(0,defender.hp-actualDamage);
 
-showCombatEffect(defender,actualDamage,false);animateUnit(defender,"combat-hit");return true;
+showCombatEffect(defender,actualDamage,false);
+
+animateUnit(defender,"combat-hit");
+
+return true;
 
 }
 
@@ -1322,9 +2976,13 @@ function resolveAttack(attacker,defender,response){
 
 if(combatAnimating||battleEnded)return;
 
-combatAnimating=true;menuOpen=true;
+combatAnimating=true;
 
-const isEnemyAttack=attacker.side==="enemy",isAllyAttack=attacker.side==="ally";
+menuOpen=true;
+
+const isEnemyAttack=attacker.side==="enemy";
+
+const isAllyAttack=attacker.side==="ally";
 
 battleVisual={attacker,defender,response,showArrows:false};
 
@@ -1332,13 +2990,17 @@ const prediction=getCombatPrediction(attacker,defender,response);
 
 info.innerHTML=`<h3>戦闘中</h3>${battlePanelHTML(attacker,defender,prediction)}<p>戦闘を解決しています……</p>`;
 
-refresh();animateUnit(attacker,"combat-attacking");
+refresh();
+
+animateUnit(attacker,"combat-attacking");
 
 setTimeout(()=>{
 
 if(battleEnded)return;
 
-applyDamage(attacker,defender,prediction.damage,response,prediction.evadeChance);refresh();
+applyDamage(attacker,defender,prediction.damage,response,prediction.evadeChance);
+
+refresh();
 
 setTimeout(()=>{
 
@@ -1348,7 +3010,9 @@ let counterTarget=null,counterAttacker=null;
 
 if((isEnemyAttack||isAllyAttack)&&response==="counter"&&defender.hp>0&&isUnitInAttackRange(defender,attacker)){
 
-counterAttacker=defender;counterTarget=attacker;
+counterAttacker=defender;
+
+counterTarget=attacker;
 
 }
 
@@ -1362,49 +3026,85 @@ animateUnit(counterAttacker,"combat-attacking");
 
 const counterDamage=calculateDamage(counterAttacker,counterTarget);
 
-applyDamage(counterAttacker,counterTarget,counterDamage,"normal",0);refresh();
+applyDamage(counterAttacker,counterTarget,counterDamage,"normal",0);
+
+refresh();
 
 setTimeout(()=>finishCombat(attacker,defender,isEnemyAttack),500);
 
 },450);
 
-}else setTimeout(()=>finishCombat(attacker,defender,isEnemyAttack),500);
+}else{
+
+setTimeout(()=>finishCombat(attacker,defender,isEnemyAttack),500);
+
+}
 
 },500);
 
 },400);
 
-}
+} function finishCombat(attacker,defender,isEnemyAttack){
 
-function finishCombat(attacker,defender,isEnemyAttack){
+combatAnimating=false;
 
-combatAnimating=false;menuOpen=false;clearBattleVisual();
+menuOpen=false;
+
+clearBattleVisual();
 
 if(checkBattleEnd())return;
 
 if(isEnemyAttack){
 
-attacker.acted=true;attacker.waited=true;selected=null;reaction=false;
+attacker.acted=true;
 
-info.innerHTML="<p>敵の攻撃が終了した。</p>";refresh();
+attacker.waited=true;
 
-setTimeout(()=>processEnemyTurn(),500);return;
+selected=null;
+
+reaction=false;
+
+info.innerHTML="<p>敵の攻撃が終了した。</p>";
+
+refresh();
+
+setTimeout(()=>processEnemyTurn(),500);
+
+return;
 
 }
 
-const actingUnit=attacker;actingUnit.acted=true;
+const actingUnit=attacker;
 
-actingUnit.moved=actingUnit.moved||Boolean(pendingMove);actingUnit.waited=true;
+actingUnit.acted=true;
+
+actingUnit.moved=actingUnit.moved||Boolean(pendingMove);
+
+actingUnit.waited=true;
 
 if(pendingMove)pendingMove=null;
 
-selected=null;selectedEnemy=null;attackMode=false;moveMode=false;
+selected=null;
 
-info.innerHTML=`<p>${actingUnit.name}の行動が終了した。</p>`;refresh();askEndTurnIfAllActed();
+selectedEnemy=null;
 
-} function chooseEnemyTarget(enemy){
+attackMode=false;
 
-const allies=units.filter(u=>u.side==="ally"&&u.hp>0);if(!allies.length)return null;
+moveMode=false;
+
+info.innerHTML=`<p>${actingUnit.name}の行動が終了した。</p>`;
+
+refresh();
+
+askEndTurnIfAllActed();
+
+}
+
+function chooseEnemyTarget(enemy){
+
+const allies=units.filter(u=>u.side==="ally"&&u.hp>0);
+
+if(!allies.length)return null;
 
 const captain=allies.find(u=>u.role==="captain");
 
@@ -1412,7 +3112,13 @@ if(enemy.targetStyle==="captain"&&captain){
 
 const guards=allies.filter(a=>a.id!==captain.id&&getDistance(a.x,a.y,captain.x,captain.y)===1);
 
-if(guards.length){guards.sort((a,b)=>(a.hp/a.maxHp)-(b.hp/b.maxHp));return guards[0];}
+if(guards.length){
+
+guards.sort((a,b)=>(a.hp/a.maxHp)-(b.hp/b.maxHp));
+
+return guards[0];
+
+}
 
 return captain;
 
@@ -1424,11 +3130,25 @@ if(enemyCaptain){
 
 const threats=allies.filter(a=>getDistance(a.x,a.y,enemyCaptain.x,enemyCaptain.y)<=1);
 
-if(threats.length){threats.sort((a,b)=>(a.hp/a.maxHp)-(b.hp/b.maxHp));return threats[0];}
+if(threats.length){
+
+threats.sort((a,b)=>(a.hp/a.maxHp)-(b.hp/b.maxHp));
+
+return threats[0];
 
 }
 
-allies.sort((a,b)=>{const ar=a.hp/a.maxHp,br=b.hp/b.maxHp;if(ar!==br)return ar-br;return a.hp-b.hp;});
+}
+
+allies.sort((a,b)=>{
+
+const ar=a.hp/a.maxHp,br=b.hp/b.maxHp;
+
+if(ar!==br)return ar-br;
+
+return a.hp-b.hp;
+
+});
 
 return allies[0];
 
@@ -1436,7 +3156,11 @@ return allies[0];
 
 function moveEnemyToward(enemy,target){
 
-const queue=[{x:enemy.x,y:enemy.y,firstStep:null,d:0}],visited=new Set([`${enemy.x},${enemy.y}`]),goals=[];
+const queue=[{x:enemy.x,y:enemy.y,firstStep:null,d:0}];
+
+const visited=new Set([`${enemy.x},${enemy.y}`]);
+
+const goals=[];
 
 while(queue.length){
 
@@ -1444,17 +3168,39 @@ const c=queue.shift();
 
 if(c.d>0){
 
-const d=getDistance(c.x,c.y,target.x,target.y),canAttack=isMage(enemy)?d===2:(d>=1&&d<=enemy.range);
+const d=getDistance(c.x,c.y,target.x,target.y);
 
-if(canAttack){goals.push(c);continue;}
+const canAttack=isMage(enemy)?d===2:(d>=1&&d<=enemy.range);
+
+if(canAttack){
+
+goals.push(c);
+
+continue;
+
+}
 
 }
 
 getNeighbors(c).forEach(n=>{
 
-const key=`${n.x},${n.y}`;if(visited.has(key)||occupied(n.x,n.y,enemy))return;
+const key=`${n.x},${n.y}`;
 
-visited.add(key);queue.push({x:n.x,y:n.y,firstStep:c.firstStep||{x:n.x,y:n.y},d:c.d+1});
+if(visited.has(key)||occupied(n.x,n.y,enemy))return;
+
+visited.add(key);
+
+queue.push({
+
+x:n.x,
+
+y:n.y,
+
+firstStep:c.firstStep||{x:n.x,y:n.y},
+
+d:c.d+1
+
+});
 
 });
 
@@ -1462,11 +3208,25 @@ visited.add(key);queue.push({x:n.x,y:n.y,firstStep:c.firstStep||{x:n.x,y:n.y},d:
 
 if(!goals.length)return false;
 
-goals.sort((a,b)=>{if(a.d!==b.d)return a.d-b.d;return getDistance(a.x,a.y,target.x,target.y)-getDistance(b.x,b.y,target.x,target.y);});
+goals.sort((a,b)=>{
 
-const best=goals[0];if(!best.firstStep)return false;
+if(a.d!==b.d)return a.d-b.d;
 
-enemy.x=best.firstStep.x;enemy.y=best.firstStep.y;enemy.moved=true;return true;
+return getDistance(a.x,a.y,target.x,target.y)-getDistance(b.x,b.y,target.x,target.y);
+
+});
+
+const best=goals[0];
+
+if(!best.firstStep)return false;
+
+enemy.x=best.firstStep.x;
+
+enemy.y=best.firstStep.y;
+
+enemy.moved=true;
+
+return true;
 
 }
 
@@ -1474,17 +3234,53 @@ function startEnemyTurn(){
 
 if(battleEnded)return;
 
-currentTurn="enemy";turn++;selected=null;selectedEnemy=null;pendingMove=null;
+currentTurn="enemy";
 
-moveMode=false;attackMode=false;menuOpen=false;reaction=false;systemMenuOpen=false;clearBattleVisual();
+turn++;
+
+selected=null;
+
+selectedEnemy=null;
+
+pendingMove=null;
+
+moveMode=false;
+
+attackMode=false;
+
+menuOpen=false;
+
+reaction=false;
+
+systemMenuOpen=false;
+
+clearBattleVisual();
 
 enemyAIActive=true;
 
-units.forEach(u=>{if(u.side==="enemy"){u.moved=false;u.acted=false;u.waited=false;}});
+units.forEach(u=>{
 
-enemyQueue=units.filter(u=>u.side==="enemy"&&u.hp>0);enemyQueueIndex=0;
+if(u.side==="enemy"){
 
-info.innerHTML="<p>敵のターン。</p>";refresh();setTimeout(processEnemyTurn,500);
+u.moved=false;
+
+u.acted=false;
+
+u.waited=false;
+
+}
+
+});
+
+enemyQueue=units.filter(u=>u.side==="enemy"&&u.hp>0);
+
+enemyQueueIndex=0;
+
+info.innerHTML="<p>敵のターン。</p>";
+
+refresh();
+
+setTimeout(processEnemyTurn,500);
 
 }
 
@@ -1492,27 +3288,79 @@ function processEnemyTurn(){
 
 if(battleEnded)return;
 
-if(enemyQueueIndex>=enemyQueue.length){startEnemyTurnFinish();return;}
+if(enemyQueueIndex>=enemyQueue.length){
 
-const enemy=enemyQueue[enemyQueueIndex];
+startEnemyTurnFinish();
 
-if(!enemy||enemy.hp<=0){enemyQueueIndex++;processEnemyTurn();return;}
-
-const target=chooseEnemyTarget(enemy);if(!target){startEnemyTurnFinish();return;}
-
-let canAttack=isUnitInAttackRange(enemy,target);
-
-if(!canAttack){moveEnemyToward(enemy,target);canAttack=isUnitInAttackRange(enemy,target);refresh();}
-
-if(canAttack){
-
-enemyQueueIndex++;reaction=true;info.innerHTML=`<p>${enemy.name}が${target.name}に迫っている。</p>`;refresh();
-
-setTimeout(()=>{if(!battleEnded)showReactionMenu(enemy,target);},350);return;
+return;
 
 }
 
-enemy.moved=true;enemy.acted=true;enemy.waited=true;enemyQueueIndex++;refresh();setTimeout(processEnemyTurn,350);
+const enemy=enemyQueue[enemyQueueIndex];
+
+if(!enemy||enemy.hp<=0){
+
+enemyQueueIndex++;
+
+processEnemyTurn();
+
+return;
+
+}
+
+const target=chooseEnemyTarget(enemy);
+
+if(!target){
+
+startEnemyTurnFinish();
+
+return;
+
+}
+
+let canAttack=isUnitInAttackRange(enemy,target);
+
+if(!canAttack){
+
+moveEnemyToward(enemy,target);
+
+canAttack=isUnitInAttackRange(enemy,target);
+
+refresh();
+
+}
+
+if(canAttack){
+
+enemyQueueIndex++;
+
+reaction=true;
+
+info.innerHTML=`<p>${enemy.name}が${target.name}に迫っている。</p>`;
+
+refresh();
+
+setTimeout(()=>{
+
+if(!battleEnded)showReactionMenu(enemy,target);
+
+},350);
+
+return;
+
+}
+
+enemy.moved=true;
+
+enemy.acted=true;
+
+enemy.waited=true;
+
+enemyQueueIndex++;
+
+refresh();
+
+setTimeout(processEnemyTurn,350);
 
 }
 
@@ -1520,11 +3368,39 @@ function startEnemyTurnFinish(){
 
 if(battleEnded)return;
 
-enemyAIActive=false;reaction=false;menuOpen=false;clearBattleVisual();currentTurn="ally";
+enemyAIActive=false;
 
-units.forEach(u=>{if(u.side==="ally"){u.moved=false;u.acted=false;u.waited=false;u.defending=false;}});
+reaction=false;
 
-selected=null;selectedEnemy=null;info.innerHTML="<p>味方のターン。ユニットを選択してね。</p>";refresh();
+menuOpen=false;
+
+clearBattleVisual();
+
+currentTurn="ally";
+
+units.forEach(u=>{
+
+if(u.side==="ally"){
+
+u.moved=false;
+
+u.acted=false;
+
+u.waited=false;
+
+u.defending=false;
+
+}
+
+});
+
+selected=null;
+
+selectedEnemy=null;
+
+info.innerHTML="<p>味方のターン。ユニットを選択してね。</p>";
+
+refresh();
 
 }
 
@@ -1532,29 +3408,83 @@ function readSaveSlots(){
 
 try{
 
-const raw=localStorage.getItem(SAVE_KEY);if(!raw)return Array(5).fill(null);
+const raw=localStorage.getItem(SAVE_KEY);
 
-const parsed=JSON.parse(raw);if(!Array.isArray(parsed))return Array(5).fill(null);
+if(!raw)return Array(5).fill(null);
+
+const parsed=JSON.parse(raw);
+
+if(!Array.isArray(parsed))return Array(5).fill(null);
 
 return Array.from({length:5},(_,i)=>parsed[i]||null);
 
-}catch(e){console.error("セーブデータを読み込めません",e);return Array(5).fill(null);}
+}catch(e){
+
+console.error("セーブデータを読み込めません",e);
+
+return Array(5).fill(null);
+
+}
 
 }
 
 function writeSaveSlots(slots){
 
-try{localStorage.setItem(SAVE_KEY,JSON.stringify(slots));return true;}
+try{
 
-catch(e){console.error("セーブに失敗しました",e);alert("保存できませんでした。ブラウザの保存容量や設定を確認してください。");return false;}
+localStorage.setItem(SAVE_KEY,JSON.stringify(slots));
+
+return true;
+
+}catch(e){
+
+console.error("セーブに失敗しました",e);
+
+alert("保存できませんでした。ブラウザの保存容量や設定を確認してください。");
+
+return false;
+
+}
 
 }
 
 function makeSaveData(){
 
-return{version:1,savedAt:new Date().toISOString(),turn,currentTurn,stageNumber,
+return{
 
-units:units.map(u=>({id:u.id,x:u.x,y:u.y,hp:u.hp,maxHp:u.maxHp,moved:u.moved,acted:u.acted,waited:u.waited,defending:Boolean(u.defending)}))};
+version:1,
+
+savedAt:new Date().toISOString(),
+
+turn,
+
+currentTurn,
+
+stageNumber,
+
+units:units.map(u=>({
+
+id:u.id,
+
+x:u.x,
+
+y:u.y,
+
+hp:u.hp,
+
+maxHp:u.maxHp,
+
+moved:u.moved,
+
+acted:u.acted,
+
+waited:u.waited,
+
+defending:Boolean(u.defending)
+
+}))
+
+};
 
 }
 
@@ -1564,47 +3494,115 @@ const slots=readSaveSlots();
 
 if(slots[index]&&!confirm(`セーブ枠${index+1}を上書きしますか？`))return;
 
-slots[index]=makeSaveData();if(!writeSaveSlots(slots))return;
+slots[index]=makeSaveData();
+
+if(!writeSaveSlots(slots))return;
 
 alert(`セーブ枠${index+1}に保存しました。`);
 
-if(intermissionOpen)showSystemMenu();else showSaveMenu();
+if(intermissionOpen)showSystemMenu();
+
+else showSaveMenu();
 
 }
 
 function loadFromSlot(index){
 
-const slots=readSaveSlots(),data=slots[index];if(!data)return;
+const slots=readSaveSlots(),data=slots[index];
+
+if(!data)return;
 
 if(!confirm(`セーブ枠${index+1}をロードしますか？\n現在の進行状況は置き換わります。`))return;
 
-if(!Array.isArray(data.units)||data.units.length!==units.length){alert("このセーブデータは読み込めません。");return;}
+if(!Array.isArray(data.units)||data.units.length!==units.length){
+
+alert("このセーブデータは読み込めません。");
+
+return;
+
+}
 
 data.units.forEach(saved=>{
 
-const unit=units.find(u=>u.id===saved.id);if(!unit)return;
+const unit=units.find(u=>u.id===saved.id);
 
-unit.x=saved.x;unit.y=saved.y;unit.hp=saved.hp;unit.maxHp=saved.maxHp;
+if(!unit)return;
 
-unit.moved=Boolean(saved.moved);unit.acted=Boolean(saved.acted);unit.waited=Boolean(saved.waited);unit.defending=Boolean(saved.defending);
+unit.x=saved.x;
+
+unit.y=saved.y;
+
+unit.hp=saved.hp;
+
+unit.maxHp=saved.maxHp;
+
+unit.moved=Boolean(saved.moved);
+
+unit.acted=Boolean(saved.acted);
+
+unit.waited=Boolean(saved.waited);
+
+unit.defending=Boolean(saved.defending);
 
 });
 
-turn=Number(data.turn)||1;stageNumber=Number(data.stageNumber)||1;
+turn=Number(data.turn)||1;
+
+stageNumber=Number(data.stageNumber)||1;
 
 currentTurn=data.currentTurn==="enemy"?"enemy":"ally";
 
-selected=null;selectedEnemy=null;pendingMove=null;moveMode=false;attackMode=false;menuOpen=false;reaction=false;
+selected=null;
 
-combatAnimating=false;battleEnded=false;enemyAIActive=false;enemyQueue=[];enemyQueueIndex=0;systemMenuOpen=false;lastTapUnitId=null;clearBattleVisual();
+selectedEnemy=null;
 
-if(intermissionOpen){showIntermission();return;}
+pendingMove=null;
 
-info.innerHTML=`<p>セーブ枠${index+1}をロードした。</p>`;refresh();
+moveMode=false;
+
+attackMode=false;
+
+menuOpen=false;
+
+reaction=false;
+
+combatAnimating=false;
+
+battleEnded=false;
+
+enemyAIActive=false;
+
+enemyQueue=[];
+
+enemyQueueIndex=0;
+
+systemMenuOpen=false;
+
+lastTapUnitId=null;
+
+clearBattleVisual();
+
+if(intermissionOpen){
+
+showIntermission();
+
+return;
+
+}
+
+info.innerHTML=`<p>セーブ枠${index+1}をロードした。</p>`;
+
+refresh();
 
 if(currentTurn==="enemy"){
 
-enemyAIActive=true;enemyQueue=units.filter(u=>u.side==="enemy"&&u.hp>0);enemyQueueIndex=0;setTimeout(processEnemyTurn,400);
+enemyAIActive=true;
+
+enemyQueue=units.filter(u=>u.side==="enemy"&&u.hp>0);
+
+enemyQueueIndex=0;
+
+setTimeout(processEnemyTurn,400);
 
 }
 
@@ -1612,73 +3610,135 @@ enemyAIActive=true;enemyQueue=units.filter(u=>u.side==="enemy"&&u.hp>0);enemyQue
 
 function showSaveMenu(){
 
-systemMenuOpen=true;menuOpen=true;
+systemMenuOpen=true;
 
-const slots=readSaveSlots();let html="<h3>セーブ</h3><p>保存する枠を選んでね。</p>";
+menuOpen=true;
+
+const slots=readSaveSlots();
+
+let html="<h3>セーブ</h3><p>保存する枠を選んでね。</p>";
 
 slots.forEach((slot,i)=>{
 
 if(slot){
 
-const date=new Date(slot.savedAt),dateText=isNaN(date.getTime())?"日時不明":date.toLocaleString("ja-JP");
+const date=new Date(slot.savedAt);
+
+const dateText=isNaN(date.getTime())?"日時不明":date.toLocaleString("ja-JP");
 
 html+=`<p>枠${i+1}：保存済み<br>${dateText}／${slot.turn}ターン</p><button data-save="${i}">この枠に保存</button>`;
 
-}else html+=`<p>枠${i+1}：空き</p><button data-save="${i}">新規保存</button>`;
+}else{
+
+html+=`<p>枠${i+1}：空き</p><button data-save="${i}">新規保存</button>`;
+
+}
 
 });
 
-html+=`<button id="saveBack">戻る</button>`;info.innerHTML=html;
+html+=`<button id="saveBack">戻る</button>`;
 
-info.querySelectorAll("[data-save]").forEach(b=>{b.onclick=()=>saveToSlot(Number(b.dataset.save));});
+info.innerHTML=html;
 
-document.querySelector("#saveBack").onclick=showSystemMenu;refresh();
+info.querySelectorAll("[data-save]").forEach(b=>{
+
+b.onclick=()=>saveToSlot(Number(b.dataset.save));
+
+});
+
+document.querySelector("#saveBack").onclick=showSystemMenu;
+
+refresh();
 
 }
 
 function showLoadMenu(){
 
-systemMenuOpen=true;menuOpen=true;
+systemMenuOpen=true;
 
-const slots=readSaveSlots();let html="<h3>ロード</h3><p>読み込む枠を選んでね。</p>";
+menuOpen=true;
+
+const slots=readSaveSlots();
+
+let html="<h3>ロード</h3><p>読み込む枠を選んでね。</p>";
 
 slots.forEach((slot,i)=>{
 
 if(slot){
 
-const date=new Date(slot.savedAt),dateText=isNaN(date.getTime())?"日時不明":date.toLocaleString("ja-JP");
+const date=new Date(slot.savedAt);
+
+const dateText=isNaN(date.getTime())?"日時不明":date.toLocaleString("ja-JP");
 
 html+=`<p>枠${i+1}：保存済み<br>${dateText}／${slot.turn}ターン</p><button data-load="${i}">ロード</button>`;
 
-}else html+=`<p>枠${i+1}：空き</p><button disabled>データなし</button>`;
+}else{
+
+html+=`<p>枠${i+1}：空き</p><button disabled>データなし</button>`;
+
+}
 
 });
 
-html+=`<button id="loadBack">戻る</button>`;info.innerHTML=html;
+html+=`<button id="loadBack">戻る</button>`;
 
-info.querySelectorAll("[data-load]").forEach(b=>{b.onclick=()=>loadFromSlot(Number(b.dataset.load));});
+info.innerHTML=html;
 
-document.querySelector("#loadBack").onclick=showSystemMenu;refresh();
+info.querySelectorAll("[data-load]").forEach(b=>{
+
+b.onclick=()=>loadFromSlot(Number(b.dataset.load));
+
+});
+
+document.querySelector("#loadBack").onclick=showSystemMenu;
+
+refresh();
 
 }
 
 function showSettingsMenu(){
 
-systemMenuOpen=true;menuOpen=true;
+systemMenuOpen=true;
+
+menuOpen=true;
 
 info.innerHTML=`<h3>設定</h3><p>現在の設定項目はありません。</p><button id="settingsBack">戻る</button>`;
 
-document.querySelector("#settingsBack").onclick=showSystemMenu;refresh();
+document.querySelector("#settingsBack").onclick=showSystemMenu;
 
-} function returnToBattleFromSystemMenu(){
+refresh();
 
-systemMenuOpen=false;menuOpen=false;
+}
 
-if(intermissionOpen){showIntermission();return;}
+function returnToBattleFromSystemMenu(){
 
-selected=null;selectedEnemy=null;moveMode=false;attackMode=false;lastTapUnitId=null;clearBattleVisual();
+systemMenuOpen=false;
 
-info.innerHTML="<p>戦闘に戻った。</p>";refresh();
+menuOpen=false;
+
+if(intermissionOpen){
+
+showIntermission();
+
+return;
+
+}
+
+selected=null;
+
+selectedEnemy=null;
+
+moveMode=false;
+
+attackMode=false;
+
+lastTapUnitId=null;
+
+clearBattleVisual();
+
+info.innerHTML="<p>戦闘に戻った。</p>";
+
+refresh();
 
 }
 
@@ -1686,7 +3746,15 @@ function showSystemMenu(){
 
 if(battleEnded||combatAnimating||reaction||enemyAIActive)return;
 
-systemMenuOpen=true;menuOpen=true;attackMode=false;moveMode=false;clearBattleVisual();
+systemMenuOpen=true;
+
+menuOpen=true;
+
+attackMode=false;
+
+moveMode=false;
+
+clearBattleVisual();
 
 info.innerHTML=`
 
@@ -1706,7 +3774,13 @@ info.innerHTML=`
 
 document.querySelector("#systemSave").onclick=()=>{
 
-if(!intermissionOpen&&currentTurn!=="ally"){alert("味方のターンにセーブしてください。");return;}
+if(!intermissionOpen&&currentTurn!=="ally"){
+
+alert("味方のターンにセーブしてください。");
+
+return;
+
+}
 
 showSaveMenu();
 
@@ -1720,7 +3794,17 @@ document.querySelector("#systemEndTurn").onclick=()=>{
 
 if(intermissionOpen||currentTurn!=="ally"||pendingMove)return;
 
-systemMenuOpen=false;menuOpen=false;selected=null;selectedEnemy=null;clearBattleVisual();startEnemyTurn();
+systemMenuOpen=false;
+
+menuOpen=false;
+
+selected=null;
+
+selectedEnemy=null;
+
+clearBattleVisual();
+
+startEnemyTurn();
 
 };
 
@@ -1732,13 +3816,19 @@ if(!confirm("ゲームを終了しますか？"))return;
 
 if(!confirm("本当に終了しますか？\nセーブしていない進行状況は失われます。"))return;
 
-info.innerHTML="<p>ゲームを終了しています……</p>";refresh();window.close();
+info.innerHTML="<p>ゲームを終了しています……</p>";
+
+refresh();
+
+window.close();
 
 setTimeout(()=>{
 
 info.innerHTML=`<h3>ゲーム終了</h3><p>ブラウザの仕様により、このページを閉じられませんでした。</p><p>Safariのタブ一覧から、このタブを閉じてください。</p><button id="exitBack">ゲームに戻る</button>`;
 
-const back=document.querySelector("#exitBack");if(back)back.onclick=returnToBattleFromSystemMenu;
+const back=document.querySelector("#exitBack");
+
+if(back)back.onclick=returnToBattleFromSystemMenu;
 
 },500);
 
@@ -1754,35 +3844,71 @@ if(battleEnded||combatAnimating||currentTurn!=="ally"||enemyAIActive)return;
 
 const unit=getUnitAt(x,y);
 
-if(systemMenuOpen){if(!unit)returnToBattleFromSystemMenu();return;}
+if(systemMenuOpen){
 
-if(menuOpen){menuOpen=false;attackMode=false;moveMode=false;}
+if(!unit)returnToBattleFromSystemMenu();
+
+return;
+
+}
+
+if(menuOpen){
+
+menuOpen=false;
+
+attackMode=false;
+
+moveMode=false;
+
+}
 
 if(attackMode){
 
 if(unit&&unit.side==="enemy"&&selected&&isAllyAttackCell(x,y)){
 
-showCombatConfirmation(selected,unit,chooseEnemyReaction(selected,unit));return;
+showCombatConfirmation(selected,unit,chooseEnemyReaction(selected,unit));
+
+return;
 
 }
 
-if(pendingMove)exitAttackSelection();else closeMenuByEmptyTap();return;
+if(pendingMove)exitAttackSelection();
+
+else closeMenuByEmptyTap();
+
+return;
 
 }
 
 if(pendingMove){
 
-if(unit&&unit.side==="ally"&&unit.id===pendingMove.unit.id){showActionMenu(unit);return;}
+if(unit&&unit.side==="ally"&&unit.id===pendingMove.unit.id){
 
-if(unit&&unit.side==="enemy"&&selected&&isAllyAttackCell(x,y)){
+showActionMenu(unit);
 
-showCombatConfirmation(selected,unit,chooseEnemyReaction(selected,unit));return;
+return;
 
 }
 
-if(x===pendingMove.fromX&&y===pendingMove.fromY){cancelMove();return;}
+if(unit&&unit.side==="enemy"&&selected&&isAllyAttackCell(x,y)){
 
-cancelMove();return;
+showCombatConfirmation(selected,unit,chooseEnemyReaction(selected,unit));
+
+return;
+
+}
+
+if(x===pendingMove.fromX&&y===pendingMove.fromY){
+
+cancelMove();
+
+return;
+
+}
+
+cancelMove();
+
+return;
 
 }
 
@@ -1790,53 +3916,123 @@ if(unit&&unit.side==="enemy"){
 
 if(selected&&selected.side==="ally"&&isAllyAttackCell(x,y)){
 
-showCombatConfirmation(selected,unit,chooseEnemyReaction(selected,unit));return;
+showCombatConfirmation(selected,unit,chooseEnemyReaction(selected,unit));
+
+return;
 
 }
 
-if(selectedEnemy&&selectedEnemy.id===unit.id){showDetails(unit);return;}
+if(selectedEnemy&&selectedEnemy.id===unit.id){
 
-selected=null;selectedEnemy=unit;menuOpen=false;moveMode=false;attackMode=false;lastTapUnitId=null;clearBattleVisual();
+showDetails(unit);
+
+return;
+
+}
+
+selected=null;
+
+selectedEnemy=unit;
+
+menuOpen=false;
+
+moveMode=false;
+
+attackMode=false;
+
+lastTapUnitId=null;
+
+clearBattleVisual();
 
 info.innerHTML=`<p>${unit.icon} ${unit.name}を選択中。</p><p>青：移動可能範囲</p><p>赤：攻撃可能範囲</p><p>もう一度クリックで能力確認</p>`;
 
-refresh();return;
+refresh();
+
+return;
 
 }
 
 if(unit&&unit.side==="ally"){
 
-if(selected&&selected.id===unit.id){lastTapUnitId=null;showActionMenu(unit);return;}
+if(selected&&selected.id===unit.id){
 
-selected=unit;selectedEnemy=null;lastTapUnitId=unit.id;menuOpen=false;moveMode=false;attackMode=false;clearBattleVisual();
+lastTapUnitId=null;
+
+showActionMenu(unit);
+
+return;
+
+}
+
+selected=unit;
+
+selectedEnemy=null;
+
+lastTapUnitId=unit.id;
+
+menuOpen=false;
+
+moveMode=false;
+
+attackMode=false;
+
+clearBattleVisual();
 
 info.innerHTML=`<p>${unit.icon} ${unit.name}を選択中。</p><p>青：移動可能範囲</p><p>赤：攻撃可能範囲</p><p>もう一度クリックで行動メニュー</p>`;
 
-refresh();return;
+refresh();
+
+return;
 
 }
 
 if(selected&&selected.side==="ally"&&!selected.moved&&!selected.acted&&!selected.waited){
 
-const reachable=getReachableCells(selected),valid=reachable.some(c=>c.x===x&&c.y===y);
+const reachable=getReachableCells(selected);
+
+const valid=reachable.some(c=>c.x===x&&c.y===y);
 
 if(valid){
 
-const mover=selected;pendingMove={unit:mover,fromX:mover.x,fromY:mover.y};
+const mover=selected;
 
-mover.x=x;mover.y=y;mover.moved=true;moveMode=false;attackMode=false;menuOpen=false;
+pendingMove={unit:mover,fromX:mover.x,fromY:mover.y};
 
-lastTapUnitId=null;selectedEnemy=null;clearBattleVisual();
+mover.x=x;
+
+mover.y=y;
+
+mover.moved=true;
+
+moveMode=false;
+
+attackMode=false;
+
+menuOpen=false;
+
+lastTapUnitId=null;
+
+selectedEnemy=null;
+
+clearBattleVisual();
 
 info.innerHTML=`<p>${mover.name}が移動した。</p><p>赤く点滅する範囲が攻撃可能範囲。</p><p>赤い範囲内の敵を選ぶと攻撃できる。</p><p>「待機」で行動終了。</p>`;
 
-refresh();return;
+refresh();
+
+return;
 
 }
 
 }
 
-if(!selected&&!selectedEnemy){showSystemMenu();return;}
+if(!selected&&!selectedEnemy){
+
+showSystemMenu();
+
+return;
+
+}
 
 closeMenuByEmptyTap();
 
@@ -1844,7 +4040,17 @@ closeMenuByEmptyTap();
 
 map.addEventListener("click",function(e){
 
-if(suppressNextClick){e.preventDefault();e.stopPropagation();suppressNextClick=false;return;}
+if(suppressNextClick){
+
+e.preventDefault();
+
+e.stopPropagation();
+
+suppressNextClick=false;
+
+return;
+
+}
 
 const cell=e.target.closest("[data-x][data-y]");
 
@@ -1908,7 +4114,13 @@ showAttackMenu(unit);
 
 pendingWaitButton.addEventListener("click",function(){
 
-if(pendingMove){finishMoveAndWait();return;}
+if(pendingMove){
+
+finishMoveAndWait();
+
+return;
+
+}
 
 const unit=selected;
 
@@ -1950,10 +4162,6 @@ showActionMenu(unit);
 
 });
 
-// インターミッションからシステムメニューを開く場合は、
-
-// 準備画面を一時的に隠して既存のシステムメニューを表示する。
-
 const originalShowSystemMenu=showSystemMenu;
 
 showSystemMenu=function(){
@@ -1972,25 +4180,51 @@ originalShowSystemMenu();
 
 };
 
-// 初期状態
+selected=null;
 
-selected=null;selectedEnemy=null;currentTurn="ally";turn=1;
+selectedEnemy=null;
 
-pendingMove=null;moveMode=false;attackMode=false;menuOpen=false;
+currentTurn="ally";
 
-reaction=false;combatAnimating=false;battleEnded=false;
+turn=1;
 
-enemyQueue=[];enemyQueueIndex=0;enemyAIActive=false;
+pendingMove=null;
 
-lastTapUnitId=null;battleVisual=null;systemMenuOpen=false;
+moveMode=false;
 
-intermissionOpen=false;cameraBusy=false;
+attackMode=false;
+
+menuOpen=false;
+
+reaction=false;
+
+combatAnimating=false;
+
+battleEnded=false;
+
+enemyQueue=[];
+
+enemyQueueIndex=0;
+
+enemyAIActive=false;
+
+lastTapUnitId=null;
+
+battleVisual=null;
+
+systemMenuOpen=false;
+
+intermissionOpen=false;
+
+cameraBusy=false;
+
+cameraSkipRequested=false;
 
 info.innerHTML="<p>ユニットを選択してね。</p>";
 
-refresh();centerMap();
+refresh();
 
-// 起動時はストーリーを挟まず、インターミッションから開始
+centerMap();
 
 showIntermission();
 
