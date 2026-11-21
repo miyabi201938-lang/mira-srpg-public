@@ -23,9 +23,10 @@ test.innerHTML=`
 
 <div id="game">
 
-<h2>ミラのSRPG</h2>
 
 <p id="turn">味方のターン</p>
+
+<div id="mapMoveControls" aria-label="マップ移動"><button type="button" data-pan="up">↑</button><button type="button" data-pan="down">↓</button><button type="button" data-pan="left">←</button><button type="button" data-pan="right">→</button></div>
 
 <div id="mapViewport"><div id="map"></div></div>
 
@@ -71,6 +72,9 @@ style.textContent=`
 
 #game{position:relative;}
 
+#mapMoveControls{display:flex;justify-content:center;align-items:center;gap:6px;margin:4px auto 8px;width:94%;max-width:420px;}
+#mapMoveControls button{width:54px;height:48px;font-size:28px;line-height:1;padding:0;border:0;border-radius:8px;background:#e9e9ed;color:#1686d9;touch-action:manipulation;-webkit-user-select:none;user-select:none;}
+#mapMoveControls button:active{background:#c9d9e8;}
 #mapViewport{position:relative;width:94%;max-width:900px;height:65vh;min-height:310px;max-height:700px;margin:0 auto;overflow:hidden;border:1px solid #777;border-radius:6px;background:#b8b5a8;touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:grab;}
 
 #mapViewport.panning{cursor:grabbing;}
@@ -211,7 +215,12 @@ style.textContent=`
 
 .opening-overlay{display:flex;flex-direction:column;padding:0;background:#080e17;overflow:hidden;gap:0;}
 
-.opening-map{position:relative;display:block;flex:0 0 43vh;width:100%;height:43vh;min-height:190px;max-height:360px;object-fit:contain;object-position:center center;z-index:0;opacity:1;background:#080e17;}
+.opening-map-frame{position:relative;display:block;flex:0 0 43vh;width:100%;height:43vh;min-height:190px;max-height:360px;background:#080e17;overflow:hidden;}
+.opening-map{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center center;z-index:0;opacity:1;background:#080e17;}
+.opening-empire-outline{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;z-index:1;pointer-events:none;}
+.opening-empire-outline path{fill:none;stroke:#ff2929;stroke-width:4;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke;animation:empireBorderBlink 1.4s steps(2,end) infinite;}
+@keyframes empireBorderBlink{0%,100%{opacity:1;}50%{opacity:.08;}}
+
 
 .opening-panel{position:relative;left:auto;right:auto;bottom:auto;flex:1;min-height:0;width:100%;max-width:none;margin:0;padding:12px 18px calc(84px + env(safe-area-inset-bottom));box-sizing:border-box;border:0;border-top:1px solid #c3a66c;border-radius:0;background:linear-gradient(180deg,rgba(17,25,35,.86),rgba(10,16,24,.97));box-shadow:0 -5px 24px #0009;text-align:center;z-index:2;overflow-y:auto;}
 
@@ -331,6 +340,20 @@ mapOffsetY=(mapViewport.clientHeight-mapHeight)/2;
 clampMapOffset();
 
 }
+
+const mapMoveControls=document.querySelector("#mapMoveControls");
+mapMoveControls.querySelectorAll("button[data-pan]").forEach(button=>{
+button.addEventListener("pointerdown",e=>e.preventDefault());
+button.addEventListener("click",e=>{
+e.preventDefault();e.stopPropagation();
+const step=58,dir=button.dataset.pan;
+if(dir==="up")mapOffsetY+=step;
+else if(dir==="down")mapOffsetY-=step;
+else if(dir==="left")mapOffsetX+=step;
+else if(dir==="right")mapOffsetX-=step;
+clampMapOffset();
+});
+});
 
 function centerMapOnUnit(unit){
 
@@ -1184,7 +1207,10 @@ let page=0;
 
 const overlay=document.createElement("div");overlay.className="story-overlay opening-overlay";
 
-const bg=document.createElement("img");bg.className="opening-map";bg.alt="ヴァルディア大陸勢力図";overlay.appendChild(bg);
+const mapFrame=document.createElement("div");mapFrame.className="opening-map-frame";overlay.appendChild(mapFrame);
+const bg=document.createElement("img");bg.className="opening-map";bg.alt="ヴァルディア大陸勢力図";mapFrame.appendChild(bg);
+const empireOutline=document.createElementNS("http://www.w3.org/2000/svg","svg");empireOutline.setAttribute("viewBox","0 0 1672 941");empireOutline.setAttribute("preserveAspectRatio","xMidYMid meet");empireOutline.classList.add("opening-empire-outline");
+const empirePath=document.createElementNS("http://www.w3.org/2000/svg","path");empirePath.setAttribute("d","M 1128,271 L 1121,271 L 1118,267 L 1113,270 L 1103,269 L 1101,260 L 1096,256 L 1091,259 L 1087,256 L 1077,257 L 1073,245 L 1068,246 L 1056,240 L 1034,246 L 1027,254 L 1021,255 L 1005,241 L 998,239 L 986,249 L 991,253 L 990,259 L 984,261 L 974,275 L 960,283 L 953,279 L 952,274 L 944,272 L 943,266 L 935,261 L 927,262 L 921,273 L 907,277 L 897,272 L 884,257 L 881,264 L 873,266 L 874,272 L 870,279 L 859,281 L 854,290 L 849,292 L 838,290 L 835,285 L 825,281 L 825,274 L 817,274 L 806,267 L 804,272 L 793,277 L 795,284 L 782,300 L 773,300 L 752,279 L 742,286 L 735,284 L 729,288 L 724,284 L 720,289 L 710,292 L 717,296 L 722,305 L 714,319 L 708,319 L 703,326 L 694,327 L 686,335 L 679,331 L 669,333 L 666,325 L 663,325 L 655,340 L 643,346 L 636,357 L 618,369 L 628,370 L 643,376 L 645,381 L 652,382 L 652,394 L 659,397 L 661,404 L 676,401 L 680,403 L 681,410 L 696,412 L 693,422 L 703,427 L 701,437 L 710,441 L 703,458 L 708,462 L 707,467 L 716,469 L 726,484 L 717,490 L 722,496 L 716,506 L 706,506 L 704,511 L 685,518 L 682,527 L 672,526 L 702,550 L 703,561 L 695,566 L 688,563 L 686,571 L 675,574 L 670,578 L 670,585 L 662,587 L 661,595 L 632,597 L 620,614 L 623,627 L 617,631 L 616,641 L 609,642 L 604,648 L 600,645 L 598,660 L 605,660 L 615,670 L 623,662 L 639,657 L 649,664 L 670,661 L 675,649 L 683,649 L 688,656 L 699,656 L 707,647 L 719,656 L 727,655 L 734,673 L 742,677 L 751,672 L 760,679 L 762,674 L 770,674 L 778,665 L 774,656 L 777,636 L 785,635 L 792,628 L 799,629 L 808,606 L 812,604 L 814,592 L 836,592 L 848,599 L 854,599 L 863,592 L 880,596 L 883,594 L 883,584 L 892,576 L 888,571 L 889,567 L 897,563 L 898,555 L 905,555 L 907,544 L 916,542 L 919,535 L 929,535 L 935,531 L 943,537 L 949,537 L 956,548 L 972,548 L 973,542 L 981,538 L 985,528 L 984,521 L 991,518 L 995,508 L 1009,507 L 1011,512 L 1023,519 L 1038,507 L 1041,500 L 1053,497 L 1070,503 L 1082,499 L 1083,491 L 1096,484 L 1091,474 L 1100,468 L 1101,459 L 1096,459 L 1093,453 L 1081,454 L 1079,447 L 1064,439 L 1063,432 L 1079,426 L 1080,419 L 1087,417 L 1086,412 L 1093,404 L 1083,400 L 1074,391 L 1073,385 L 1066,382 L 1066,374 L 1080,366 L 1076,363 L 1075,356 L 1068,356 L 1066,352 L 1058,353 L 1053,340 L 1069,330 L 1080,333 L 1083,327 L 1090,327 L 1094,317 L 1098,315 L 1108,316 L 1113,320 L 1127,316 L 1128,307 L 1136,301 L 1122,296 L 1118,286 L 1127,278 Z");empireOutline.appendChild(empirePath);mapFrame.appendChild(empireOutline);
 
 const panel=document.createElement("div");panel.className="story-panel opening-panel";
 
@@ -1204,6 +1230,7 @@ function render(){
 
 paragraph.textContent=openingPages[page].text;
 bg.src=openingPages[page].map;
+empireOutline.style.display=(page===4||page===5)?"block":"none";
 
 backButton.disabled=page===0;
 
@@ -1309,7 +1336,7 @@ function showIntermission(){
 
 intermissionOpen=true;intermissionReturnMode=true;systemMenuOpen=false;menuOpen=false;selected=null;selectedEnemy=null;pendingMove=null;moveMode=false;attackMode=false;clearBattleVisual();
 
-mapViewport.style.display="none";document.querySelector("#actionButtons").style.display="none";turnLabel.style.display="none";info.style.display="none";
+mapViewport.style.display="none";document.querySelector("#actionButtons").style.display="none";turnLabel.style.display="none";document.querySelector("#mapMoveControls").style.display="none";info.style.display="none";
 
 let old=document.querySelector("#intermissionPanel");if(old)old.remove();
 
@@ -1357,7 +1384,7 @@ intermissionOpen=false;systemMenuOpen=false;
 
 let old=document.querySelector("#intermissionPanel");if(old)old.remove();
 
-mapViewport.style.display="none";document.querySelector("#actionButtons").style.display="none";turnLabel.style.display="none";info.style.display="none";
+mapViewport.style.display="none";document.querySelector("#actionButtons").style.display="none";turnLabel.style.display="none";document.querySelector("#mapMoveControls").style.display="none";info.style.display="none";
 
 const panel=document.createElement("div");panel.id="intermissionPanel";
 
@@ -1383,7 +1410,7 @@ game.appendChild(panel);
 
 panel.querySelector("#situationStart").onclick=()=>{
 
-panel.remove();intermissionOpen=false;mapViewport.style.display="block";document.querySelector("#actionButtons").style.display="flex";turnLabel.style.display="block";info.style.display="block";startStage();
+panel.remove();intermissionOpen=false;mapViewport.style.display="block";document.querySelector("#actionButtons").style.display="flex";turnLabel.style.display="block";document.querySelector("#mapMoveControls").style.display="flex";info.style.display="block";startStage();
 
 };
 
