@@ -4,15 +4,24 @@ window.addEventListener("load", function () {
 const titleBgm=new Audio("https://raw.githubusercontent.com/miyabi201938-lang/mira-srpg-public/main/%E5%B8%9D%E5%9B%BD%E3%81%AE%E9%BB%84%E6%98%8F.mp3");
 const storyBgm=new Audio("https://raw.githubusercontent.com/miyabi201938-lang/mira-srpg-public/main/%E8%88%88%E4%BA%A1%E3%81%AE%E3%83%AC%E3%82%AF%E3%82%A4%E3%82%A8%E3%83%A0.mp3");
 const intermissionBgm=new Audio("https://raw.githubusercontent.com/miyabi201938-lang/mira-srpg-public/main/%E3%82%A4%E3%83%B3%E3%82%BF%E3%83%BC%E3%83%9F%E3%83%83%E3%82%B7%E3%83%A7%E3%83%B3.mp3");
-titleBgm.loop=true;storyBgm.loop=true;intermissionBgm.loop=true;titleBgm.volume=0.55;storyBgm.volume=0.5;intermissionBgm.volume=0.5;
-let musicEnabled=false;let musicScene="title";
+const battleBgm=new Audio("https://raw.githubusercontent.com/miyabi201938-lang/mira-srpg-public/main/Iron%20%26%20Dust%20-%20Instrumental%20Take%202.mp3");
+titleBgm.loop=true;storyBgm.loop=true;intermissionBgm.loop=true;battleBgm.loop=true;titleBgm.volume=0.55;storyBgm.volume=0.5;intermissionBgm.volume=0.5;battleBgm.volume=0.5;
+let musicEnabled=false;let musicScene="title";let musicPausedByLifecycle=false;
 function stopTitleBgm(){titleBgm.pause();titleBgm.currentTime=0;}
 function stopStoryBgm(){storyBgm.pause();storyBgm.currentTime=0;}
 function stopIntermissionBgm(){intermissionBgm.pause();intermissionBgm.currentTime=0;}
-function getSceneTrack(){return musicScene==="title"?titleBgm:musicScene==="intermission"?intermissionBgm:storyBgm;}
-function stopAllBgm(){stopTitleBgm();stopStoryBgm();stopIntermissionBgm();}
-function setMusicScene(scene){if(scene===musicScene){if(musicEnabled)getSceneTrack().play().catch(()=>{});return;}musicScene=scene;stopAllBgm();if(musicEnabled)getSceneTrack().play().catch(()=>{});}
-function makeMusicButton(){const b=document.createElement("button");b.className="music-toggle";b.type="button";function update(){b.textContent="♫";b.title=musicEnabled?"BGM ON":"BGM OFF";b.setAttribute("aria-label",b.title);b.style.opacity=musicEnabled?"1":"0.55";}update();b.onclick=()=>{musicEnabled=!musicEnabled;if(musicEnabled)getSceneTrack().play().catch(()=>{});else stopAllBgm();update();};return b;}
+function stopBattleBgm(){battleBgm.pause();battleBgm.currentTime=0;}
+function getSceneTrack(){return musicScene==="title"?titleBgm:musicScene==="intermission"?intermissionBgm:musicScene==="battle"?battleBgm:storyBgm;}
+function stopAllBgm(){stopTitleBgm();stopStoryBgm();stopIntermissionBgm();stopBattleBgm();}
+function pauseAllBgmPreservePosition(){titleBgm.pause();storyBgm.pause();intermissionBgm.pause();battleBgm.pause();}
+function setMusicScene(scene){if(scene===musicScene){if(musicEnabled&&!musicPausedByLifecycle)getSceneTrack().play().catch(()=>{});return;}musicScene=scene;stopAllBgm();if(musicEnabled&&!musicPausedByLifecycle)getSceneTrack().play().catch(()=>{});}
+function makeMusicButton(){const b=document.createElement("button");b.className="music-toggle";b.type="button";function update(){b.textContent="♫";b.title=musicEnabled?"BGM ON":"BGM OFF";b.setAttribute("aria-label",b.title);b.style.opacity=musicEnabled?"1":"0.55";}update();b.onclick=()=>{musicEnabled=!musicEnabled;if(musicEnabled&&!musicPausedByLifecycle)getSceneTrack().play().catch(()=>{});else if(!musicEnabled)stopAllBgm();update();};return b;}
+/* アプリがバックグラウンドへ移動したら停止し、戻ったら現在画面の曲を再開 */
+function suspendMusicForLifecycle(){if(musicPausedByLifecycle)return;musicPausedByLifecycle=true;pauseAllBgmPreservePosition();}
+function resumeMusicForLifecycle(){if(!musicPausedByLifecycle)return;musicPausedByLifecycle=false;if(musicEnabled)getSceneTrack().play().catch(()=>{});}
+document.addEventListener("visibilitychange",()=>{if(document.hidden)suspendMusicForLifecycle();else resumeMusicForLifecycle();});
+window.addEventListener("pagehide",suspendMusicForLifecycle);
+window.addEventListener("pageshow",()=>{if(!document.hidden)resumeMusicForLifecycle();});
 
 
 const test=document.querySelector("#test");
@@ -24,9 +33,10 @@ test.innerHTML=`
 <div id="game">
 
 
+<div id="turnControlsRow">
 <p id="turn">味方のターン</p>
-
 <div id="mapMoveControls" aria-label="マップ移動"><button type="button" data-pan="up">↑</button><button type="button" data-pan="down">↓</button><button type="button" data-pan="left">←</button><button type="button" data-pan="right">→</button></div>
+</div>
 
 <div id="mapViewport"><div id="map"></div></div>
 
@@ -70,12 +80,14 @@ const style=document.createElement("style");
 
 style.textContent=`
 
-#game{position:relative;}
+#game{position:relative;font-family:"Yu Mincho","Hiragino Mincho ProN",serif;letter-spacing:.02em;}
 
-#mapMoveControls{display:flex;justify-content:center;align-items:center;gap:6px;margin:4px auto 8px;width:94%;max-width:420px;}
-#mapMoveControls button{width:54px;height:48px;font-size:28px;line-height:1;padding:0;border:0;border-radius:8px;background:#e9e9ed;color:#1686d9;touch-action:manipulation;-webkit-user-select:none;user-select:none;}
+#turnControlsRow{display:flex;align-items:center;justify-content:space-between;gap:8px;width:94%;max-width:420px;margin:0 auto 2px;}
+#turn{margin:0;flex:1;font-size:13px;font-weight:bold;}
+#mapMoveControls{display:flex;justify-content:flex-end;align-items:center;gap:4px;margin:0;width:auto;max-width:none;flex:0 0 auto;}
+#mapMoveControls button{width:38px;height:36px;font-size:24px;line-height:1;padding:0;border:0;border-radius:7px;background:#e9e9ed;color:#1686d9;touch-action:manipulation;-webkit-user-select:none;user-select:none;}
 #mapMoveControls button:active{background:#c9d9e8;}
-#mapViewport{position:relative;width:94%;max-width:900px;height:65vh;min-height:310px;max-height:700px;margin:0 auto;overflow:hidden;border:1px solid #777;border-radius:6px;background:#b8b5a8;touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:grab;}
+#mapViewport{position:relative;width:94%;max-width:900px;height:57vh;min-height:270px;max-height:620px;margin:0 auto;overflow:hidden;border:1px solid #777;border-radius:6px;background:#b8b5a8;touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:grab;}
 
 #mapViewport.panning{cursor:grabbing;}
 
@@ -83,21 +95,32 @@ style.textContent=`
 
 #terrainBackground{position:absolute;left:0;top:0;width:100%;height:100%;z-index:1;pointer-events:none;background-color:#477b39;background-image:url("https://raw.githubusercontent.com/miyabi201938-lang/mira-srpg-public/refs/heads/main/a_high_resolution_top_down_oblique_pixel_art_rpg.png");background-size:150% 100%;background-position:left center;background-repeat:no-repeat;}
 
-#actionButtons{display:flex;justify-content:center;align-items:center;gap:5px;width:94%;max-width:420px;margin:8px auto;}
+#actionButtons{display:flex;justify-content:center;align-items:center;gap:3px;width:94%;max-width:420px;margin:3px auto;}
 
-#actionButtons button{flex:1;min-width:0;padding:9px 3px;font-size:11px;border-radius:6px;}
+#actionButtons button{flex:1;min-width:0;padding:7px 2px;font-size:11px;font-weight:bold;letter-spacing:.02em;border-radius:6px;border:1px solid #b99b59;background:linear-gradient(180deg,#f3e6c7,#d8c18b);color:#28344a;box-shadow:inset 0 1px 0 #fff9;}
 
 #actionButtons button:disabled{opacity:.35;filter:grayscale(1);}
 
-#info{position:relative;z-index:15;width:94%;max-width:340px;box-sizing:border-box;margin:8px auto;padding:7px;background:rgba(255,255,255,.97);border:1px solid #777;border-radius:8px;color:#222;font-size:12px;line-height:1.3;min-height:35px;}
+#info{position:relative;z-index:15;width:94%;max-width:340px;box-sizing:border-box;margin:1px auto;padding:7px;background:linear-gradient(145deg,#f4ecd9,#dfd0ad);border:2px solid #8b6c35;border-radius:10px;color:#263247;font-size:12px;line-height:1.3;min-height:30px;box-shadow:0 2px 5px #0003,inset 0 0 0 1px #fff8;}
 
-#info h3{font-size:14px;margin:4px 0;}
+#info h3{font-size:15px;font-weight:bold;margin:3px 0;color:#27344a;text-shadow:0 1px #fff8;}
 
-#info h4{font-size:12px;margin:4px 0;}
+#info h4{font-size:13px;font-weight:bold;margin:3px 0;color:#5a4526;}
 
-#info p{margin:4px 0;}
+#info p{margin:2px 0;}
 
-#info button{font-size:11px;padding:5px 7px;margin:2px;}
+#info button{font-size:11px;font-weight:bold;padding:5px 6px;margin:2px;border-radius:5px;}
+#info .action-menu-header{display:flex;flex-wrap:wrap;align-items:center;gap:2px 6px;margin:0 0 5px;}
+#info .action-menu-header h3{margin:0;font-size:14px;white-space:nowrap;color:#f6df9c;font-family:"Yu Mincho","Hiragino Mincho ProN",serif;font-weight:bold;text-shadow:0 1px 2px #000;}
+#info .action-menu-stats{display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px;margin:0;font-size:11px;line-height:1.15;color:#f2e6c6;font-weight:bold;}
+#info:has(.action-menu-header){background:linear-gradient(145deg,#0d1a30,#1a2d4c 52%,#101a2b);border:3px double #d0ad62;border-radius:12px;color:#f4e8c8;padding:7px;box-shadow:inset 0 0 0 1px #574522,0 3px 7px #0006;}
+#info:has(.action-menu-header) .action-menu-buttons{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;align-items:stretch;}
+#info .action-menu-buttons button{width:100%;min-width:0;box-sizing:border-box;font-family:"Yu Mincho","Hiragino Mincho ProN",serif;flex:initial;font-size:12px;font-weight:bold;padding:6px 2px;margin:0;line-height:1.2;border-radius:6px;min-height:32px;white-space:nowrap;background:linear-gradient(180deg,#29466f,#132744);color:#f1e5c5;border:1px solid #c5a45d;box-shadow:inset 0 1px 0 #ffffff25,0 1px 2px #0004;}
+#info .action-menu-buttons button:active:not(:disabled){background:linear-gradient(#3b69a8,#214778);}
+#info .action-menu-buttons button:disabled{opacity:.38;filter:grayscale(.6);}
+#info:has(.action-menu-header)::before,#info:has(.action-menu-header)::after{content:"✦";position:absolute;color:#d6b46c;font-size:10px;pointer-events:none;}
+#info:has(.action-menu-header)::before{top:2px;left:4px;}
+#info:has(.action-menu-header)::after{bottom:2px;right:4px;}
 
 .unit-token{position:absolute!important;box-sizing:border-box!important;width:56px!important;height:44px!important;min-width:56px!important;max-width:56px!important;min-height:44px!important;max-height:44px!important;padding:0!important;margin:0!important;z-index:5;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:7px;background:rgba(20,25,31,.88);border:1px solid rgba(255,255,255,.9);box-shadow:0 2px 5px #000b,inset 0 0 0 1px #0005;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
 
@@ -179,15 +202,15 @@ style.textContent=`
 
 .story-overlay{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;box-sizing:border-box;padding:20px;background:rgba(10,16,27,.94);color:#fff;}
 
-.story-panel{width:100%;max-width:420px;box-sizing:border-box;padding:24px 20px;border:1px solid #b9a16b;border-radius:12px;background:linear-gradient(160deg,#28364a,#111923);text-align:center;}
+.story-panel{width:100%;max-width:420px;box-sizing:border-box;padding:24px 20px;border:3px double #c6a45e;border-radius:14px;background:linear-gradient(160deg,#243955,#101a2b);text-align:center;font-family:"Yu Mincho","Hiragino Mincho ProN",serif;box-shadow:inset 0 0 0 1px #ffffff14,0 5px 20px #0008;}
 
-.story-panel h2{font-size:22px;color:#f0d99b;}
+.story-panel h2{font-size:23px;color:#f0d99b;font-weight:bold;text-shadow:0 2px 4px #000;}
 
 .story-panel p{font-size:16px;line-height:2;text-align:left;white-space:pre-line;}
 
 .story-panel button{min-width:150px;padding:11px 20px;font-size:15px;border:1px solid #d5bd83;border-radius:7px;background:#d5bd83;color:#202020;font-weight:bold;}
 
-#intermissionPanel{width:94%;max-width:520px;margin:12px auto;padding:14px 14px 92px;box-sizing:border-box;border:2px solid #a78b55;border-radius:10px;background:linear-gradient(160deg,#28364a,#111923);color:#fff;text-align:center;}
+#intermissionPanel{width:94%;max-width:520px;margin:12px auto;padding:14px 14px 92px;box-sizing:border-box;border:3px double #c6a45e;border-radius:12px;background:linear-gradient(160deg,#243955,#101a2b);color:#f4e8c8;text-align:center;font-family:"Yu Mincho","Hiragino Mincho ProN",serif;box-shadow:inset 0 0 0 1px #ffffff14,0 3px 8px #0005;}
 
 #intermissionPanel h3{font-size:19px;color:#f0d99b;margin:5px;}
 
@@ -206,10 +229,10 @@ style.textContent=`
 #titleScreen{position:fixed;inset:0;z-index:20000;background:#05070b;overflow-y:auto;display:flex;flex-direction:column;align-items:center;}
 .title-art{width:100%;height:42vh;min-height:220px;max-height:420px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;background:#05070b;}
 .title-background{display:block;width:100%;height:100%;object-fit:contain;object-position:center;}
-.title-menu{width:min(88%,460px);display:flex;flex-direction:column;gap:9px;padding:14px 0 26px;box-sizing:border-box;}
-.title-menu button{width:100%;min-height:48px;padding:10px 12px;border:1px solid #c8b17b;border-radius:7px;background:linear-gradient(140deg,#251817,#090b10);color:#e8d5a6;font-size:17px;letter-spacing:.08em;}
+.title-menu{width:min(84%,440px);display:flex;flex-direction:column;gap:7px;padding:10px 0 20px;box-sizing:border-box;}
+.title-menu button{width:100%;min-height:48px;padding:10px 12px;border:2px double #c8b17b;border-radius:8px;background:linear-gradient(140deg,#263c5c,#0b1425);color:#f0dba5;font-family:"Yu Mincho","Hiragino Mincho ProN",serif;font-weight:bold;font-size:18px;letter-spacing:.08em;box-shadow:inset 0 1px 0 #ffffff20,0 2px 5px #0007;}
 .title-menu button:active{background:#514126;}
-.title-music{position:fixed;right:16px;bottom:calc(22px + env(safe-area-inset-bottom));top:auto;z-index:30000;width:58px;height:58px;border-radius:50%;border:2px solid #c8b17b;background:rgba(12,18,28,.96);color:#e8c879;font-size:30px;box-shadow:0 4px 14px #0009;display:flex;align-items:center;justify-content:center;}
+.title-music{position:fixed;right:16px;bottom:calc(12px + env(safe-area-inset-bottom));top:auto;z-index:30000;width:58px;height:58px;border-radius:50%;border:2px solid #c8b17b;background:rgba(12,18,28,.96);color:#e8c879;font-size:30px;box-shadow:0 4px 14px #0009;display:flex;align-items:center;justify-content:center;}
 
 /* オープニング：地図全体を表示し、文章を画面下部の字幕帯に置く */
 
@@ -232,7 +255,7 @@ style.textContent=`
 
 .opening-panel button:disabled{opacity:.35;}
 
-.music-toggle{position:fixed;right:16px;bottom:calc(22px + env(safe-area-inset-bottom));z-index:30000;width:58px;height:58px;min-width:0;padding:0;border-radius:50%;border:2px solid #c8b17b;background:rgba(12,18,28,.96);color:#e8c879;font-size:30px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px #0009;}
+.music-toggle{position:fixed;right:8px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:30000;width:58px;height:58px;min-width:0;padding:0;border-radius:50%;border:2px solid #c8b17b;background:rgba(12,18,28,.96);color:#e8c879;font-size:30px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px #0009;}
 #intermissionPanel+.music-toggle,.music-toggle{box-sizing:border-box;appearance:none;-webkit-appearance:none;min-width:0;width:58px;height:58px;padding:0;margin:0;border-radius:50%;border:2px solid #c8b17b;background:rgba(12,18,28,.96);color:#e8c879;font-size:30px;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px #0009;}
 .opening-panel{padding-bottom:calc(96px + env(safe-area-inset-bottom));}
 .title-load-list{max-height:55vh;overflow-y:auto;text-align:left;margin:12px 0;}
@@ -240,13 +263,13 @@ style.textContent=`
 .title-load-list button{width:100%;padding:9px;margin:4px 0;}
 
 /* ミラ選択時の下部顔グラ・ステータス */
-#miraPortraitPanel{display:none;position:fixed;left:0;right:0;bottom:0;z-index:25000;padding:7px 10px calc(7px + env(safe-area-inset-bottom));box-sizing:border-box;background:rgba(12,18,28,.97);border-top:1px solid #c8b17b;color:#f3e8cb;}
+#miraPortraitPanel{display:none;position:fixed;left:0;right:0;bottom:0;z-index:25000;padding:5px 8px calc(5px + env(safe-area-inset-bottom));box-sizing:border-box;background:rgba(12,18,28,.97);border-top:1px solid #c8b17b;color:#f3e8cb;}
 #miraPortraitPanel.visible{display:flex;align-items:center;gap:10px;}
-#miraPortraitPanel img{width:82px;height:82px;flex:0 0 82px;object-fit:contain;object-position:center;border:1px solid #c8b17b;border-radius:6px;background:#111;}
-#miraPortraitPanel .mira-status{min-width:0;flex:1;font-size:13px;line-height:1.5;}
-#miraPortraitPanel .mira-name{font-weight:bold;font-size:15px;color:#e8c879;}
-#miraPortraitPanel .mira-hp{margin-top:3px;font-weight:bold;}
-#miraPortraitPanel .mira-hpbar{height:8px;margin-top:5px;border:1px solid #777;border-radius:5px;background:#333;overflow:hidden;}
+#miraPortraitPanel img{width:70px;height:70px;flex:0 0 70px;object-fit:contain;object-position:center;border:1px solid #c8b17b;border-radius:6px;background:#111;}
+#miraPortraitPanel .mira-status{min-width:0;flex:1;padding-right:68px;font-size:12px;line-height:1.25;}
+#miraPortraitPanel .mira-name{font-weight:bold;font-size:13px;color:#e8c879;}
+#miraPortraitPanel .mira-hp{margin-top:2px;font-weight:bold;}
+#miraPortraitPanel .mira-hpbar{height:6px;margin-top:3px;border:1px solid #777;border-radius:5px;background:#333;overflow:hidden;}
 #miraPortraitPanel .mira-hpfill{height:100%;background:#42a5f5;}
 #game.has-mira-portrait #info{margin-bottom:112px;}
 .unit-details-layout{display:flex;align-items:flex-start;gap:12px;}
@@ -942,13 +965,10 @@ selected=unit;selectedEnemy=null;menuOpen=true;moveMode=false;attackMode=false;s
 
 const canMove=!unit.moved&&!unit.acted&&!unit.waited,canAct=!unit.acted&&!unit.waited;
 
-info.innerHTML=`<h3>${unit.icon} ${unit.name}</h3><p>HP：${unit.hp}/${unit.maxHp}</p><p>攻撃：${unit.atk}　防御：${unit.def}</p>
-
-<button id="actMove" ${canMove?"":"disabled"}>移動</button><button id="actAttack" ${canAct?"":"disabled"}>攻撃対象選択</button>
-
+info.innerHTML=`<div class="action-menu-header"><h3>${unit.icon} ${unit.name}</h3><div class="action-menu-stats"><span>HP：${unit.hp}/${unit.maxHp}</span><span>攻撃：${unit.atk}</span><span>防御：${unit.def}</span></div></div><div class="action-menu-buttons">
+<button id="actMove" ${canMove?"":"disabled"}>移動</button><button id="actAttack" ${canAct?"":"disabled"}>攻撃選択</button>
 <button id="actSkill" ${canAct?"":"disabled"}>スキル</button><button id="actItem" ${canAct?"":"disabled"}>アイテム</button>
-
-<button id="actDetails">能力確認</button><button id="actWait">待機</button><button id="actCancel">キャンセル</button>`;
+<button id="actEquipment">装備変更</button><button id="actDetails">能力確認</button><button id="actWait">待機</button><button id="actCancel">キャンセル</button></div>`;
 
 document.querySelector("#actMove").onclick=()=>{if(!canMove)return;menuOpen=false;moveMode=true;attackMode=false;info.innerHTML=`<p>${unit.name}：青い範囲から移動先を選んでね。</p>`;refresh();};
 
@@ -957,6 +977,8 @@ document.querySelector("#actAttack").onclick=()=>{if(canAct)showAttackMenu(unit)
 document.querySelector("#actSkill").onclick=()=>{if(canAct)showSkillMenu(unit);};
 
 document.querySelector("#actItem").onclick=()=>{if(canAct)showItemMenu(unit);};
+
+document.querySelector("#actEquipment").onclick=()=>{info.innerHTML=`<p>装備変更は今後の更新で機能を追加する予定です。</p><button id="equipBack">戻る</button>`;document.querySelector("#equipBack").onclick=()=>showActionMenu(unit);};
 
 document.querySelector("#actDetails").onclick=()=>showDetails(unit);
 
@@ -1314,7 +1336,7 @@ function showTitleScreen(){
 intermissionOpen=false;
 mapViewport.style.display="none";
 document.querySelector("#actionButtons").style.display="none";
-turnLabel.style.display="none";
+document.querySelector("#turnControlsRow").style.display="none";
 info.style.display="none";
 const old=document.querySelector("#intermissionPanel");if(old)old.remove();
 const oldTitle=document.querySelector("#titleScreen");if(oldTitle)oldTitle.remove();
@@ -1336,7 +1358,7 @@ function showIntermission(){
 
 intermissionOpen=true;intermissionReturnMode=true;systemMenuOpen=false;menuOpen=false;selected=null;selectedEnemy=null;pendingMove=null;moveMode=false;attackMode=false;clearBattleVisual();
 
-mapViewport.style.display="none";document.querySelector("#actionButtons").style.display="none";turnLabel.style.display="none";document.querySelector("#mapMoveControls").style.display="none";info.style.display="none";
+mapViewport.style.display="none";document.querySelector("#actionButtons").style.display="none";document.querySelector("#turnControlsRow").style.display="none";info.style.display="none";
 
 let old=document.querySelector("#intermissionPanel");if(old)old.remove();
 
@@ -1384,7 +1406,7 @@ intermissionOpen=false;systemMenuOpen=false;
 
 let old=document.querySelector("#intermissionPanel");if(old)old.remove();
 
-mapViewport.style.display="none";document.querySelector("#actionButtons").style.display="none";turnLabel.style.display="none";document.querySelector("#mapMoveControls").style.display="none";info.style.display="none";
+mapViewport.style.display="none";document.querySelector("#actionButtons").style.display="none";document.querySelector("#turnControlsRow").style.display="none";info.style.display="none";
 
 const panel=document.createElement("div");panel.id="intermissionPanel";
 
@@ -1410,7 +1432,7 @@ game.appendChild(panel);
 
 panel.querySelector("#situationStart").onclick=()=>{
 
-panel.remove();intermissionOpen=false;mapViewport.style.display="block";document.querySelector("#actionButtons").style.display="flex";turnLabel.style.display="block";document.querySelector("#mapMoveControls").style.display="flex";info.style.display="block";startStage();
+panel.remove();intermissionOpen=false;mapViewport.style.display="block";document.querySelector("#actionButtons").style.display="flex";document.querySelector("#turnControlsRow").style.display="flex";info.style.display="block";startStage();
 
 };
 
@@ -1468,6 +1490,7 @@ async function startStage(){
 
 if(cameraBusy)return;
 
+setMusicScene("battle");
 cameraBusy=true;cameraSkipRequested=false;battleEnded=false;combatAnimating=false;reaction=false;selected=null;selectedEnemy=null;pendingMove=null;moveMode=false;attackMode=false;menuOpen=false;systemMenuOpen=false;currentTurn="ally";turn=1;
 
 units.forEach(u=>{u.moved=false;u.acted=false;u.waited=false;u.defending=false;});
