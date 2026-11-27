@@ -209,11 +209,12 @@ style.textContent=`
 
 .unit-token.combat-hit{animation:combatHit 420ms ease-in-out;}
 
-@keyframes rangePulse{0%,100%{fill-opacity:.38;stroke-opacity:1;stroke-width:3.5;}50%{fill-opacity:.72;stroke-opacity:1;stroke-width:4.5;}}
+@keyframes rangePulseBlue{0%,49%{fill-opacity:.34;stroke-opacity:1;}50%,100%{fill-opacity:.045;stroke-opacity:.16;}}
+@keyframes rangePulseRed{0%,49%{fill-opacity:.045;stroke-opacity:.16;}50%,100%{fill-opacity:.34;stroke-opacity:1;}}
 
-.move-range-hex{fill:#0878ff;fill-opacity:.52;stroke:#fff;stroke-width:3.5;animation:rangePulse 1s ease-in-out infinite;filter:drop-shadow(0 0 3px #003cff) drop-shadow(0 0 7px #168cff);pointer-events:none;}
+.move-range-hex{fill:#0878ff;fill-opacity:.34;stroke:#004cbd;stroke-width:1.4;animation:rangePulseBlue 2s ease-in-out infinite;pointer-events:none;}
 
-.attack-range-hex{fill:#ff2020;fill-opacity:.52;stroke:#fff;stroke-width:3.5;animation:rangePulse 1s ease-in-out infinite;animation-delay:-.5s;filter:drop-shadow(0 0 3px #a00000) drop-shadow(0 0 7px #ff3030);pointer-events:none;}
+.attack-range-hex{fill:#ff2020;fill-opacity:.045;stroke:#a51010;stroke-width:1.4;animation:rangePulseRed 2s ease-in-out infinite;pointer-events:none;}
 
 @keyframes battleHexPulse{0%,100%{opacity:.55;stroke-width:3;}50%{opacity:1;stroke-width:5;}}
 
